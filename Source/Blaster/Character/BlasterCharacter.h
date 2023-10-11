@@ -3,13 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InputActionValue.h"
 #include "GameFramework/Character.h"
 #include "BlasterCharacter.generated.h"
 
 
 class USpringArmComponent;
 class UCameraComponent;
-
+class UInputMappingContext;
+class UInputAction;
 
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter
@@ -33,8 +35,41 @@ public:
 
 
 public:
+	//跳跃
+	virtual void Jump() override;
 
 protected:
+	//增强输入
+	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UInputMappingContext* InputContext;
+
+	//增强输入-移动
+	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UInputAction* MovementAction;
+	void Move(const FInputActionValue& Value);
+
+	
+	//增强输入-鼠标
+	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UInputAction* LookAction;
+	void Look(const FInputActionValue& Value);
+
+	//增强输入-跳
+	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UInputAction* JumpAction;
+
+	//增强输入-鼠标左键攻击
+	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UInputAction* AttackAction;
+	void AttackKeyPressed(const FInputActionValue& Value);
+
+	//增强输入-E键功能
+	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UInputAction* EKeyAction;
+	void EKeyPressed(const FInputActionValue& Value);
+
+	
+	
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
