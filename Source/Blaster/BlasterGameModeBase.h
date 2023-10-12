@@ -13,5 +13,17 @@ UCLASS()
 class BLASTER_API ABlasterGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
+
+public:
+	virtual void PostLogin(APlayerController* NewPlayer) override;
+
+	
+protected:
+
+	
+private:
+
+	FString PlayerName = (TEXT("NULL"));
+	
 	
 };

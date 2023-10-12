@@ -4,6 +4,7 @@
 #include "OverheadWidget.h"
 
 #include "Components/TextBlock.h"
+#include "GameFramework/PlayerState.h"
 
 void UOverheadWidget::SetDisplayText(FString TextToDisplay)
 {
@@ -35,6 +36,22 @@ void UOverheadWidget::ShowPlayerNetRole(APawn* InPawn)
 	FString LocalRoleString = FString::Printf(TEXT("本地角色: %s"), *Role);
 
 	SetDisplayText(LocalRoleString);
+	
+}
+
+void UOverheadWidget::ShowPlayerName(APawn* InPawn)
+{
+	APlayerState* PlayerState = InPawn->GetPlayerState();
+	
+	if(PlayerState)
+	{
+		SetDisplayText(PlayerState->GetPlayerName());
+	}
+	else
+	{
+		SetDisplayText(TEXT("NULL"));
+	}
+	
 	
 }
 
