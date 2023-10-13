@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "InputActionValue.h"
+#include "Blaster/BlaseComponents/CombatComponent.h"
 #include "GameFramework/Character.h"
 #include "BlasterCharacter.generated.h"
 
@@ -43,6 +44,11 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
+
+	//AActor::PostInitializeComponents: Called after the actor’s components have been initialized, only during gameplay and some editor previews
+	//在角色的组件初始化后调用，仅在游戏和某些编辑器预览时调用
+	//用这个来初始化CombatComponent相关的变量
+	virtual void PostInitializeComponents() override;
 
 protected:
 	//增强输入
@@ -93,5 +99,8 @@ private:
 	//使用ReplicatedUsing = OnRep_OverlappingWeapon，表示我们在这个变量上调用OnRep_OverlappingWeapon这个方法
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 	AWeapon* OverlappingWeapon;
+
+	UPROPERTY(VisibleAnywhere)
+	UCombatComponent* Combat;
 	
 };
