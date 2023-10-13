@@ -7,8 +7,10 @@
 #include "Components/InputComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Blaster/Weapon/Weapon.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Net/UnrealNetwork.h"
 
 
 // Sets default values
@@ -48,16 +50,12 @@ void ABlasterCharacter::BeginPlay()
 			Subsystem->AddMappingContext(InputContext, 0);
 		}
 	}
-	
-
-	
 }
 
 // Called every frame
 void ABlasterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 // Called to bind functionality to input
@@ -82,6 +80,18 @@ void ABlasterCharacter::Jump()
 {
 	Super::Jump();
 
+	
+}
+
+void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	//注册需要复制的变量，这个将显示给所有客户端
+	//DOREPLIFETIME(ABlasterCharacter, OverlappingWeapon);
+
+	//注册需要复制的变量，使用COND_OwnerOnly，选择只会复制到所有者的客户端
+	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 	
 }
 
@@ -123,5 +133,36 @@ void ABlasterCharacter::AttackKeyPressed(const FInputActionValue& Value)
 
 void ABlasterCharacter::EKeyPressed(const FInputActionValue& Value)
 {
+}
+
+void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
+{
+	if(OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(false);
+	}
+
+	OverlappingWeapon = Weapon;
+	
+	//使用IsLocallyControlled()，判断当前是否在本地控制的人物
+	if(IsLocallyControlled())
+	{
+		if(OverlappingWeapon)
+		{
+			OverlappingWeapon->ShowPickupWidget(true);
+		}
+	}
+}
+
+void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
+{
+	if(OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(true);
+	}
+	if(LastWeapon)
+	{
+		LastWeapon->ShowPickupWidget(false);
+	}
 }
 

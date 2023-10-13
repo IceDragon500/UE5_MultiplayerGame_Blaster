@@ -37,6 +37,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 public:
+	void ShowPickupWidget(bool bShowWidget);
 
 	
 protected:

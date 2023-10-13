@@ -60,21 +60,6 @@ void AWeapon::BeginPlay()
 	{
 		PickupWidget->SetVisibility(false);
 	}
-	
-	
-}
-
-void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	if(OtherActor)
-	{
-		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
-		if(BlasterCharacter && PickupWidget)
-		{
-			PickupWidget->SetVisibility(false);
-		}
-	}
 }
 
 // Called every frame
@@ -84,17 +69,39 @@ void AWeapon::Tick(float DeltaTime)
 
 }
 
-void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AWeapon::ShowPickupWidget(bool bShowWidget)
 {
-	
+	if(PickupWidget)
+	{
+		PickupWidget->SetVisibility(bShowWidget);
+	}
+}
+
+void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
 	if(OtherActor)
 	{
 		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
-		if(BlasterCharacter && PickupWidget)
+		if(BlasterCharacter)
 		{
-			PickupWidget->SetVisibility(true);
+			BlasterCharacter->SetOverlappingWeapon(this);
 		}
 	}
 }
+
+void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if(OtherActor)
+	{
+		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
+		if(BlasterCharacter)
+		{
+			BlasterCharacter->SetOverlappingWeapon(nullptr);
+		}
+	}
+}
+
+
+
+
 
