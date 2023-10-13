@@ -3,6 +3,9 @@
 
 #include "Weapon.h"
 
+#include "Blaster/Character/BlasterCharacter.h"
+#include "Components/WidgetComponent.h"
+
 // Sets default values
 AWeapon::AWeapon()
 {
@@ -29,6 +32,9 @@ AWeapon::AWeapon()
 	AreaSphere->SetCollisionResponseToChannels(ECollisionResponse::ECR_Ignore);
 	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);//我们先把碰撞盒子关掉
 
+	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
+	PickupWidget->SetupAttachment(RootComponent);
+
 }
 
 // Called when the game starts or when spawned
@@ -45,11 +51,30 @@ void AWeapon::BeginPlay()
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		//并且，将盒子碰撞与Pawn设置为重叠
 		AreaSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+		//将碰撞方法与碰撞球体进行绑定
+		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnSphereOverlap);
+		AreaSphere->OnComponentEndOverlap.AddDynamic(this,&ThisClass::OnSphereEndOverlap);
 	}
 
+	if(PickupWidget)
+	{
+		PickupWidget->SetVisibility(false);
+	}
+	
+	
+}
 
-	
-	
+void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if(OtherActor)
+	{
+		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
+		if(BlasterCharacter && PickupWidget)
+		{
+			PickupWidget->SetVisibility(false);
+		}
+	}
 }
 
 // Called every frame
@@ -57,5 +82,19 @@ void AWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	
+	if(OtherActor)
+	{
+		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
+		if(BlasterCharacter && PickupWidget)
+		{
+			PickupWidget->SetVisibility(true);
+		}
+	}
 }
 
