@@ -84,6 +84,9 @@ private:
 	//创建一个OnRep的方法，给需要复制的变量指定这个方法
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
+
+	UFUNCTION(Server, Reliable)
+	void ServerEquipButtonPressed();
 	
 
 private:
@@ -93,6 +96,7 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	UCameraComponent* FollowCamera;
 
+	//创建拾取提示组件
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	UWidgetComponent* OverheadWidget;
 
@@ -100,7 +104,10 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 	AWeapon* OverlappingWeapon;
 
+	//创建战斗组件CombatComponent
 	UPROPERTY(VisibleAnywhere)
 	UCombatComponent* Combat;
+
+	//void 
 	
 };

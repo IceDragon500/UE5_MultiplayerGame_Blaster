@@ -136,7 +136,23 @@ void ABlasterCharacter::AttackKeyPressed(const FInputActionValue& Value)
 
 void ABlasterCharacter::EKeyPressed(const FInputActionValue& Value)
 {
-	if(Combat && HasAuthority())
+	if(Combat)
+	{
+		if(HasAuthority())//如果是拥有权限的服务器端，则执行下面进行武器装备
+		{
+			Combat->EquipWeapon(OverlappingWeapon);
+		}
+		else//如果不是，则调用函数来执行
+		{
+			ServerEquipButtonPressed();
+		}
+		
+	}
+}
+
+void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
+{
+	if(Combat)
 	{
 		Combat->EquipWeapon(OverlappingWeapon);
 	}
@@ -184,4 +200,6 @@ void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 		LastWeapon->ShowPickupWidget(false);
 	}
 }
+
+
 

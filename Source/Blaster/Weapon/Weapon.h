@@ -25,21 +25,21 @@ class BLASTER_API AWeapon : public AActor
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
+
 	AWeapon();
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-public:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void ShowPickupWidget(bool bShowWidget);
 
-	FORCEINLINE void SetWeaponState(EWeaponState State) { WeaponState = State; }
+protected:
+
+	virtual void BeginPlay() override;
+	
+
+public:
+	
+	void SetWeaponState(EWeaponState State);
+	FORCEINLINE USphereComponent* GetAreaSphere() const { return  AreaSphere; }
 	
 protected:
 
@@ -57,12 +57,14 @@ private:
 	UPROPERTY(VisibleAnywhere, Category= "武器属性")
 	USphereComponent* AreaSphere;
 
-	UPROPERTY(VisibleAnywhere, Category= "武器属性")
+	UPROPERTY(ReplicatedUsing=OnRep_WeaponState, VisibleAnywhere, Category= "武器属性")
 	EWeaponState WeaponState;
+
+	UFUNCTION()
+	void OnRep_WeaponState();
 	
 	UPROPERTY(VisibleAnywhere, Category= "武器属性")
 	class UWidgetComponent* PickupWidget;
 	
 
 };
-

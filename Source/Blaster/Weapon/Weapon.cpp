@@ -5,6 +5,7 @@
 
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Components/WidgetComponent.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 AWeapon::AWeapon()
@@ -69,6 +70,14 @@ void AWeapon::Tick(float DeltaTime)
 
 }
 
+void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	//将WeaponState注册，这样可以复制
+	DOREPLIFETIME(AWeapon, WeaponState);
+	
+}
+
 void AWeapon::ShowPickupWidget(bool bShowWidget)
 {
 	if(PickupWidget)
@@ -101,6 +110,28 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	}
 }
 
+void AWeapon::SetWeaponState(EWeaponState State)
+{
+	WeaponState = State;
+
+	switch (WeaponState)
+	{
+	case EWeaponState::EWS_Equipped:
+		ShowPickupWidget(false);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		break;
+	}
+}
+
+void AWeapon::OnRep_WeaponState()
+{
+	switch (WeaponState)
+	{
+	case EWeaponState::EWS_Equipped:
+		ShowPickupWidget(false);
+		break;
+	}
+}
 
 
 
