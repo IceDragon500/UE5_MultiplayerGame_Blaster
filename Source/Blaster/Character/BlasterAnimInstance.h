@@ -50,4 +50,8 @@ private:
 	//是否装备了武器
 	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
 	bool bWeaponEquipped;
+
+	//是否蹲下
+	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
+	bool bIsCrouched;
 };

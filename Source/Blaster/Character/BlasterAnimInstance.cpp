@@ -41,4 +41,7 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	//是否装备了武器
 	bWeaponEquipped = BlasterCharacter->IsWeaponEquipped();
+
+	//是否蹲下
+	bIsCrouched = BlasterCharacter->bIsCrouched;
 }

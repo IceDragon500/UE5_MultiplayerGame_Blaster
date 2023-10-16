@@ -39,6 +39,14 @@ ABlasterCharacter::ABlasterCharacter()
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);//指定组件是可以被复制的 网络相关
 
+	//蹲下的设置，这里我们使用角色移动组件里面的蹲下功能
+	//设置可以蹲下
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+	//设置蹲下后碰撞胶囊体的高度
+	GetCharacterMovement()->SetCrouchedHalfHeight(60.f);
+	//设置蹲下后的移动速度
+	GetCharacterMovement()->MaxWalkSpeedCrouched = 100.f;
+
 }
 
 // Called when the game starts or when spawned
@@ -72,11 +80,11 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	{
 		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ThisClass::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ThisClass::Jump);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ThisClass::AttackKeyPressed);
 		EnhancedInputComponent->BindAction(EKeyAction, ETriggerEvent::Triggered, this, &ThisClass::EKeyPressed);
+		EnhancedInputComponent->BindAction(Crouching, ETriggerEvent::Started, this, &ThisClass::CrouchKeyPressed);//注意这里是ETriggerEvent::Started
 	}
-
 }
 
 void ABlasterCharacter::Jump()
@@ -158,6 +166,23 @@ void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 	}
 }
 
+void ABlasterCharacter::CrouchKeyPressed(const FInputActionValue& Value)
+{
+	//在Character类中，UE实现了 Crouch的网络复制的申明，我们可以直接重写下面的方法
+	//virtual void OnRep_IsCrouched();
+	// bIsCrouched:1
+	// 系统封账的蹲下可以自动调整碰撞盒高度和移动速度
+	if(bIsCrouched)
+	{
+		UnCrouch();
+	}
+	else
+	{
+		Crouch();
+	}
+	
+}
+
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
 	if(OverlappingWeapon)
@@ -193,6 +218,8 @@ bool ABlasterCharacter::IsWeaponEquipped()
 {
 	return (Combat && Combat->EquippedWeapon);
 }
+
+
 
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
