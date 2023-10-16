@@ -50,6 +50,8 @@ public:
 	//用这个来初始化CombatComponent相关的变量
 	virtual void PostInitializeComponents() override;
 
+	bool IsWeaponEquipped();
+
 protected:
 	//增强输入
 	UPROPERTY(EditAnywhere, Category= "增强输入")
@@ -82,6 +84,7 @@ protected:
 
 private:
 	//创建一个OnRep的方法，给需要复制的变量指定这个方法
+	//是一个接收到服务器replicate后需要执行的函数，replicate过程是单向的，所以On_RepXXX只能再客户端执行
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 

@@ -38,4 +38,7 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	//是否加速
 	bIsAccelerating = CharacterMovement->GetCurrentAcceleration().Size() > 0.f ? true : false;
+
+	//是否装备了武器
+	bWeaponEquipped = BlasterCharacter->IsWeaponEquipped();
 }

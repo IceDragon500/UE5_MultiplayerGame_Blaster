@@ -46,4 +46,8 @@ private:
 	//是否在加速
 	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
 	bool bIsAccelerating;
+
+	//是否装备了武器
+	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
+	bool bWeaponEquipped;
 };
