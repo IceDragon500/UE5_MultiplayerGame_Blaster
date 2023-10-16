@@ -54,4 +54,8 @@ private:
 	//是否蹲下
 	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
 	bool bIsCrouched;
+
+	//是否瞄准
+	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
+	bool bAiming;
 };

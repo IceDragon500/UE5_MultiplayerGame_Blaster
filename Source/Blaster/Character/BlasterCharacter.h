@@ -50,7 +50,11 @@ public:
 	//用这个来初始化CombatComponent相关的变量
 	virtual void PostInitializeComponents() override;
 
+	//返回是否已经装备武器
 	bool IsWeaponEquipped();
+
+	//返回是否在瞄准
+	bool IsAiming();
 
 protected:
 	//增强输入
@@ -86,6 +90,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category= "增强输入")
 	UInputAction* Crouching;
 	void CrouchKeyPressed(const FInputActionValue& Value);
+
+	//增强输入-瞄准
+	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UInputAction* Aiming;
+	void AimKeyPressed(const FInputActionValue& Value);
+	void AImKeyReleased(const FInputActionValue& Value);
 
 private:
 	//创建一个OnRep的方法，给需要复制的变量指定这个方法

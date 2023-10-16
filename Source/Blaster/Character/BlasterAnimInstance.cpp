@@ -44,4 +44,7 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	//是否蹲下
 	bIsCrouched = BlasterCharacter->bIsCrouched;
+
+	//是否瞄准
+	bAiming = BlasterCharacter->IsAiming();
 }

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -28,6 +28,10 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	void SetAiming(bool bIsAiming);
+
+	UFUNCTION(Server, Reliable)
+	void ServerSetAiming(bool bIsAiming);
 
 public:
 	void EquipWeapon(AWeapon* WeaponToEquip);
@@ -38,10 +42,16 @@ protected:
 	
 
 private:
+	//角色实例
 	ABlasterCharacter* Character;
 
+	//已经装备上的武器
 	UPROPERTY(Replicated)
 	AWeapon* EquippedWeapon;
+
+	//是否在瞄准
+	UPROPERTY(Replicated)
+	bool bAiming;
 
 		
 };

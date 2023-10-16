@@ -79,11 +79,22 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	if(UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
+		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Completed, this, &ThisClass::Move);
+		
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Completed, this, &ThisClass::Look);
+		
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ThisClass::Jump);
+		
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ThisClass::AttackKeyPressed);
+		
 		EnhancedInputComponent->BindAction(EKeyAction, ETriggerEvent::Triggered, this, &ThisClass::EKeyPressed);
+		
 		EnhancedInputComponent->BindAction(Crouching, ETriggerEvent::Started, this, &ThisClass::CrouchKeyPressed);//注意这里是ETriggerEvent::Started
+		
+		EnhancedInputComponent->BindAction(Aiming,ETriggerEvent::Started, this, &ThisClass::AimKeyPressed);
+		EnhancedInputComponent->BindAction(Aiming,ETriggerEvent::Completed, this, &ThisClass::AImKeyReleased);
+		
 	}
 }
 
@@ -180,7 +191,23 @@ void ABlasterCharacter::CrouchKeyPressed(const FInputActionValue& Value)
 	{
 		Crouch();
 	}
+}
+
+void ABlasterCharacter::AimKeyPressed(const FInputActionValue& Value)
+{
+	if(Combat)
+	{
+		Combat->SetAiming(true);
+	}
 	
+}
+
+void ABlasterCharacter::AImKeyReleased(const FInputActionValue& Value)
+{
+	if(Combat)
+	{
+		Combat->SetAiming(false);
+	}
 }
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
@@ -219,6 +246,10 @@ bool ABlasterCharacter::IsWeaponEquipped()
 	return (Combat && Combat->EquippedWeapon);
 }
 
+bool ABlasterCharacter::IsAiming()
+{
+	return (Combat && Combat->bAiming);
+}
 
 
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
