@@ -58,4 +58,33 @@ private:
 	//是否瞄准
 	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
 	bool bAiming;
+	
+	//前进的方向  就是教程里面的YawOffset
+	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
+	float Direction;
+	//最后停下的方向
+	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
+	float StopDirection;
+
+	//倾斜角度
+	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
+	float Lean;
+
+	//模型上一帧的旋转
+	//教程里面是CharacterRotationLastFrame
+	FRotator RotationLastTick;
+	//获得控制器（镜头）的旋转 教程里面是AimRotation
+	FRotator  PlayerControlRotation;
+	//获得模型Actor的旋转
+	//教程里面是CharacterRotation
+	FRotator PlayerRotation;
+
+	FRotator DeltaRotation;
+
+	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
+	float Pitch = 0;
+	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
+	float Roll = 0;
+	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
+	float Yaw = 0;
 };

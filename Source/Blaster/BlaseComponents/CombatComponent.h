@@ -24,21 +24,20 @@ public:
 
 	//处理需要
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	void EquipWeapon(AWeapon* WeaponToEquip);
 	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	
 	void SetAiming(bool bIsAiming);
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetAiming(bool bIsAiming);
 
-public:
-	void EquipWeapon(AWeapon* WeaponToEquip);
-
-	
-
-protected:
+	UFUNCTION()
+	void OnRep_EquippedWeapon();
 	
 
 private:
@@ -46,7 +45,7 @@ private:
 	ABlasterCharacter* Character;
 
 	//已经装备上的武器
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
 
 	//是否在瞄准

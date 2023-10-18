@@ -125,7 +125,4 @@ private:
 	//创建战斗组件CombatComponent
 	UPROPERTY(VisibleAnywhere)
 	UCombatComponent* Combat;
-
-	//void 
-	
 };
