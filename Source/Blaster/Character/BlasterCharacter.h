@@ -22,20 +22,12 @@ class BLASTER_API ABlasterCharacter : public ACharacter
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	ABlasterCharacter();
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+protected:
+	virtual void BeginPlay() override;
 
 public:
 	//跳跃
@@ -56,6 +48,10 @@ public:
 	//返回是否在瞄准
 	bool IsAiming();
 
+	FORCEINLINE float GetAO_Yaw() const { return  AO_Yaw; }
+	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
+
+	
 protected:
 	//增强输入
 	UPROPERTY(EditAnywhere, Category= "增强输入")
@@ -97,6 +93,8 @@ protected:
 	void AimKeyPressed(const FInputActionValue& Value);
 	void AImKeyReleased(const FInputActionValue& Value);
 
+	void AimOffset(float DeltaTime);
+
 private:
 	//创建一个OnRep的方法，给需要复制的变量指定这个方法
 	//是一个接收到服务器replicate后需要执行的函数，replicate过程是单向的，所以On_RepXXX只能再客户端执行
@@ -125,4 +123,9 @@ private:
 	//创建战斗组件CombatComponent
 	UPROPERTY(VisibleAnywhere)
 	UCombatComponent* Combat;
+
+
+	float AO_Yaw;
+	float AO_Pitch;
+	FRotator  StartingAimRotation;
 };
