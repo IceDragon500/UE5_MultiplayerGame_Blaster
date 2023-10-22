@@ -8,6 +8,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Blaster/Weapon/Weapon.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -46,6 +47,11 @@ ABlasterCharacter::ABlasterCharacter()
 	GetCharacterMovement()->SetCrouchedHalfHeight(60.f);
 	//设置蹲下后的移动速度
 	GetCharacterMovement()->MaxWalkSpeedCrouched = 100.f;
+
+	//将碰撞盒设置为摄像机忽略，避免镜头臂扫到其他角色时，会莫名其妙的缩短
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	//将网格体设置为摄像机忽略，避免镜头臂扫到其他角色时，会莫名其妙的缩短
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 
 }
 
@@ -198,6 +204,7 @@ void ABlasterCharacter::AimKeyPressed(const FInputActionValue& Value)
 	if(Combat)
 	{
 		Combat->SetAiming(true);
+		GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("AimKeyPress")));
 	}
 	
 }

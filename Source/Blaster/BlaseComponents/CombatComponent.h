@@ -52,5 +52,11 @@ private:
 	UPROPERTY(Replicated)
 	bool bAiming;
 
+	UPROPERTY(EditAnywhere , meta=( AllowPrivateAccess = true))
+	float BaseWalkSpeed = 600.f;
+	
+	UPROPERTY(EditAnywhere , meta=( AllowPrivateAccess = true))
+	float AimWalkSpeed = 450.f;
+	
 		
 };
