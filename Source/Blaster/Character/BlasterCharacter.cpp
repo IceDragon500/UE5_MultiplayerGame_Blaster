@@ -110,8 +110,6 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 void ABlasterCharacter::Jump()
 {
 	Super::Jump();
-
-	
 }
 
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -123,7 +121,6 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	//注册需要复制的变量，使用COND_OwnerOnly，选择只会复制到所有者的客户端
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
-	
 }
 
 void ABlasterCharacter::Move(const FInputActionValue& Value)
@@ -174,7 +171,6 @@ void ABlasterCharacter::EKeyPressed(const FInputActionValue& Value)
 		{
 			ServerEquipButtonPressed();
 		}
-		
 	}
 }
 
@@ -207,9 +203,7 @@ void ABlasterCharacter::AimKeyPressed(const FInputActionValue& Value)
 	if(Combat)
 	{
 		Combat->SetAiming(true);
-		//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("AimKeyPress")));
 	}
-	
 }
 
 void ABlasterCharacter::AImKeyReleased(const FInputActionValue& Value)
@@ -228,6 +222,7 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 	Velocity.Z = 0.f;
 	float Speed = Velocity.Size();
 	bool bIsInAir = GetCharacterMovement()->IsFalling();
+	
 
 	if(Speed == 0.f && !bIsInAir) // standing still , not jumping
 	{
@@ -236,6 +231,7 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 		AO_Yaw = DeltaAimRotation.Yaw;
 		bUseControllerRotationYaw = false;
 	}
+	
 	if(Speed >0.f || bIsInAir) // runing or jumping
 	{
 		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
@@ -253,9 +249,6 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 		FVector2d OutRange(-90.f, 0.f);
 		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
 	}
-
-	GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("AO_Yaw : %f"), AO_Yaw));
-	
 }
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
@@ -284,9 +277,6 @@ void ABlasterCharacter::PostInitializeComponents()
 	{
 		Combat->Character = this;
 	}
-
-
-	
 }
 
 bool ABlasterCharacter::IsWeaponEquipped()
@@ -297,6 +287,12 @@ bool ABlasterCharacter::IsWeaponEquipped()
 bool ABlasterCharacter::IsAiming()
 {
 	return (Combat && Combat->bAiming);
+}
+
+AWeapon* ABlasterCharacter::GetEquippedWeapon()
+{
+	if(Combat == nullptr)  return nullptr;
+	return Combat->EquippedWeapon;
 }
 
 

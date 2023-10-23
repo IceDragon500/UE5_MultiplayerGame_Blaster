@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "Blaster/Weapon/Weapon.h"
 #include "BlasterAnimInstance.generated.h"
 
 /**
@@ -51,6 +52,8 @@ private:
 	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
 	bool bWeaponEquipped;
 
+	AWeapon* EquippedWeapon;
+
 	//是否蹲下
 	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
 	bool bIsCrouched;
@@ -87,4 +90,7 @@ private:
 	float Roll = 0;
 	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
 	float Yaw = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
+	FTransform LeftHandTransform;
 };

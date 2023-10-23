@@ -54,6 +54,7 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	//是否装备了武器
 	bWeaponEquipped = BlasterCharacter->IsWeaponEquipped();
+	EquippedWeapon = BlasterCharacter->GetEquippedWeapon();
 
 	//是否蹲下
 	bIsCrouched = BlasterCharacter->bIsCrouched;
@@ -65,13 +66,13 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	FRotator RotatorDeltar = UKismetMathLibrary::NormalizedDeltaRotator(PlayerControlRotation, PlayerRotation);
 
-	Pitch = RotatorDeltar.Pitch;
+	//Pitch = RotatorDeltar.Pitch;
 	Roll = RotatorDeltar.Roll;
-	Yaw = RotatorDeltar.Yaw;
+	//Yaw = RotatorDeltar.Yaw;
 
 
-	//Yaw = BlasterCharacter->GetAO_Yaw();
-	//Pitch = BlasterCharacter->GetAO_Pitch();
+	Yaw = BlasterCharacter->GetAO_Yaw();
+	Pitch = BlasterCharacter->GetAO_Pitch();
 
 	//获得当前方向（就是速度的方向）到X轴的一个旋转
 	//这里得到了当Actor在世界中运动时，Actor前进方向 相对于世界坐标的旋转
@@ -100,6 +101,16 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	const float Target = Delta.Yaw / DeltaSeconds;
 	const float Interp = FMath::FInterpTo(Lean, Target, DeltaSeconds, 6.f);
 	Lean = FMath::Clamp(Interp, -90.f, 90.f);
+
+//------添加一个FBRIK结算器，用来设置左手在武器上的位置-----------------------------------------------------
+	if(bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && BlasterCharacter->GetMesh())
+	{
+		LeftHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("LeftHandSocket"), ERelativeTransformSpace::RTS_World);
+		FVector OutPosition;
+		FRotator OutRotation;
+		BlasterCharacter->GetMesh()->TransformToBoneSpace(FName("hand_r"), LeftHandTransform.GetLocation(),FRotator::ZeroRotator, OutPosition, OutRotation);
+		LeftHandTransform.SetLocation(OutPosition);
+		LeftHandTransform.SetRotation(FQuat(OutRotation));
+	}
 	
-	//GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("Yaw : %f"), Yaw));
 }
