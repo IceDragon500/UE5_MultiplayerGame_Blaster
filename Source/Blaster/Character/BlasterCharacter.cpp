@@ -247,7 +247,15 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 	}
 	
 	AO_Pitch = GetBaseAimRotation().Pitch;
-
+	if(AO_Pitch > 90.f && !IsLocallyControlled())
+	{
+		// map pitch form [270, 360) to [-90, 0)
+		//因为存在数据压缩，会导致负数变为整数，结果就是从-90 到 0度，会变成 270到360度
+		//所以我们需要使用FMath::GetMappedRangeValueClamped  将一个值到赢外一个值进行映射和钳制
+		FVector2d InRange(270.f, 360.f);
+		FVector2d OutRange(-90.f, 0.f);
+		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
+	}
 	
 }
 
