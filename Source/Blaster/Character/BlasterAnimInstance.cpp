@@ -115,5 +115,5 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		LeftHandTransform.SetLocation(OutPosition);
 		LeftHandTransform.SetRotation(FQuat(OutRotation));
 	}
-	
+	GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Blue, FString::Printf(TEXT("Yaw: %f"), Yaw));
 }

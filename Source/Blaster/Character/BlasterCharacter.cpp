@@ -226,20 +226,24 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 	bool bIsInAir = GetCharacterMovement()->IsFalling();
 	
 
-	if(Speed == 0.f && !bIsInAir) // 当没有移动并且没有在空中（跳跃）的时候，将Yaw的控制设置为false，这样转动镜头不会同时转动角色
+	if(Speed == 0.f && !bIsInAir) // 当没有移动并且没有在空中（跳跃）的时候，
 	{
-		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
-		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
+		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f); //获取当前控制器镜头的旋转Yaw
+		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation); 
 		AO_Yaw = DeltaAimRotation.Yaw;
-		bUseControllerRotationYaw = false;
+		if(TurningInPlace == ETurningInPlace::ETIP_NotTurning)
+		{
+			InterpAO_Yaw = AO_Yaw;
+		}
+		bUseControllerRotationYaw = true; //将Yaw的控制设置为false，这样转动镜头不会同时转动角色
 		TurnInPlace(DeltaTime);
 	}
 	
-	if(Speed >0.f || bIsInAir) // 当在移动或者在空中（跳跃）的时候，将Yaw控制设置为true，这样镜头旋转会带动角色旋转
+	if(Speed >0.f || bIsInAir) // 当在移动或者在空中（跳跃）的时候，
 	{
-		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);  //将StartingAimRotation设置为控制器镜头的旋转
 		AO_Yaw = 0.f;
-		bUseControllerRotationYaw = true;
+		bUseControllerRotationYaw = true;  //将Yaw控制设置为true，这样镜头旋转会带动角色旋转
 		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	}
 	
@@ -252,6 +256,28 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 		FVector2d InRange(270.f, 360.f);
 		FVector2d OutRange(-90.f, 0.f);
 		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
+	}
+}
+
+void ABlasterCharacter::TurnInPlace(float DeltaTime)
+{
+	if(AO_Yaw >90.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_Right;
+	}
+	else if(AO_Yaw < -90.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_Left;
+	}
+	if(TurningInPlace != ETurningInPlace::ETIP_NotTurning)
+	{
+		InterpAO_Yaw = FMath::FInterpTo(InterpAO_Yaw, 0.f, DeltaTime, 4.f);
+		AO_Yaw = InterpAO_Yaw;
+		if(FMath::Abs(AO_Yaw) < 15.f)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+			StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		}
 	}
 }
 
@@ -311,18 +337,3 @@ void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 		LastWeapon->ShowPickupWidget(false);
 	}
 }
-
-void ABlasterCharacter::TurnInPlace(float DeltaTime)
-{
-	if(AO_Yaw >90.f)
-	{
-		TurningInPlace = ETurningInPlace::ETIP_Right;
-	}
-	else if(AO_Yaw < -90.f)
-	{
-		TurningInPlace = ETurningInPlace::ETIP_Left;
-	}
-}
-
-
-
