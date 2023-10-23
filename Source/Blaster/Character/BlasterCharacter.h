@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "InputActionValue.h"
 #include "Blaster/BlaseComponents/CombatComponent.h"
+#include "Blaster/BlasterTypes/TurningInPlace.h"
 #include "GameFramework/Character.h"
 #include "BlasterCharacter.generated.h"
 
@@ -50,6 +51,7 @@ public:
 
 	FORCEINLINE float GetAO_Yaw() const { return  AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
+	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 
 	AWeapon* GetEquippedWeapon();
 	
@@ -104,7 +106,9 @@ private:
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
-	
+
+	//用来处理原地转身
+	void TurnInPlace(float DeltaTime);
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -124,9 +128,10 @@ private:
 	//创建战斗组件CombatComponent
 	UPROPERTY(VisibleAnywhere)
 	UCombatComponent* Combat;
-
-
+	
 	float AO_Yaw;
 	float AO_Pitch;
 	FRotator  StartingAimRotation;
+
+	ETurningInPlace TurningInPlace;
 };

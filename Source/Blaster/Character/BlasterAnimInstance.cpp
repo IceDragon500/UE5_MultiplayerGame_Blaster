@@ -62,6 +62,9 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	//是否瞄准
 	bAiming = BlasterCharacter->IsAiming();
 
+	//是否原地转身
+	TurningInPlace = BlasterCharacter->GetTurningInPlace();
+
 //------计算Direction-----------------------------------------------------
 
 	FRotator RotatorDeltar = UKismetMathLibrary::NormalizedDeltaRotator(PlayerControlRotation, PlayerRotation);

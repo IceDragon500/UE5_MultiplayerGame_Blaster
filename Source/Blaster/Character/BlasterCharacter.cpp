@@ -54,6 +54,8 @@ ABlasterCharacter::ABlasterCharacter()
 	//将网格体设置为摄像机忽略，避免镜头臂扫到其他角色时，会莫名其妙的缩短
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 
+	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+
 }
 
 // Called when the game starts or when spawned
@@ -224,19 +226,21 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 	bool bIsInAir = GetCharacterMovement()->IsFalling();
 	
 
-	if(Speed == 0.f && !bIsInAir) // standing still , not jumping
+	if(Speed == 0.f && !bIsInAir) // 当没有移动并且没有在空中（跳跃）的时候，将Yaw的控制设置为false，这样转动镜头不会同时转动角色
 	{
 		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
 		AO_Yaw = DeltaAimRotation.Yaw;
 		bUseControllerRotationYaw = false;
+		TurnInPlace(DeltaTime);
 	}
 	
-	if(Speed >0.f || bIsInAir) // runing or jumping
+	if(Speed >0.f || bIsInAir) // 当在移动或者在空中（跳跃）的时候，将Yaw控制设置为true，这样镜头旋转会带动角色旋转
 	{
 		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		AO_Yaw = 0.f;
 		bUseControllerRotationYaw = true;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	}
 	
 	AO_Pitch = GetBaseAimRotation().Pitch;
@@ -305,6 +309,18 @@ void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 	if(LastWeapon)
 	{
 		LastWeapon->ShowPickupWidget(false);
+	}
+}
+
+void ABlasterCharacter::TurnInPlace(float DeltaTime)
+{
+	if(AO_Yaw >90.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_Right;
+	}
+	else if(AO_Yaw < -90.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_Left;
 	}
 }
 
