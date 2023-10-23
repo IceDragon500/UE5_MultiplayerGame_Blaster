@@ -65,13 +65,13 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	FRotator RotatorDeltar = UKismetMathLibrary::NormalizedDeltaRotator(PlayerControlRotation, PlayerRotation);
 
-	//Pitch = RotatorDeltar.Pitch;
+	Pitch = RotatorDeltar.Pitch;
 	Roll = RotatorDeltar.Roll;
-	//Yaw = RotatorDeltar.Yaw;
+	Yaw = RotatorDeltar.Yaw;
 
 
-	Yaw = BlasterCharacter->GetAO_Yaw();
-	Pitch = BlasterCharacter->GetAO_Pitch();
+	//Yaw = BlasterCharacter->GetAO_Yaw();
+	//Pitch = BlasterCharacter->GetAO_Pitch();
 
 	//获得当前方向（就是速度的方向）到X轴的一个旋转
 	//这里得到了当Actor在世界中运动时，Actor前进方向 相对于世界坐标的旋转

@@ -233,11 +233,8 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 	{
 		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
-
 		AO_Yaw = DeltaAimRotation.Yaw;
 		bUseControllerRotationYaw = false;
-		//AO_Pitch = DeltaAimRotation.Pitch;
-		
 	}
 	if(Speed >0.f || bIsInAir) // runing or jumping
 	{
@@ -256,6 +253,8 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 		FVector2d OutRange(-90.f, 0.f);
 		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
 	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("AO_Yaw : %f"), AO_Yaw));
 	
 }
 
