@@ -12,6 +12,7 @@
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Misc/LowLevelTestAdapter.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -101,7 +102,8 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ThisClass::Jump);
 		
-		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ThisClass::AttackKeyPressed);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ThisClass::FireButtonPressed);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &ThisClass::FIreButtonReleased);
 		
 		EnhancedInputComponent->BindAction(EKeyAction, ETriggerEvent::Triggered, this, &ThisClass::EKeyPressed);
 		
@@ -168,8 +170,21 @@ void ABlasterCharacter::Look(const FInputActionValue& Value)
 	AddControllerYawInput(LookAxisVector.X);//以z轴，向左右转动
 }
 
-void ABlasterCharacter::AttackKeyPressed(const FInputActionValue& Value)
+void ABlasterCharacter::FireButtonPressed(const FInputActionValue& Value)
 {
+	if(Combat)
+	{
+		Combat->FireButtonPressed(true);
+		GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red , FString::Printf(TEXT("fierwefwefwef")));
+	}
+}
+
+void ABlasterCharacter::FIreButtonReleased(const FInputActionValue& Value)
+{
+	if(Combat)
+	{
+		Combat->FireButtonPressed(false);
+	}
 }
 
 void ABlasterCharacter::EKeyPressed(const FInputActionValue& Value)
@@ -334,6 +349,20 @@ AWeapon* ABlasterCharacter::GetEquippedWeapon()
 {
 	if(Combat == nullptr)  return nullptr;
 	return Combat->EquippedWeapon;
+}
+
+void ABlasterCharacter::PlayFireMontage(bool bAiming)
+{
+	if(Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && FireWeaponMontage)
+	{
+		AnimInstance->Montage_Play(FireWeaponMontage);
+		FName SectionName;
+		SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
 }
 
 

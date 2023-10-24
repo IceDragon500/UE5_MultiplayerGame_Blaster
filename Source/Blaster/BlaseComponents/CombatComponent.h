@@ -38,6 +38,8 @@ protected:
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
+
+	void FireButtonPressed(bool bPressed);
 	
 
 private:
@@ -52,11 +54,16 @@ private:
 	UPROPERTY(Replicated)
 	bool bAiming;
 
+	//基础移动速度
 	UPROPERTY(EditAnywhere , meta=( AllowPrivateAccess = true))
 	float BaseWalkSpeed = 600.f;
-	
+
+	//瞄准下的移动速度
 	UPROPERTY(EditAnywhere , meta=( AllowPrivateAccess = true))
 	float AimWalkSpeed = 450.f;
+
+	//是否按下开火键
+	bool bFireButtonPressed;
 	
 		
 };

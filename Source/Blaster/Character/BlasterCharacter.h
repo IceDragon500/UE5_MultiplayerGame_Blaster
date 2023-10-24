@@ -54,48 +54,52 @@ public:
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 
 	AWeapon* GetEquippedWeapon();
+
+	void PlayFireMontage(bool bAiming);
 	
 protected:
 	//增强输入
-	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UPROPERTY(EditAnywhere, Category= "AAAA设置|增强输入")
 	UInputMappingContext* InputContext;
 
 	//增强输入-移动
-	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UPROPERTY(EditAnywhere, Category= "AAAA设置|增强输入")
 	UInputAction* MovementAction;
 	void Move(const FInputActionValue& Value);
 
 	
 	//增强输入-鼠标
-	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UPROPERTY(EditAnywhere, Category= "AAAA设置|增强输入")
 	UInputAction* LookAction;
 	void Look(const FInputActionValue& Value);
 
 	//增强输入-跳
-	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UPROPERTY(EditAnywhere, Category= "AAAA设置|增强输入")
 	UInputAction* JumpAction;
 
-	//增强输入-鼠标左键攻击
-	UPROPERTY(EditAnywhere, Category= "增强输入")
+	//增强输入-鼠标左键攻击 
+	UPROPERTY(EditAnywhere, Category= "AAAA设置|增强输入")
 	UInputAction* AttackAction;
-	void AttackKeyPressed(const FInputActionValue& Value);
+	void FireButtonPressed(const FInputActionValue& Value);
+	void FIreButtonReleased(const FInputActionValue& Value);
 
 	//增强输入-E键功能
-	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UPROPERTY(EditAnywhere, Category= "AAAA设置|增强输入")
 	UInputAction* EKeyAction;
 	void EKeyPressed(const FInputActionValue& Value);
 
 	//增强输入-蹲
-	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UPROPERTY(EditAnywhere, Category= "AAAA设置|增强输入")
 	UInputAction* Crouching;
 	void CrouchKeyPressed(const FInputActionValue& Value);
 
 	//增强输入-瞄准
-	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UPROPERTY(EditAnywhere, Category= "AAAA设置|增强输入")
 	UInputAction* Aiming;
 	void AimKeyPressed(const FInputActionValue& Value);
 	void AImKeyReleased(const FInputActionValue& Value);
 
+	//用来计算瞄准偏移
 	void AimOffset(float DeltaTime);
 
 private:
@@ -111,10 +115,10 @@ private:
 	void TurnInPlace(float DeltaTime);
 
 private:
-	UPROPERTY(VisibleAnywhere, Category = Camera)
+	UPROPERTY(VisibleAnywhere, Category = "AAAA设置|摄像机")
 	USpringArmComponent* CameraBoom;
 
-	UPROPERTY(VisibleAnywhere, Category = Camera)
+	UPROPERTY(VisibleAnywhere, Category = "AAAA设置|摄像机")
 	UCameraComponent* FollowCamera;
 
 	//创建拾取提示组件
@@ -129,10 +133,14 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	UCombatComponent* Combat;
 	
-	float AO_Yaw;
-	float InterpAO_Yaw;
-	float AO_Pitch;
-	FRotator  StartingAimRotation;
+	float AO_Yaw;//瞄准偏移Yaw
+	float InterpAO_Yaw;//用来计算转身的Yaw
+	float AO_Pitch;//瞄准偏移Pitch
+	FRotator  StartingAimRotation;//用来计算左手相较于右手的位置变化
 
-	ETurningInPlace TurningInPlace;
+	ETurningInPlace TurningInPlace;//转身的状态
+
+	//开火的动画
+	UPROPERTY(EditAnywhere, Category= "AAAA设置|战斗")
+	UAnimMontage* FireWeaponMontage;
 };
