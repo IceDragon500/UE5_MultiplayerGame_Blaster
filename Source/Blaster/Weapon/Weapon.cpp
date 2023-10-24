@@ -38,6 +38,14 @@ AWeapon::AWeapon()
 
 }
 
+void AWeapon::Fire()
+{
+	if(FireAnimation)
+	{
+		WeaponMesh->PlayAnimation(FireAnimation, false);
+	}
+}
+
 // Called when the game starts or when spawned
 void AWeapon::BeginPlay()
 {

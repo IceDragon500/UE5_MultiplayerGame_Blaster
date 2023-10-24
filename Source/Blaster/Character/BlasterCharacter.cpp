@@ -175,7 +175,6 @@ void ABlasterCharacter::FireButtonPressed(const FInputActionValue& Value)
 	if(Combat)
 	{
 		Combat->FireButtonPressed(true);
-		GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red , FString::Printf(TEXT("fierwefwefwef")));
 	}
 }
 
