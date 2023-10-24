@@ -1,10 +1,13 @@
 
-*.uasset
 .idea/*
 .vs/*
 Build/*
 Binaries/*
-Content/*
+Content/__ExternalActors__
+Content/__ExternalObjects__
+Content/Assets
+Content/Collections
+Content/Developers
 Intermediate/*
 Platforms/*
 Plugins/MultiplayerSessions/Binaries/*
