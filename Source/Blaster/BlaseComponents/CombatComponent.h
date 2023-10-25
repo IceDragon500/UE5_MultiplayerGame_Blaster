@@ -39,13 +39,19 @@ protected:
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
 
+	//主要实现当开火键按下时的逻辑
+	//进行射线检测
+	//调用Character 和 Weapon中的fire方法
 	void FireButtonPressed(bool bPressed);
 
+	//服务端上进行的开火逻辑  ,传入参数为命中的位置FVector
+	//这里使用FVector_NetQuantize进行一定的网络优化
 	UFUNCTION(Server, Reliable)
-	void ServerFire();
+	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
 
+	//多播的开火逻辑  ,传入参数为命中的位置FVector
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastFire();
+	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
 
 	//用于检测命中目标
 	void TraceUnderCrosehairs(FHitResult& TraceHitResult);

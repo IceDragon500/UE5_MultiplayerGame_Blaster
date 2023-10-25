@@ -40,10 +40,15 @@ AWeapon::AWeapon()
 
 void AWeapon::Fire(const FVector& HitTarget)
 {
+	//播放动画
+	//播放开火特效 和 音效，开火特效和音效集合在了开火动画中，通过通知来进行播放
 	if(FireAnimation)
 	{
 		WeaponMesh->PlayAnimation(FireAnimation, false);
 	}
+
+	//命中逻辑
+	
 }
 
 // Called when the game starts or when spawned

@@ -95,11 +95,12 @@ void UCombatComponent::OnRep_EquippedWeapon()
 
 void UCombatComponent::FireButtonPressed(bool bPressed)
 {
-	bFireButtonPressed = bPressed;
-	
-	if(bFireButtonPressed)
+	bFireButtonPressed = bPressed;  //将boo置为与bPressed相同
+	if(bFireButtonPressed)  //如果开火键按下
 	{
-		ServerFire();
+		FHitResult HitResult; //创建一个FHitResult结构体接受命中检测结果
+		TraceUnderCrosehairs(HitResult); //进行射线检测
+		ServerFire(HitResult.ImpactPoint);  //对命中目标点进行开火逻辑
 	}
 }
 
@@ -137,31 +138,30 @@ void UCombatComponent::TraceUnderCrosehairs(FHitResult& TraceHitResult)
 		End,
 		ECollisionChannel::ECC_Visibility
 		);
-		if(!TraceHitResult.bBlockingHit)//如果射线检测么有碰撞到任何东西
+		
+		if(!TraceHitResult.bBlockingHit)//如果射线检测没有碰撞到任何东西
 		{
 			TraceHitResult.ImpactPoint = End;//那我们就设置碰撞到的那个点为射线的终点
-			HitTarget = End;//同样也是子弹的终点
 		}
 		else
 		{
-			HitTarget = TraceHitResult.ImpactPoint;//将命中点的坐标赋值
 			DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 13.f, 12, FColor::Red);
 		}
 	}
 }
 
-void UCombatComponent::ServerFire_Implementation()
+void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
-	MulticastFire();
+	MulticastFire(TraceHitTarget);
 }
 
-void UCombatComponent::MulticastFire_Implementation()
+void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	if(EquippedWeapon == nullptr) return;
 	if(Character)
 	{
-		Character->PlayFireMontage(bAiming);
-		EquippedWeapon->Fire(HitTarget);
+		Character->PlayFireMontage(bAiming);  //执行角色身上的开火逻辑：播放开火动画
+		EquippedWeapon->Fire(TraceHitTarget); //执行武器上的开火逻辑：播放武器开火动画和特效音效
 	}
 }
 
@@ -171,7 +171,4 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
-
-	FHitResult HitResult;
-	TraceUnderCrosehairs(HitResult);
 }
