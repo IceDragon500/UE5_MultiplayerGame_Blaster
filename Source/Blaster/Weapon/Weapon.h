@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Casing.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
@@ -50,7 +51,7 @@ protected:
 	virtual void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	
 private:
-
+	
 	UPROPERTY(VisibleAnywhere, Category= "武器属性")
 	USkeletalMeshComponent* WeaponMesh;
 	
@@ -62,12 +63,17 @@ private:
 
 	UFUNCTION()
 	void OnRep_WeaponState();
-	
+
+	//拾取UI
 	UPROPERTY(VisibleAnywhere, Category= "武器属性")
 	class UWidgetComponent* PickupWidget;
 
+	//开火动画
 	UPROPERTY(EditAnywhere, Category= "武器属性")
 	UAnimationAsset* FireAnimation;
-	
+
+	//设置抛落的弹壳
+	UPROPERTY(EditAnywhere, Category= "武器属性")
+	TSubclassOf<ACasing> CasingClass;
 
 };

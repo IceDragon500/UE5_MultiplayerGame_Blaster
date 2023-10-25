@@ -5,6 +5,8 @@
 
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Components/WidgetComponent.h"
+#include "Engine/SkeletalMeshSocket.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
@@ -47,7 +49,27 @@ void AWeapon::Fire(const FVector& HitTarget)
 		WeaponMesh->PlayAnimation(FireAnimation, false);
 	}
 
-	//命中逻辑
+	//TODO 抛壳
+	if(CasingClass)
+	{
+		const USkeletalMeshSocket* AmmoEjectSocket = WeaponMesh->GetSocketByName(FName("AmmoEject"));
+		if(AmmoEjectSocket)
+		{
+			FTransform SocketTransform = AmmoEjectSocket->GetSocketTransform(GetWeaponMesh()); //获得抛弹口的变换
+			
+			UWorld* World = GetWorld();
+			if(World)
+			{
+				World->SpawnActor<ACasing>(
+					CasingClass,//传入需要生成的类
+					SocketTransform.GetLocation(), //传入生成类的坐标
+					SocketTransform.GetRotation().Rotator()//传入生成类的旋转
+					);
+			}
+			
+		}
+	}
+	//TODO 
 	
 }
 
