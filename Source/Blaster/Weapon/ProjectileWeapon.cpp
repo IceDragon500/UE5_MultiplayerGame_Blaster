@@ -13,6 +13,10 @@ AProjectileWeapon::AProjectileWeapon()
 void AProjectileWeapon::Fire(const FVector& HitTarget)
 {
 	Super::Fire(HitTarget);
+
+	if(!HasAuthority()) return; //除非在我们服务器存在的武器，否则这些都不会实现
+
+		
 	APawn* InstigatorPawn = Cast<APawn>(GetOwner());
 	
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
