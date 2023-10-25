@@ -37,7 +37,8 @@ public:
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return  AreaSphere; }
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 
-	void Fire();
+	//开火相关的逻辑
+	virtual void Fire(const FVector& HitTarget);
 	
 protected:
 	virtual void BeginPlay() override;

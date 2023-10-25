@@ -40,6 +40,15 @@ protected:
 	void OnRep_EquippedWeapon();
 
 	void FireButtonPressed(bool bPressed);
+
+	UFUNCTION(Server, Reliable)
+	void ServerFire();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastFire();
+
+	//用于检测命中目标
+	void TraceUnderCrosehairs(FHitResult& TraceHitResult);
 	
 
 private:
@@ -64,6 +73,9 @@ private:
 
 	//是否按下开火键
 	bool bFireButtonPressed;
+
+	//命中目标的位置
+	FVector HitTarget;
 	
 		
 };

@@ -6,7 +6,10 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+
+#define TRACE_LENGTH 80000.f  //定义一下射线检测的长度为一个宏
 
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
@@ -17,11 +20,19 @@ UCombatComponent::UCombatComponent()
 	//如果不需要，可以关闭这些功能以提高性能。
 
 	//这里设为false，默认不开启tick事件，我们在需要的时候再启用
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
 
 	// ...
 }
 
+void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	//复制已经装备的武器，当他有变化的时候会复制给所有客户端
+	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
+	DOREPLIFETIME(UCombatComponent, bAiming);
+}
 
 // Called when the game starts
 void UCombatComponent::BeginPlay()
@@ -85,15 +96,74 @@ void UCombatComponent::OnRep_EquippedWeapon()
 void UCombatComponent::FireButtonPressed(bool bPressed)
 {
 	bFireButtonPressed = bPressed;
-	if(EquippedWeapon == nullptr) return;
 	
- 	if(Character && bFireButtonPressed)
+	if(bFireButtonPressed)
 	{
-		Character->PlayFireMontage(bAiming);
- 		EquippedWeapon->Fire();
+		ServerFire();
 	}
 }
 
+void UCombatComponent::TraceUnderCrosehairs(FHitResult& TraceHitResult)
+{
+	FVector2d ViewportSize;
+	if(GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->GetViewportSize(ViewportSize);
+	}
+
+	//获得屏幕中心点的坐标
+	FVector2d CrosshairLocation(ViewportSize.X/ 2.f , ViewportSize.Y / 2.0f);
+
+	FVector CrosshairWorldPosition;//准星的世界坐标位置
+	FVector CrosshairWorldDirection;//准星位置的方向
+	
+	//将屏幕坐标转换到游戏中空间坐标
+	bool bScreenToWorld = UGameplayStatics::DeprojectScreenToWorld(
+		UGameplayStatics::GetPlayerController(this, 0),//通过这个方法 获得玩家控制
+		CrosshairLocation,//传入屏幕上的坐标
+		CrosshairWorldPosition,//传出世界坐标位置
+		CrosshairWorldDirection//传出世界坐标方向
+		);
+
+	//开始设置射线检测
+	if(bScreenToWorld)
+	{
+		FVector Start = CrosshairWorldPosition;//设置射线检测的起点 ，是上面获得由屏幕中心点坐标转换的世界坐标位置
+		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;//设置射线检测的终点
+
+		GetWorld()->LineTraceSingleByChannel(
+		TraceHitResult,
+		Start,
+		End,
+		ECollisionChannel::ECC_Visibility
+		);
+		if(!TraceHitResult.bBlockingHit)//如果射线检测么有碰撞到任何东西
+		{
+			TraceHitResult.ImpactPoint = End;//那我们就设置碰撞到的那个点为射线的终点
+			HitTarget = End;//同样也是子弹的终点
+		}
+		else
+		{
+			HitTarget = TraceHitResult.ImpactPoint;//将命中点的坐标赋值
+			DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 13.f, 12, FColor::Red);
+		}
+	}
+}
+
+void UCombatComponent::ServerFire_Implementation()
+{
+	MulticastFire();
+}
+
+void UCombatComponent::MulticastFire_Implementation()
+{
+	if(EquippedWeapon == nullptr) return;
+	if(Character)
+	{
+		Character->PlayFireMontage(bAiming);
+		EquippedWeapon->Fire(HitTarget);
+	}
+}
 
 // Called every frame
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -101,14 +171,7 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
+
+	FHitResult HitResult;
+	TraceUnderCrosehairs(HitResult);
 }
-
-void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	//复制已经装备的武器，当他有变化的时候会复制给所有客户端
-	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
-	DOREPLIFETIME(UCombatComponent, bAiming);
-}
-

@@ -25,7 +25,7 @@ ABlasterCharacter::ABlasterCharacter()
 	//初始化摄像机臂和摄像机
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetMesh());
-	CameraBoom->TargetArmLength = 600.f;
+	CameraBoom->TargetArmLength = 350.f;
 	CameraBoom->bUsePawnControlRotation = true;
 
 
