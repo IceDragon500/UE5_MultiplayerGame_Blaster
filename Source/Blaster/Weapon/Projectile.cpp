@@ -5,6 +5,7 @@
 
 #include "Kismet/GameplayStatics.h"
 
+
 // Sets default values
 AProjectile::AProjectile()
 {
@@ -38,7 +39,19 @@ void AProjectile::BeginPlay()
 		//用这个 特效不会动
 		//TracerComponent = UGameplayStatics::SpawnEmitterAtLocation(this, Tracer, GetActorLocation(),GetActorRotation());
 	}
+
+	if(HasAuthority())
+	{
+		//将重写的OnHit事件与CollisionBox进行绑定
+		CollisionBox->OnComponentHit.AddDynamic(this, &ThisClass::OnHit);
+	}
 	
+}
+
+void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	FVector NormalImpulse, const FHitResult& Hit)
+{
+	Destroy();
 }
 
 // Called every frame
@@ -46,5 +59,19 @@ void AProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void AProjectile::Destroyed()
+{
+	Super::Destroyed();
+
+	if(ImpactParticles)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());
+	}
+	if(ImpactSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
+	}
 }
 
