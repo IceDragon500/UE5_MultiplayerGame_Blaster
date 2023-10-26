@@ -123,9 +123,20 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 				CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 0.f, DeltaTime, 30.f);
 			}
 			
+			if(bAiming)
+			{
+				CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, 0.58f, DeltaTime, 30.f);
+			}
+			else
+			{
+				CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, 0.f, DeltaTime, 30.f);
+			}
+
+			CrosshairShootingFactor = FMath::FInterpTo(CrosshairShootingFactor, 0.f ,DeltaTime, 40.f);
+			
 			
 			//赋值给HUDPackage
-			HUDPackage.CrosshairSpread = CrosshairVelocityFactor +CrosshairInAirFactor;
+			HUDPackage.CrosshairSpread =0.5f + CrosshairVelocityFactor +CrosshairInAirFactor - CrosshairAimFactor + CrosshairShootingFactor;
 			
 			HUD->SetHUDPackage(HUDPackage);
 		}
@@ -206,6 +217,11 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 		FHitResult HitResult; //创建一个FHitResult结构体接受命中检测结果
 		TraceUnderCrosehairs(HitResult); //进行射线检测
 		ServerFire(HitResult.ImpactPoint);  //对命中目标点进行开火逻辑
+
+		if(EquippedWeapon)
+		{
+			CrosshairShootingFactor = 0.2f;
+		}
 	}
 }
 

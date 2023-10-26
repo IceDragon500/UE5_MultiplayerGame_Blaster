@@ -93,6 +93,10 @@ private:
 	float CrosshairVelocityFactor;
 	//准星在掉落时的扩散量
 	float CrosshairInAirFactor;
+	//准星在瞄准时的扩散量
+	float CrosshairAimFactor;
+	//准星在射击时的扩散量
+	float CrosshairShootingFactor;
 
 	FVector HitTarget;
 
