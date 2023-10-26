@@ -37,6 +37,8 @@ public:
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return  AreaSphere; }
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
+	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
+	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
 
 	//开火相关的逻辑
 	virtual void Fire(const FVector& HitTarget);
@@ -86,5 +88,12 @@ private:
 	//设置抛落的弹壳
 	UPROPERTY(EditAnywhere, Category= "武器属性")
 	TSubclassOf<ACasing> CasingClass;
+
+	//这把武器的镜头缩放值
+	UPROPERTY(EditAnywhere, Category= "武器属性")
+	float ZoomedFOV = 30.f;
+	//这把武器镜头缩放速度
+	UPROPERTY(EditAnywhere, Category= "武器属性")
+	float ZoomInterpSpeed = 20.f;
 	
 };

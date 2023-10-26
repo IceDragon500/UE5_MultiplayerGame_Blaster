@@ -95,6 +95,19 @@ private:
 	float CrosshairInAirFactor;
 
 	FVector HitTarget;
-	
+
+	//不瞄准时候的视野
+	float DefaultFOV;
+	//瞄准时候的默认视野
+	UPROPERTY(EditAnywhere)
+	float ZoomedFOV = 30.f;
+
+	//当前视野值
+	float CurrentFOV;
+	//视野切换速度
+	UPROPERTY(EditAnywhere)
+	float ZoomInterpSpeed= 20.f;
+
+	void InterpFOV(float DeltaTime);
 		
 };
