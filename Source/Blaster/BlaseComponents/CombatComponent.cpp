@@ -84,6 +84,32 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 				HUDPackage.CrosshairTop = nullptr;
 				HUDPackage.CrosshairDown = nullptr;
 			}
+			//计算准星的扩展
+			//计算运动速度与扩展的关系
+			//我们将速度0~600 映射到 0~1
+			//先获得角色的速度，存在一个FVector2D变量中
+			FVector2d WalkSpeedRange(0.f, Character->GetCharacterMovement()->MaxWalkSpeed);
+			//再设置速度变量
+			FVector2d VeloctiyMultiplierRange(0.f, 1.f);
+			//获得当前的速度
+			//我们用当前的速度，对比0~600之间，映射到0~1是多少
+			FVector Velocity = Character->GetVelocity();
+			//获得最终映射到0~1的值
+			CrosshairVelocityFactor = FMath::GetMappedRangeValueClamped(WalkSpeedRange, VeloctiyMultiplierRange, Velocity.Size());
+
+			if(Character->GetCharacterMovement()->IsFalling())
+			{
+				CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 2.25f, DeltaTime, 2.25f);
+			}
+			else
+			{
+				CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 0.f, DeltaTime, 30.f);
+			}
+			
+			
+			//赋值给HUDPackage
+			HUDPackage.CrosshairSpread = CrosshairVelocityFactor +CrosshairInAirFactor;
+			
 			HUD->SetHUDPackage(HUDPackage);
 		}
 	}

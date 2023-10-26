@@ -17,6 +17,7 @@ public:
 	UTexture2D* CrosshairRight;
 	UTexture2D* CrosshairTop;
 	UTexture2D* CrosshairDown;
+	float CrosshairSpread;
 };
 
 /**
@@ -35,8 +36,12 @@ protected:
 
 private:
 
-	void DrawCrosshair(UTexture2D* Texture, FVector2d ViewportSize);
+	void DrawCrosshair(UTexture2D* Texture, FVector2d ViewportSize, FVector2d Spread);
 	FHUDPackage HUDPackage;
-	
+
+	//准星扩散的最大值
+	//这里设置了最大值，控制的变量是0~1，用变量乘以这个最大值
+	UPROPERTY(EditAnywhere)
+	float CrosshairSpreaMax = 16.f;
 	
 };

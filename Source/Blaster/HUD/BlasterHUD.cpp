@@ -13,34 +13,41 @@ void ABlasterHUD::DrawHUD()
 		GEngine->GameViewport->GetViewportSize(ViewportSize);
 		const FVector2d ViewportCenter(ViewportSize.X / 2.f , ViewportSize.Y/2.f);
 
+		//控制准星变化的量
+		//乘以的值，就是变量，是0~1之间的一个值
+		float SpreadScaled = CrosshairSpreaMax * HUDPackage.CrosshairSpread;
+		
 		if(HUDPackage.CrosshairCenter)
 		{
-			DrawCrosshair(HUDPackage.CrosshairCenter , ViewportCenter);
+			DrawCrosshair(HUDPackage.CrosshairCenter , ViewportCenter, FVector2d(0.f, 0.f));
 		}
 		if(HUDPackage.CrosshairLeft)
 		{
-			DrawCrosshair(HUDPackage.CrosshairLeft , ViewportCenter);
+			DrawCrosshair(HUDPackage.CrosshairLeft , ViewportCenter,FVector2d(-SpreadScaled, 0.f));
 		}
 		if(HUDPackage.CrosshairRight)
 		{
-			DrawCrosshair(HUDPackage.CrosshairRight , ViewportCenter);
+			DrawCrosshair(HUDPackage.CrosshairRight , ViewportCenter, FVector2d(SpreadScaled, 0.f));
 		}
 		if(HUDPackage.CrosshairTop)
 		{
-			DrawCrosshair(HUDPackage.CrosshairTop , ViewportCenter);
+			DrawCrosshair(HUDPackage.CrosshairTop , ViewportCenter, FVector2d(0.f, -SpreadScaled));
 		}
 		if(HUDPackage.CrosshairDown)
 		{
-			DrawCrosshair(HUDPackage.CrosshairDown , ViewportCenter);
+			DrawCrosshair(HUDPackage.CrosshairDown , ViewportCenter, FVector2d(0.f, SpreadScaled));
 		}
 	}
 }
 
-void ABlasterHUD::DrawCrosshair(UTexture2D* Texture, FVector2d ViewportSize)
+void ABlasterHUD::DrawCrosshair(UTexture2D* Texture, FVector2d ViewportSize, FVector2d Spread)
 {
 	const float TextureWidth = Texture->GetSizeX();
 	const float TextureHeight = Texture->GetSizeY();
-	const FVector2d TextureDrawPoint(ViewportSize.X - TextureWidth / 2.f,ViewportSize.Y - TextureHeight / 2.f);
+	const FVector2d TextureDrawPoint(
+		ViewportSize.X - TextureWidth / 2.f + Spread.X,
+		ViewportSize.Y - TextureHeight / 2.f + Spread.Y
+		);
 
 	DrawTexture(
 		Texture,

@@ -89,8 +89,10 @@ private:
 	//是否按下开火键
 	bool bFireButtonPressed;
 
-	//命中目标的位置
-	FVector HitTarget;
+	//准星在移动下的扩散量
+	float CrosshairVelocityFactor;
+	//准星在掉落时的扩散量
+	float CrosshairInAirFactor;
 	
 		
 };
