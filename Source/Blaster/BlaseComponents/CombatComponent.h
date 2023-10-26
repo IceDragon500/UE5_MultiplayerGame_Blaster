@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Blaster/HUD/BlasterHUD.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Components/ActorComponent.h"
 #include "CombatComponent.generated.h"
@@ -55,11 +57,18 @@ protected:
 
 	//用于检测命中目标
 	void TraceUnderCrosehairs(FHitResult& TraceHitResult);
+
+	//设置准星
+	void SetHUDCrosshair(float DeltaTime);
 	
 
 private:
 	//角色实例
 	ABlasterCharacter* Character;
+	//角色控制器实例
+	ABlasterPlayerController* Controller;
+	//角色HUD实例
+	ABlasterHUD* HUD;
 
 	//已经装备上的武器
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)

@@ -40,6 +40,17 @@ public:
 
 	//开火相关的逻辑
 	virtual void Fire(const FVector& HitTarget);
+
+	UPROPERTY(EditAnywhere, Category="武器属性|准星")
+	UTexture2D* CrosshairCenter;
+	UPROPERTY(EditAnywhere, Category="武器属性|准星")
+	UTexture2D* CrosshairLeft;
+	UPROPERTY(EditAnywhere, Category="武器属性|准星")
+	UTexture2D* CrosshairRight;
+	UPROPERTY(EditAnywhere, Category="武器属性|准星")
+	UTexture2D* CrosshairTop;
+	UPROPERTY(EditAnywhere, Category="武器属性|准星")
+	UTexture2D* CrosshairDown;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -75,5 +86,5 @@ private:
 	//设置抛落的弹壳
 	UPROPERTY(EditAnywhere, Category= "武器属性")
 	TSubclassOf<ACasing> CasingClass;
-
+	
 };
