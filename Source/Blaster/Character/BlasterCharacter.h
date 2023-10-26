@@ -56,6 +56,8 @@ public:
 	AWeapon* GetEquippedWeapon();
 
 	void PlayFireMontage(bool bAiming);
+
+	FVector GetHitTarget() const;
 	
 protected:
 	//增强输入

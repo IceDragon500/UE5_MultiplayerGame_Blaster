@@ -114,6 +114,19 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		BlasterCharacter->GetMesh()->TransformToBoneSpace(FName("hand_r"), LeftHandTransform.GetLocation(),FRotator::ZeroRotator, OutPosition, OutRotation);
 		LeftHandTransform.SetLocation(OutPosition);
 		LeftHandTransform.SetRotation(FQuat(OutRotation));
+
+		//为这个设置只需要对本地玩家来说比较精确就可以了，不用对其他玩家展示如此精细
+		//因为AnimInstance是可以复制的，所以我们需要排除一下，当只有本地角色控制时才有效果
+		if(BlasterCharacter ->IsLocallyControlled())
+		{
+			bLocallyControlled = true;
+			//获得右手持枪那个骨骼的变换
+			FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("Hand_R"), ERelativeTransformSpace::RTS_World);
+			RightHandRotation = UKismetMathLibrary::FindLookAtRotation(
+				RightHandTransform.GetLocation(),
+				RightHandTransform.GetLocation() + (RightHandTransform.GetLocation() - BlasterCharacter->GetHitTarget())
+				);
+		}
 	}
 	//GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Blue, FString::Printf(TEXT("Yaw: %f"), Yaw));
 }

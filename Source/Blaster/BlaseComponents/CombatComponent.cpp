@@ -52,6 +52,14 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 	//每一帧都设置准星
 	SetHUDCrosshair(DeltaTime);
+
+	if(Character && Character->IsLocallyControlled())
+	{
+		FHitResult HitResult;
+		TraceUnderCrosehairs(HitResult);
+		HitTarget = HitResult.ImpactPoint;
+	}
+	
 }
 
 void UCombatComponent::SetHUDCrosshair(float DeltaTime)
