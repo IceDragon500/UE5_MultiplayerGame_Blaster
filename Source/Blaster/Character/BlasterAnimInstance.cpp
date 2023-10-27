@@ -122,10 +122,13 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			bLocallyControlled = true;
 			//获得右手持枪那个骨骼的变换
 			FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("Hand_R"), ERelativeTransformSpace::RTS_World);
-			RightHandRotation = UKismetMathLibrary::FindLookAtRotation(
+			//添加一个插值，当瞄准近距离物体的时候，骨骼切换不会那么直接
+			FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(
 				RightHandTransform.GetLocation(),
 				RightHandTransform.GetLocation() + (RightHandTransform.GetLocation() - BlasterCharacter->GetHitTarget())
 				);
+			//添加一个插值，当瞄准近距离物体的时候，骨骼切换不会那么直接
+			RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotation, DeltaSeconds, 30.f);
 		}
 	}
 	//GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Blue, FString::Printf(TEXT("Yaw: %f"), Yaw));

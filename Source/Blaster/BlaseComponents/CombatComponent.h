@@ -99,6 +99,7 @@ private:
 	float CrosshairShootingFactor;
 
 	FVector HitTarget;
+	FHUDPackage HUDPackage;
 
 	//不瞄准时候的视野
 	float DefaultFOV;

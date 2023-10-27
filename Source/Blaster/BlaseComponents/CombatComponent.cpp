@@ -83,7 +83,6 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 		HUD = HUD==nullptr ? Cast<ABlasterHUD>(Controller->GetHUD()) : HUD;
 		if(HUD)
 		{
-			FHUDPackage HUDPackage;
 			if(EquippedWeapon)
 			{
 				
@@ -264,6 +263,20 @@ void UCombatComponent::TraceUnderCrosehairs(FHitResult& TraceHitResult)
 		{
 			TraceHitResult.ImpactPoint = End;//那我们就设置碰撞到的那个点为射线的终点
 		}
+
+		//实现当检测目标是角色时，改变准星的颜色
+		//判断角色， 并且判断获取到的角色是否有对应的接口
+		if(TraceHitResult.GetActor() && TraceHitResult.GetActor()->Implements<UInteractWithCrosshairsInterface>())
+		{
+			HUDPackage.CrosshairColor = FLinearColor::Red;
+		}
+		else
+		{
+			HUDPackage.CrosshairColor = FLinearColor::White;
+		}
+
+
+		
 	}
 }
 

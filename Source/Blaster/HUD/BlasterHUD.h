@@ -18,6 +18,7 @@ public:
 	UTexture2D* CrosshairTop;
 	UTexture2D* CrosshairDown;
 	float CrosshairSpread;
+	FLinearColor CrosshairColor;
 };
 
 /**
@@ -36,7 +37,7 @@ protected:
 
 private:
 
-	void DrawCrosshair(UTexture2D* Texture, FVector2d ViewportSize, FVector2d Spread);
+	void DrawCrosshair(UTexture2D* Texture, FVector2d ViewportSize, FVector2d Spread, FLinearColor CrosshairColor);
 	FHUDPackage HUDPackage;
 
 	//准星扩散的最大值

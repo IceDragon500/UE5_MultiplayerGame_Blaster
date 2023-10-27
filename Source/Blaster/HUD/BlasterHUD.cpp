@@ -19,28 +19,28 @@ void ABlasterHUD::DrawHUD()
 		
 		if(HUDPackage.CrosshairCenter)
 		{
-			DrawCrosshair(HUDPackage.CrosshairCenter , ViewportCenter, FVector2d(0.f, 0.f));
+			DrawCrosshair(HUDPackage.CrosshairCenter , ViewportCenter, FVector2d(0.f, 0.f), HUDPackage.CrosshairColor);
 		}
 		if(HUDPackage.CrosshairLeft)
 		{
-			DrawCrosshair(HUDPackage.CrosshairLeft , ViewportCenter,FVector2d(-SpreadScaled, 0.f));
+			DrawCrosshair(HUDPackage.CrosshairLeft , ViewportCenter,FVector2d(-SpreadScaled, 0.f), HUDPackage.CrosshairColor);
 		}
 		if(HUDPackage.CrosshairRight)
 		{
-			DrawCrosshair(HUDPackage.CrosshairRight , ViewportCenter, FVector2d(SpreadScaled, 0.f));
+			DrawCrosshair(HUDPackage.CrosshairRight , ViewportCenter, FVector2d(SpreadScaled, 0.f), HUDPackage.CrosshairColor);
 		}
 		if(HUDPackage.CrosshairTop)
 		{
-			DrawCrosshair(HUDPackage.CrosshairTop , ViewportCenter, FVector2d(0.f, -SpreadScaled));
+			DrawCrosshair(HUDPackage.CrosshairTop , ViewportCenter, FVector2d(0.f, -SpreadScaled), HUDPackage.CrosshairColor);
 		}
 		if(HUDPackage.CrosshairDown)
 		{
-			DrawCrosshair(HUDPackage.CrosshairDown , ViewportCenter, FVector2d(0.f, SpreadScaled));
+			DrawCrosshair(HUDPackage.CrosshairDown , ViewportCenter, FVector2d(0.f, SpreadScaled), HUDPackage.CrosshairColor);
 		}
 	}
 }
 
-void ABlasterHUD::DrawCrosshair(UTexture2D* Texture, FVector2d ViewportSize, FVector2d Spread)
+void ABlasterHUD::DrawCrosshair(UTexture2D* Texture, FVector2d ViewportSize, FVector2d Spread, FLinearColor CrosshairColor)
 {
 	const float TextureWidth = Texture->GetSizeX();
 	const float TextureHeight = Texture->GetSizeY();
@@ -59,7 +59,7 @@ void ABlasterHUD::DrawCrosshair(UTexture2D* Texture, FVector2d ViewportSize, FVe
 		0.f,
 		1.f,
 		1.f,
-		FLinearColor::White  //顶点的颜色，默认为白色
+		CrosshairColor  //顶点的颜色，默认为白色
 		);
 	
 }
