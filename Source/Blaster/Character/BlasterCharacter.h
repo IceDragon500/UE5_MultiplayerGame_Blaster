@@ -44,6 +44,8 @@ public:
 	//用这个来初始化CombatComponent相关的变量
 	virtual void PostInitializeComponents() override;
 
+	virtual void OnRep_ReplicatedMovement() override;
+
 	//返回是否已经装备武器
 	bool IsWeaponEquipped();
 
@@ -54,6 +56,7 @@ public:
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
 
 	AWeapon* GetEquippedWeapon();
 
@@ -106,9 +109,12 @@ protected:
 	UInputAction* Aiming;
 	void AimKeyPressed(const FInputActionValue& Value);
 	void AImKeyReleased(const FInputActionValue& Value);
+	float CalculateSpeed();
+	void CalculateAO_Pitch();
 
 	//用来计算瞄准偏移
 	void AimOffset(float DeltaTime);
+	void SimProxiesTurn();
 
 	//用来播放受击动画
 	void PlayHitReactMontage();
@@ -167,5 +173,12 @@ private:
 	UPROPERTY(EditAnywhere, Category= "AAAA设置|战斗")
 	UAnimMontage* HitReactMontage;
 
+	//是否旋转根骨骼
+	bool bRotateRootBone;
+	float TurnThreshold = 0.5f;
+	FRotator ProxyRotationLastFrame;
+	FRotator ProxyRotation;
+	float ProxyYaw;
+	float TimeSinceLastMovementReplication;//上次运动复制后的时间
 	
 };
