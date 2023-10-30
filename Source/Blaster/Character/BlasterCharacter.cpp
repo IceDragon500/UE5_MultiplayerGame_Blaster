@@ -84,6 +84,7 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	AimOffset(DeltaTime);
+	HideCameraIfCharacterClose();
 }
 
 // Called to bind functionality to input
@@ -304,6 +305,30 @@ void ABlasterCharacter::TurnInPlace(float DeltaTime)
 			TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 			StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		}
+	}
+}
+
+void ABlasterCharacter::HideCameraIfCharacterClose()
+{
+	if(!IsLocallyControlled()) return;
+	//当摄像机距离和角色距离小于阈值时，说明已经靠墙了
+	if((FollowCamera->GetComponentLocation() - GetActorLocation()).Size() < CameraThreshold)
+	{
+		GetMesh()->SetVisibility(false);//隐藏角色的模型
+		if(Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())//隐藏武器的模型
+		{
+			//Combat->EquippedWeapon->GetWeaponMesh()->SetVisibility(false);
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;//只对拥有者不可见
+		}
+	}
+	else
+	{
+		GetMesh()->SetVisibility(true);//隐藏角色的模型
+		if(Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())//隐藏武器的模型
+			{
+			//Combat->EquippedWeapon->GetWeaponMesh()->SetVisibility(false);
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;//只对拥有者不可见
+			}
 	}
 }
 

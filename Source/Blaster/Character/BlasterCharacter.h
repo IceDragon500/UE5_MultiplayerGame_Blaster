@@ -118,6 +118,12 @@ private:
 	//用来处理原地转身
 	void TurnInPlace(float DeltaTime);
 
+	//用来处理靠墙时，隐藏角色模型
+	void HideCameraIfCharacterClose();
+	//摄像机靠墙阈值
+	UPROPERTY(EditAnywhere)
+	float CameraThreshold = 200.f;
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = "AAAA设置|摄像机")
 	USpringArmComponent* CameraBoom;

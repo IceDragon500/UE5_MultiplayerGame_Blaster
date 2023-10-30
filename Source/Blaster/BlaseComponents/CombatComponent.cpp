@@ -250,6 +250,16 @@ void UCombatComponent::TraceUnderCrosehairs(FHitResult& TraceHitResult)
 	if(bScreenToWorld)
 	{
 		FVector Start = CrosshairWorldPosition;//设置射线检测的起点 ，是上面获得由屏幕中心点坐标转换的世界坐标位置
+		//这里修正一下射线检测起始的位置
+		//预期是将起始位置从摄像机当前位置推到角色的位置，然后再加一点
+		if(Character)
+		{
+			//获得角色到摄像机的距离
+			float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
+			//将摄像机的距离 往前推一段距离再加100
+			Start += CrosshairWorldDirection * (DistanceToCharacter + 100.f);
+		}
+		
 		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;//设置射线检测的终点
 
 		GetWorld()->LineTraceSingleByChannel(
