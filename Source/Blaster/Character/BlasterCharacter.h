@@ -61,6 +61,10 @@ public:
 
 	FVector GetHitTarget() const;
 	
+	//用来处理多人播放受击动画
+	UFUNCTION(NetMulticast, Unreliable)
+	void MuticastHit();
+	
 protected:
 	//增强输入
 	UPROPERTY(EditAnywhere, Category= "AAAA设置|增强输入")
@@ -106,6 +110,9 @@ protected:
 	//用来计算瞄准偏移
 	void AimOffset(float DeltaTime);
 
+	//用来播放受击动画
+	void PlayHitReactMontage();
+
 private:
 	//创建一个OnRep的方法，给需要复制的变量指定这个方法
 	//是一个接收到服务器replicate后需要执行的函数，replicate过程是单向的，所以On_RepXXX只能再客户端执行
@@ -123,6 +130,8 @@ private:
 	//摄像机靠墙阈值
 	UPROPERTY(EditAnywhere)
 	float CameraThreshold = 200.f;
+
+	
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "AAAA设置|摄像机")
@@ -153,4 +162,10 @@ private:
 	//开火的动画
 	UPROPERTY(EditAnywhere, Category= "AAAA设置|战斗")
 	UAnimMontage* FireWeaponMontage;
+
+	//受击动画
+	UPROPERTY(EditAnywhere, Category= "AAAA设置|战斗")
+	UAnimMontage* HitReactMontage;
+
+	
 };

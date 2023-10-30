@@ -7,6 +7,7 @@
 #include "Components/InputComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Blaster/Blaster.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
@@ -52,6 +53,7 @@ ABlasterCharacter::ABlasterCharacter()
 
 	//将碰撞盒设置为摄像机忽略，避免镜头臂扫到其他角色时，会莫名其妙的缩短
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
 	//将网格体设置为摄像机忽略，避免镜头臂扫到其他角色时，会莫名其妙的缩短
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
@@ -332,6 +334,11 @@ void ABlasterCharacter::HideCameraIfCharacterClose()
 	}
 }
 
+void ABlasterCharacter::MuticastHit_Implementation()
+{
+	PlayHitReactMontage();
+}
+
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
 	if(OverlappingWeapon)
@@ -394,6 +401,20 @@ FVector ABlasterCharacter::GetHitTarget() const
 {
 	if(Combat == nullptr) return FVector();
 	return Combat->HitTarget;
+}
+
+void ABlasterCharacter::PlayHitReactMontage()
+{
+	if(Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && HitReactMontage)
+	{
+		AnimInstance->Montage_Play(HitReactMontage);
+		FName SectionName("FromFront");
+		
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
 }
 
 

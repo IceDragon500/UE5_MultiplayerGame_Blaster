@@ -3,6 +3,8 @@
 
 #include "Projectile.h"
 
+#include "Blaster/Blaster.h"
+#include "Blaster/Character/BlasterCharacter.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -20,6 +22,7 @@ AProjectile::AProjectile()
 	CollisionBox->SetCollisionResponseToChannels(ECollisionResponse::ECR_Ignore);
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECollisionResponse::ECR_Block);
 
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
 	ProjectileMovementComponent->bRotationFollowsVelocity = true;// 对应蓝图中的抛射物-旋转跟踪速度：发射物每帧更新他的旋转，用来匹配他前进的方向
@@ -34,6 +37,7 @@ void AProjectile::BeginPlay()
 	Super::BeginPlay();
 	if(Tracer)
 	{
+		//绑定特效到碰撞盒子上，这样子弹在飞行的时候就能看到特效
 		TracerComponent = UGameplayStatics::SpawnEmitterAttached(Tracer, CollisionBox, FName(), GetActorLocation(), GetActorRotation(), EAttachLocation::KeepWorldPosition);
 
 		//用这个 特效不会动
@@ -51,6 +55,11 @@ void AProjectile::BeginPlay()
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
+	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
+	if(BlasterCharacter)
+	{
+		BlasterCharacter->MuticastHit();
+	}
 	Destroy();
 }
 
