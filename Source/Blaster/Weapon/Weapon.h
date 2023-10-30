@@ -53,6 +53,13 @@ public:
 	UTexture2D* CrosshairTop;
 	UPROPERTY(EditAnywhere, Category="武器属性|准星")
 	UTexture2D* CrosshairDown;
+
+	//开火延迟
+	UPROPERTY(EditAnywhere, Category= "武器属性")
+	float FireDelay = 0.1f;
+	//是否可以自动开火
+	UPROPERTY(EditAnywhere, Category= "武器属性")
+	bool bAutomatic = true;
 	
 protected:
 	virtual void BeginPlay() override;

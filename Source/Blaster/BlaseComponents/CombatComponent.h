@@ -40,6 +40,7 @@ protected:
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
+	void Fire();
 
 	//主要实现当开火键按下时的逻辑
 	//进行射线检测
@@ -79,11 +80,11 @@ private:
 	bool bAiming;
 
 	//基础移动速度
-	UPROPERTY(EditAnywhere , meta=( AllowPrivateAccess = true))
+	UPROPERTY(EditAnywhere , Category= "战斗设置", meta=( AllowPrivateAccess = true))
 	float BaseWalkSpeed = 600.f;
 
 	//瞄准下的移动速度
-	UPROPERTY(EditAnywhere , meta=( AllowPrivateAccess = true))
+	UPROPERTY(EditAnywhere , Category= "战斗设置", meta=( AllowPrivateAccess = true))
 	float AimWalkSpeed = 450.f;
 
 	//是否按下开火键
@@ -104,15 +105,24 @@ private:
 	//不瞄准时候的视野
 	float DefaultFOV;
 	//瞄准时候的默认视野
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "战斗设置")
 	float ZoomedFOV = 30.f;
 
 	//当前视野值
 	float CurrentFOV;
 	//视野切换速度
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "战斗设置")
 	float ZoomInterpSpeed= 20.f;
 
 	void InterpFOV(float DeltaTime);
+
+	FTimerHandle FireTimer;
+	
+	bool bCanFire = true;
+	//开始开火计时器
+	void StartFireTImer();
+	//结束开火计时器
+	void FireTimerFinished();
+	
 		
 };
