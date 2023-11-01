@@ -36,6 +36,10 @@ protected:
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComp,	AActor* OtherActor,	UPrimitiveComponent* OtherComp,	FVector NormalImpulse, const FHitResult& Hit);
 
+	//对命中目标造成伤害
+	UPROPERTY(EditAnywhere)
+	float Damage;
+	
 private:
 
 	UPROPERTY(EditAnywhere)
@@ -59,6 +63,5 @@ private:
 	//命中音效
 	UPROPERTY(EditAnywhere, Category= "子弹属性")
 	USoundCue* ImpactSound;
-	
 
 };

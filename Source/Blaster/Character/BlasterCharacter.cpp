@@ -81,9 +81,19 @@ void ABlasterCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(InputContext, 0);
 		}
+		else
+		{
+			UE_LOG(LogTemp,Warning,TEXT("增强输入Subsystem初始化失败"));
+		}
+	}
 
-		//设置生命值
-		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+	UpdateHUDHealth();
+
+	if(HasAuthority())
+	{
+		//绑定ReceiveDamage到OnTakeAnyDamage，
+		//通过OnTakeAnyDamage接受伤害，执行ReceiveDamage的逻辑
+		OnTakeAnyDamage.AddDynamic(this, &ThisClass::ReceiveDamage);
 	}
 }
 
@@ -417,11 +427,19 @@ void ABlasterCharacter::HideCameraIfCharacterClose()
 
 void ABlasterCharacter::OnRep_Health()
 {
+	PlayHitReactMontage();
+	UpdateHUDHealth();
 }
 
-void ABlasterCharacter::MuticastHit_Implementation()
+void ABlasterCharacter::UpdateHUDHealth()
 {
-	PlayHitReactMontage();
+	BlasterPlayerController = Cast<ABlasterPlayerController>(Controller);
+	if(BlasterPlayerController == nullptr)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("BlasterPlayerController失败"));
+		return;
+	}
+	BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
 }
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
@@ -502,6 +520,13 @@ void ABlasterCharacter::PlayHitReactMontage()
 	}
 }
 
+void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
+	AController* InstigatroController, AActor* DamageCasuer)
+{
+	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
+	UpdateHUDHealth();
+	PlayHitReactMontage();
+}
 
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {

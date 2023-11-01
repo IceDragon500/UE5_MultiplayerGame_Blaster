@@ -18,7 +18,7 @@ void ABlasterPlayerController::BeginPlay()
 void ABlasterPlayerController::SetHUDHealth(float Health, float MaxHealth)
 {
 	//先判断BlasterHUD是否为空，如果为空则创建，如果不为空，则不改变
-	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;	
 
 	//因为这里需要直接使用到CharacterOverlay中的具体指针变量，所以都需要检查一下是否为空
 	bool bHUDValid = BlasterHUD && BlasterHUD->CharacterOverlay && BlasterHUD->CharacterOverlay->HealthBar && BlasterHUD->CharacterOverlay->HealthText;

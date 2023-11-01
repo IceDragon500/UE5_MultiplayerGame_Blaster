@@ -64,10 +64,6 @@ public:
 
 	FVector GetHitTarget() const;
 	
-	//用来处理多人播放受击动画
-	UFUNCTION(NetMulticast, Unreliable)
-	void MuticastHit();
-	
 protected:
 	//增强输入
 	UPROPERTY(EditAnywhere, Category= "AAAA设置|增强输入")
@@ -118,6 +114,13 @@ protected:
 
 	//用来播放受击动画
 	void PlayHitReactMontage();
+
+	//受到伤害
+	//收到伤害的方法
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatroController, AActor* DamageCasuer);
+
+	void UpdateHUDHealth();
 
 private:
 	//创建一个OnRep的方法，给需要复制的变量指定这个方法
@@ -194,6 +197,7 @@ private:
 	UFUNCTION()
 	void OnRep_Health();
 
+	UPROPERTY(VisibleAnywhere);
 	ABlasterPlayerController* BlasterPlayerController;
 	
 	
