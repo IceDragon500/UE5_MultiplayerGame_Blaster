@@ -89,12 +89,11 @@ void UCombatComponent::Fire()
 			{
 			CrosshairShootingFactor = 0.2f;
 			}
-		StartFireTImer();
-		GEngine->AddOnScreenDebugMessage(-1,1,FColor::Red,FString(TEXT("fwefwef")));
+		StartFireTimer();
 	}
 }
 
-void UCombatComponent::StartFireTImer()
+void UCombatComponent::StartFireTimer()
 {
 	if(EquippedWeapon == nullptr || Character == nullptr) return;
 	//传入计时器、当前这个类、到时间之后调用的函数，时间间隔

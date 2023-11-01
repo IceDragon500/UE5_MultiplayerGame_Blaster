@@ -120,7 +120,7 @@ private:
 	
 	bool bCanFire = true;
 	//开始开火计时器
-	void StartFireTImer();
+	void StartFireTimer();
 	//结束开火计时器
 	void FireTimerFinished();
 	

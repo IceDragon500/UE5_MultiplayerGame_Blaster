@@ -180,5 +180,21 @@ private:
 	FRotator ProxyRotation;
 	float ProxyYaw;
 	float TimeSinceLastMovementReplication;//上次运动复制后的时间
+
+	//角色健康值
+	UPROPERTY(EditAnywhere, Category= "角色状态")
+	float MaxHealth = 100.f;
+
+	//当前血量
+	//将其绑定至OnRep_Health方法，进行网络复制
+	UPROPERTY(ReplicatedUsing= OnRep_Health, VisibleAnywhere, Category= "角色状态")
+	float Health = 100.f;
+
+	//我们需要在血量值变化的时候，进行复制
+	UFUNCTION()
+	void OnRep_Health();
+
+	ABlasterPlayerController* BlasterPlayerController;
+	
 	
 };

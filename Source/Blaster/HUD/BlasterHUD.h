@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CharacterOverlay.h"
 #include "GameFramework/HUD.h"
 #include "BlasterHUD.generated.h"
 
@@ -33,8 +34,16 @@ public:
 
 	FORCEINLINE void SetHUDPackage(const FHUDPackage& Package) { HUDPackage = Package; }
 
-protected:
+	UPROPERTY(EditAnywhere, Category= "玩家状态")
+	TSubclassOf<UUserWidget> CharacterOverlayClass;
 
+	UCharacterOverlay* CharacterOverlay;
+
+protected:
+	virtual  void BeginPlay() override;
+
+	//创建CharacterOverlay
+	void AddCharacterOverlay();
 private:
 
 	void DrawCrosshair(UTexture2D* Texture, FVector2d ViewportSize, FVector2d Spread, FLinearColor CrosshairColor);

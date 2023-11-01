@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "Blaster/HUD/BlasterHUD.h"
 #include "BlasterPlayerController.generated.h"
 
 /**
@@ -17,8 +18,13 @@ class BLASTER_API ABlasterPlayerController : public APlayerController
 public:
 	ABlasterPlayerController();
 
+	void SetHUDHealth(float Health, float MaxHealth);
+
 protected:
+	virtual void BeginPlay() override;
+	
 
 private:
+	ABlasterHUD* BlasterHUD;
 	
 };

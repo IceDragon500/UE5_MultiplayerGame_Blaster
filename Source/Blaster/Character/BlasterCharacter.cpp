@@ -71,12 +71,19 @@ void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if(APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	BlasterPlayerController = Cast<ABlasterPlayerController>(Controller);
+	
+	if(BlasterPlayerController)
 	{
-		if(UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		//设置增强输入
+		UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(BlasterPlayerController->GetLocalPlayer());
+		if(Subsystem)
 		{
 			Subsystem->AddMappingContext(InputContext, 0);
 		}
+
+		//设置生命值
+		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
 	}
 }
 
@@ -163,6 +170,9 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	//注册需要复制的变量，使用COND_OwnerOnly，选择只会复制到所有者的客户端
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
+
+	//注册血量
+	DOREPLIFETIME(ABlasterCharacter, Health);
 }
 
 void ABlasterCharacter::Move(const FInputActionValue& Value)
@@ -403,6 +413,10 @@ void ABlasterCharacter::HideCameraIfCharacterClose()
 			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;//只对拥有者不可见
 			}
 	}
+}
+
+void ABlasterCharacter::OnRep_Health()
+{
 }
 
 void ABlasterCharacter::MuticastHit_Implementation()
