@@ -57,54 +57,59 @@ public:
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
+	FORCEINLINE bool IsElimmed() const { return bElimmed; }
 
 	AWeapon* GetEquippedWeapon();
 
+	//播放开火动画
 	void PlayFireMontage(bool bAiming);
+	//播放死亡动画
+	void PlayElimMontage();
 
 	FVector GetHitTarget() const;
 
 	//被淘汰之后的逻辑
+	UFUNCTION(NetMulticast, Reliable)
 	void Elim();
 	
 protected:
 	//增强输入
-	UPROPERTY(EditAnywhere, Category= "AAAA设置|增强输入")
+	UPROPERTY(EditAnywhere, Category= "增强输入")
 	UInputMappingContext* InputContext;
 
 	//增强输入-移动
-	UPROPERTY(EditAnywhere, Category= "AAAA设置|增强输入")
+	UPROPERTY(EditAnywhere, Category= "增强输入")
 	UInputAction* MovementAction;
 	void Move(const FInputActionValue& Value);
 
 	
 	//增强输入-鼠标
-	UPROPERTY(EditAnywhere, Category= "AAAA设置|增强输入")
+	UPROPERTY(EditAnywhere, Category= "增强输入")
 	UInputAction* LookAction;
 	void Look(const FInputActionValue& Value);
 
 	//增强输入-跳
-	UPROPERTY(EditAnywhere, Category= "AAAA设置|增强输入")
+	UPROPERTY(EditAnywhere, Category= "增强输入")
 	UInputAction* JumpAction;
 
 	//增强输入-鼠标左键攻击 
-	UPROPERTY(EditAnywhere, Category= "AAAA设置|增强输入")
+	UPROPERTY(EditAnywhere, Category= "增强输入")
 	UInputAction* AttackAction;
 	void FireButtonPressed(const FInputActionValue& Value);
 	void FIreButtonReleased(const FInputActionValue& Value);
 
 	//增强输入-E键功能
-	UPROPERTY(EditAnywhere, Category= "AAAA设置|增强输入")
+	UPROPERTY(EditAnywhere, Category= "增强输入")
 	UInputAction* EKeyAction;
 	void EKeyPressed(const FInputActionValue& Value);
 
 	//增强输入-蹲
-	UPROPERTY(EditAnywhere, Category= "AAAA设置|增强输入")
+	UPROPERTY(EditAnywhere, Category= "增强输入")
 	UInputAction* Crouching;
 	void CrouchKeyPressed(const FInputActionValue& Value);
 
 	//增强输入-瞄准
-	UPROPERTY(EditAnywhere, Category= "AAAA设置|增强输入")
+	UPROPERTY(EditAnywhere, Category= "增强输入")
 	UInputAction* Aiming;
 	void AimKeyPressed(const FInputActionValue& Value);
 	void AImKeyReleased(const FInputActionValue& Value);
@@ -150,10 +155,10 @@ private:
 	UPROPERTY(VisibleAnywhere);
 	ABlasterPlayerController* BlasterPlayerController;
 	
-	UPROPERTY(VisibleAnywhere, Category = "AAAA设置|摄像机")
+	UPROPERTY(VisibleAnywhere, Category = "设置|摄像机")
 	USpringArmComponent* CameraBoom;
 
-	UPROPERTY(VisibleAnywhere, Category = "AAAA设置|摄像机")
+	UPROPERTY(VisibleAnywhere, Category = "设置|摄像机")
 	UCameraComponent* FollowCamera;
 
 	//创建拾取提示组件
@@ -176,12 +181,16 @@ private:
 	ETurningInPlace TurningInPlace;//转身的状态
 
 	//开火的动画
-	UPROPERTY(EditAnywhere, Category= "AAAA设置|战斗")
+	UPROPERTY(EditAnywhere, Category= "设置|战斗")
 	UAnimMontage* FireWeaponMontage;
 
 	//受击动画
-	UPROPERTY(EditAnywhere, Category= "AAAA设置|战斗")
+	UPROPERTY(EditAnywhere, Category= "设置|战斗")
 	UAnimMontage* HitReactMontage;
+	
+	//死亡动画
+	UPROPERTY(EditAnywhere, Category= "设置|战斗")
+	UAnimMontage* ElimMontage;
 
 	//是否旋转根骨骼
 	bool bRotateRootBone;
@@ -192,17 +201,20 @@ private:
 	float TimeSinceLastMovementReplication;//上次运动复制后的时间
 
 	//角色健康值
-	UPROPERTY(EditAnywhere, Category= "角色状态")
+	UPROPERTY(EditAnywhere, Category= "设置|角色状态")
 	float MaxHealth = 100.f;
 
 	//当前血量
 	//将其绑定至OnRep_Health方法，进行网络复制
-	UPROPERTY(ReplicatedUsing= OnRep_Health, VisibleAnywhere, Category= "角色状态")
+	UPROPERTY(ReplicatedUsing= OnRep_Health, VisibleAnywhere, Category= "设置|角色状态")
 	float Health = 100.f;
 
 	//我们需要在血量值变化的时候，进行复制
 	UFUNCTION()
 	void OnRep_Health();
+
+	//是否被淘汰
+	bool bElimmed = false;
 	
 	
 };

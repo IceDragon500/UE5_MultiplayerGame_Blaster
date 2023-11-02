@@ -428,8 +428,11 @@ void ABlasterCharacter::HideCameraIfCharacterClose()
 
 void ABlasterCharacter::OnRep_Health()
 {
-	PlayHitReactMontage();
 	UpdateHUDHealth();
+	if(!bElimmed)
+	{
+		PlayHitReactMontage();
+	}
 }
 
 void ABlasterCharacter::UpdateHUDHealth()
@@ -501,15 +504,26 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 	}
 }
 
+void ABlasterCharacter::PlayElimMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && ElimMontage)
+	{
+		AnimInstance->Montage_Play(ElimMontage);
+	}
+}
+
 FVector ABlasterCharacter::GetHitTarget() const
 {
 	if(Combat == nullptr) return FVector();
 	return Combat->HitTarget;
 }
 
-void ABlasterCharacter::Elim()
+void ABlasterCharacter::Elim_Implementation()
 {
+	bElimmed = true;
 	//实现玩家淘汰之后的逻辑
+	PlayElimMontage();
 }
 
 void ABlasterCharacter::PlayHitReactMontage()
@@ -547,8 +561,6 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 			BlasterGameMode->PlayerEliminated(this, BlasterPlayerController, AttackController);
 		}
 	}
-	
-	
 }
 
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)

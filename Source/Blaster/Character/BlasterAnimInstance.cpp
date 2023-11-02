@@ -67,6 +67,8 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	
 	bRotateRootBone = BlasterCharacter->ShouldRotateRootBone();
 
+	bElimmed = BlasterCharacter->IsElimmed();
+
 //------计算Direction-----------------------------------------------------
 
 	FRotator RotatorDeltar = UKismetMathLibrary::NormalizedDeltaRotator(PlayerControlRotation, PlayerRotation);
