@@ -63,6 +63,9 @@ public:
 	void PlayFireMontage(bool bAiming);
 
 	FVector GetHitTarget() const;
+
+	//被淘汰之后的逻辑
+	void Elim();
 	
 protected:
 	//增强输入
@@ -120,6 +123,7 @@ protected:
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatroController, AActor* DamageCasuer);
 
+	//更新显示血量的HUD
 	void UpdateHUDHealth();
 
 private:
@@ -143,6 +147,9 @@ private:
 	
 
 private:
+	UPROPERTY(VisibleAnywhere);
+	ABlasterPlayerController* BlasterPlayerController;
+	
 	UPROPERTY(VisibleAnywhere, Category = "AAAA设置|摄像机")
 	USpringArmComponent* CameraBoom;
 
@@ -196,9 +203,6 @@ private:
 	//我们需要在血量值变化的时候，进行复制
 	UFUNCTION()
 	void OnRep_Health();
-
-	UPROPERTY(VisibleAnywhere);
-	ABlasterPlayerController* BlasterPlayerController;
 	
 	
 };

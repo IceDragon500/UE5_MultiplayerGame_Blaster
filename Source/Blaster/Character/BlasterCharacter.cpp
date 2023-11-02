@@ -8,6 +8,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Blaster/Blaster.h"
+#include "Blaster/GameMode/BlasterGameMode.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
@@ -506,6 +507,11 @@ FVector ABlasterCharacter::GetHitTarget() const
 	return Combat->HitTarget;
 }
 
+void ABlasterCharacter::Elim()
+{
+	//实现玩家淘汰之后的逻辑
+}
+
 void ABlasterCharacter::PlayHitReactMontage()
 {
 	if(Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
@@ -526,6 +532,23 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
 	UpdateHUDHealth();
 	PlayHitReactMontage();
+
+	//当血量为0的时候，处理淘汰的逻辑
+	//获得游戏模式，然后执行游戏模式中的淘汰相关的逻辑
+	if (Health == 0.f)
+	{
+		ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+		if(BlasterGameMode)
+		{
+			//获得受害者的控制器，就是当前这个类
+			BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) :BlasterPlayerController;
+			//获得攻击者的控制器，就是传入的InstigatroController，需要从AController转换到ABlasterPlayerController
+			ABlasterPlayerController* AttackController = Cast<ABlasterPlayerController>(InstigatroController);
+			BlasterGameMode->PlayerEliminated(this, BlasterPlayerController, AttackController);
+		}
+	}
+	
+	
 }
 
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
