@@ -524,6 +524,10 @@ FVector ABlasterCharacter::GetHitTarget() const
 
 void ABlasterCharacter::Elim()
 {
+	if(Combat && Combat->EquippedWeapon)
+	{
+		Combat->EquippedWeapon->Dropped();
+	}
 	MulticastElim();
 	GetWorldTimerManager().SetTimer(ElimTimer, this, &ThisClass::ElimTimerFinished, ElimDelay);
 }
@@ -534,6 +538,7 @@ void ABlasterCharacter::MulticastElim_Implementation()
 	//实现玩家淘汰之后的逻辑
 	PlayElimMontage();
 
+	//Start dissolve effect
 	if(DissolveMaterialInstance)
 	{
 		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance, this);
@@ -543,6 +548,17 @@ void ABlasterCharacter::MulticastElim_Implementation()
 		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Glow"), 200.f);
 	}
 	StartDissolve();
+
+	//disable character movement
+	GetCharacterMovement()->DisableMovement();//禁止移动
+	GetCharacterMovement()->StopMovementImmediately();//禁止通过鼠标旋转角色
+	if(BlasterPlayerController)//禁止角色输入
+	{
+		DisableInput(BlasterPlayerController);
+	}
+	//Disable Collision
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ABlasterCharacter::ElimTimerFinished()
