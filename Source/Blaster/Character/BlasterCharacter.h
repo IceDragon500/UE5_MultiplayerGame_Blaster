@@ -68,9 +68,10 @@ public:
 
 	FVector GetHitTarget() const;
 
+	void Elim();
 	//被淘汰之后的逻辑
 	UFUNCTION(NetMulticast, Reliable)
-	void Elim();
+	void MulticastElim();
 	
 protected:
 	//增强输入
@@ -215,6 +216,15 @@ private:
 
 	//是否被淘汰
 	bool bElimmed = false;
+
+	//设置复活的定时器
+	FTimerHandle ElimTimer;
+	//复活的时间间隔
+	UPROPERTY(EditAnywhere)
+	float ElimDelay = 3.f;
+
+	//定时器到时间之后调用的方法
+	void ElimTimerFinished();
 	
 	
 };

@@ -22,6 +22,7 @@ public:
 	//ABlasterPlayerController* AttackerControlle 攻击者的控制器
 	virtual void PlayerEliminated(ABlasterCharacter* ElimmedCharacter, ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController);
 
+	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
 protected:
 
 private:

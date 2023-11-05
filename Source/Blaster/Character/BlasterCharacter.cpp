@@ -24,6 +24,8 @@ ABlasterCharacter::ABlasterCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
 	//初始化摄像机臂和摄像机
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetMesh());
@@ -440,7 +442,6 @@ void ABlasterCharacter::UpdateHUDHealth()
 	BlasterPlayerController = Cast<ABlasterPlayerController>(Controller);
 	if(BlasterPlayerController == nullptr)
 	{
-		UE_LOG(LogTemp,Warning,TEXT("BlasterPlayerController失败"));
 		return;
 	}
 	BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
@@ -519,11 +520,27 @@ FVector ABlasterCharacter::GetHitTarget() const
 	return Combat->HitTarget;
 }
 
-void ABlasterCharacter::Elim_Implementation()
+void ABlasterCharacter::Elim()
+{
+	MulticastElim();
+	GetWorldTimerManager().SetTimer(ElimTimer, this, &ThisClass::ElimTimerFinished, ElimDelay);
+}
+
+void ABlasterCharacter::MulticastElim_Implementation()
 {
 	bElimmed = true;
 	//实现玩家淘汰之后的逻辑
 	PlayElimMontage();
+}
+
+void ABlasterCharacter::ElimTimerFinished()
+{
+	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	if(BlasterGameMode)
+	{
+		BlasterGameMode->RequestRespawn(this, Controller);
+	}
+	
 }
 
 void ABlasterCharacter::PlayHitReactMontage()
