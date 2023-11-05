@@ -8,6 +8,7 @@
 #include "Blaster/BlasterTypes/TurningInPlace.h"
 #include "GameFramework/Character.h"
 #include "Blaster/Interface/InteractWithCrosshairsInterface.h"
+#include "Components/TimelineComponent.h"
 #include "BlasterCharacter.generated.h"
 
 
@@ -220,11 +221,36 @@ private:
 	//设置复活的定时器
 	FTimerHandle ElimTimer;
 	//复活的时间间隔
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="设置|角色状态")
 	float ElimDelay = 3.f;
 
 	//定时器到时间之后调用的方法
 	void ElimTimerFinished();
+
+	/*
+	 *使用时间轴控制角色溶解特效
+	 */
+	//时间轴组件
+	UPROPERTY(VisibleAnywhere, Category="设置|角色状态")
+	UTimelineComponent* DissolveTimeline;
+	//时间轴中使用的曲线类型
+	FOnTimelineFloat DissolveTrack;
+	//定义曲线
+	UPROPERTY(EditAnywhere, Category="设置|角色状态")
+	UCurveFloat* DissolveCurve;
+	//定义动态材质
+	//我们可以在运行时更改的动态实例Dynamic instance that we can change at runtime
+	UPROPERTY(VisibleAnywhere, Category="设置|角色状态")
+	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance;
+	//蓝图上设置的材料实例，与动态材料一起使用material instance set on the Blueprint, used with the dynamic material
+	UPROPERTY(EditAnywhere, Category="设置|角色状态")
+	UMaterialInstance* DissolveMaterialInstance;
+
+	UFUNCTION()
+	void UpdateDissolveMaterial(float DissolveValue);
+	void StartDissolve();
+	
+	
 	
 	
 };
