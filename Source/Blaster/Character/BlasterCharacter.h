@@ -73,45 +73,47 @@ public:
 	//被淘汰之后的逻辑
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastElim();
+
+	virtual void Destroyed() override;
 	
 protected:
 	//增强输入
-	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
 	UInputMappingContext* InputContext;
 
 	//增强输入-移动
-	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
 	UInputAction* MovementAction;
 	void Move(const FInputActionValue& Value);
 
 	
 	//增强输入-鼠标
-	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
 	UInputAction* LookAction;
 	void Look(const FInputActionValue& Value);
 
 	//增强输入-跳
-	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
 	UInputAction* JumpAction;
 
 	//增强输入-鼠标左键攻击 
-	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
 	UInputAction* AttackAction;
 	void FireButtonPressed(const FInputActionValue& Value);
 	void FIreButtonReleased(const FInputActionValue& Value);
 
 	//增强输入-E键功能
-	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
 	UInputAction* EKeyAction;
 	void EKeyPressed(const FInputActionValue& Value);
 
 	//增强输入-蹲
-	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
 	UInputAction* Crouching;
 	void CrouchKeyPressed(const FInputActionValue& Value);
 
 	//增强输入-瞄准
-	UPROPERTY(EditAnywhere, Category= "增强输入")
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
 	UInputAction* Aiming;
 	void AimKeyPressed(const FInputActionValue& Value);
 	void AImKeyReleased(const FInputActionValue& Value);
@@ -154,13 +156,13 @@ private:
 	
 
 private:
-	UPROPERTY(VisibleAnywhere);
+	UPROPERTY(VisibleAnywhere, Category = "BlasterPlayer");
 	ABlasterPlayerController* BlasterPlayerController;
 	
-	UPROPERTY(VisibleAnywhere, Category = "设置|摄像机")
+	UPROPERTY(VisibleAnywhere, Category = "BlasterPlayer|摄像机")
 	USpringArmComponent* CameraBoom;
 
-	UPROPERTY(VisibleAnywhere, Category = "设置|摄像机")
+	UPROPERTY(VisibleAnywhere, Category = "BlasterPlayer|摄像机")
 	UCameraComponent* FollowCamera;
 
 	//创建拾取提示组件
@@ -172,7 +174,7 @@ private:
 	AWeapon* OverlappingWeapon;
 
 	//创建战斗组件CombatComponent
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "BlasterPlayer")
 	UCombatComponent* Combat;
 	
 	float AO_Yaw;//瞄准偏移Yaw
@@ -183,15 +185,15 @@ private:
 	ETurningInPlace TurningInPlace;//转身的状态
 
 	//开火的动画
-	UPROPERTY(EditAnywhere, Category= "设置|战斗")
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|战斗")
 	UAnimMontage* FireWeaponMontage;
 
 	//受击动画
-	UPROPERTY(EditAnywhere, Category= "设置|战斗")
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|战斗")
 	UAnimMontage* HitReactMontage;
 	
 	//死亡动画
-	UPROPERTY(EditAnywhere, Category= "设置|战斗")
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|战斗")
 	UAnimMontage* ElimMontage;
 
 	//是否旋转根骨骼
@@ -203,12 +205,12 @@ private:
 	float TimeSinceLastMovementReplication;//上次运动复制后的时间
 
 	//角色健康值
-	UPROPERTY(EditAnywhere, Category= "设置|角色状态")
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|角色状态")
 	float MaxHealth = 100.f;
 
 	//当前血量
 	//将其绑定至OnRep_Health方法，进行网络复制
-	UPROPERTY(ReplicatedUsing= OnRep_Health, VisibleAnywhere, Category= "设置|角色状态")
+	UPROPERTY(ReplicatedUsing= OnRep_Health, VisibleAnywhere, Category= "BlasterPlayer|角色状态")
 	float Health = 100.f;
 
 	//我们需要在血量值变化的时候，进行复制
@@ -221,7 +223,7 @@ private:
 	//设置复活的定时器
 	FTimerHandle ElimTimer;
 	//复活的时间间隔
-	UPROPERTY(EditAnywhere, Category="设置|角色状态")
+	UPROPERTY(EditAnywhere, Category="BlasterPlayer|角色状态")
 	float ElimDelay = 3.f;
 
 	//定时器到时间之后调用的方法
@@ -231,26 +233,38 @@ private:
 	 *使用时间轴控制角色溶解特效
 	 */
 	//时间轴组件
-	UPROPERTY(VisibleAnywhere, Category="设置|角色状态")
+	UPROPERTY(VisibleAnywhere, Category="BlasterPlayer|角色淘汰")
 	UTimelineComponent* DissolveTimeline;
 	//时间轴中使用的曲线类型
 	FOnTimelineFloat DissolveTrack;
 	//定义曲线
-	UPROPERTY(EditAnywhere, Category="设置|角色状态")
+	UPROPERTY(EditAnywhere, Category="BlasterPlayer|角色淘汰")
 	UCurveFloat* DissolveCurve;
 	//定义动态材质
 	//我们可以在运行时更改的动态实例Dynamic instance that we can change at runtime
-	UPROPERTY(VisibleAnywhere, Category="设置|角色状态")
+	UPROPERTY(VisibleAnywhere, Category="BlasterPlayer|角色淘汰")
 	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance;
 	//蓝图上设置的材料实例，与动态材料一起使用material instance set on the Blueprint, used with the dynamic material
-	UPROPERTY(EditAnywhere, Category="设置|角色状态")
+	UPROPERTY(EditAnywhere, Category="BlasterPlayer|角色淘汰")
 	UMaterialInstance* DissolveMaterialInstance;
 
 	UFUNCTION()
 	void UpdateDissolveMaterial(float DissolveValue);
 	void StartDissolve();
 	
+	/*
+	 *Elim Bot
+	 */
+
+	//角色被淘汰时的特效
+	UPROPERTY(EditAnywhere, Category="BlasterPlayer|角色淘汰")
+	UParticleSystem* ElimBotEffect;
+
+	//特效组件
+	UPROPERTY(VisibleAnywhere)
+	UParticleSystemComponent* ElimBotComponent;
 	
-	
+	UPROPERTY(EditAnywhere, Category="BlasterPlayer|角色淘汰")
+	USoundCue* ElimBotSound;
 	
 };
