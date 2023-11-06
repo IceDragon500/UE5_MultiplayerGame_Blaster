@@ -9,6 +9,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Blaster/Blaster.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
+#include "Blaster/PlayerState/BlasterPlayerState.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
@@ -124,8 +125,11 @@ void ABlasterCharacter::Tick(float DeltaTime)
 		}
 		CalculateAO_Pitch();
 	}
-	
+	//检测玩家是否靠墙，如果靠墙则隐藏玩家模型
 	HideCameraIfCharacterClose();
+
+	//轮询玩家状态，将分分数重置为0
+	PollInit();
 }
 
 void ABlasterCharacter::OnRep_ReplicatedMovement()
@@ -448,6 +452,18 @@ void ABlasterCharacter::UpdateHUDHealth()
 		return;
 	}
 	BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+}
+
+void ABlasterCharacter::PollInit()
+{
+	if(BlasterPlayerState == nullptr)
+	{
+		BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
+		if(BlasterPlayerState)
+		{
+			BlasterPlayerState->AddToScore(0.f);
+		}
+	}
 }
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)

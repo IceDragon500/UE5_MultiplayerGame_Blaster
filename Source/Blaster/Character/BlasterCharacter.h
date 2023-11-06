@@ -8,6 +8,7 @@
 #include "Blaster/BlasterTypes/TurningInPlace.h"
 #include "GameFramework/Character.h"
 #include "Blaster/Interface/InteractWithCrosshairsInterface.h"
+//#include "Blaster/PlayerState/BlasterPlayerState.h"
 #include "Components/TimelineComponent.h"
 #include "BlasterCharacter.generated.h"
 
@@ -59,6 +60,8 @@ public:
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
 	FORCEINLINE bool IsElimmed() const { return bElimmed; }
+	FORCEINLINE float GetHealth() const { return Health; }
+	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 
 	AWeapon* GetEquippedWeapon();
 
@@ -135,6 +138,11 @@ protected:
 	//更新显示血量的HUD
 	void UpdateHUDHealth();
 
+	//初始化分数相关的操作
+	//Poll for any relelvant classes and initialize our hud
+	//轮询任何相关类并初始化hud
+	void PollInit();
+
 private:
 	//创建一个OnRep的方法，给需要复制的变量指定这个方法
 	//是一个接收到服务器replicate后需要执行的函数，replicate过程是单向的，所以On_RepXXX只能再客户端执行
@@ -158,6 +166,8 @@ private:
 private:
 	UPROPERTY(VisibleAnywhere, Category = "BlasterPlayer");
 	ABlasterPlayerController* BlasterPlayerController;
+
+	class ABlasterPlayerState* BlasterPlayerState;
 	
 	UPROPERTY(VisibleAnywhere, Category = "BlasterPlayer|摄像机")
 	USpringArmComponent* CameraBoom;
