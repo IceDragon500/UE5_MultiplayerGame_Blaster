@@ -32,6 +32,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void ShowPickupWidget(bool bShowWidget);//显示拾取界面
 	void Dropped();//扔出武器
+	virtual void OnRep_Owner() override;
+	void SetHUDAmmo();
 public:
 	
 	void SetWeaponState(EWeaponState State);
@@ -71,6 +73,10 @@ protected:
 	virtual void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	
 private:
+	UPROPERTY()
+	class ABlasterCharacter* BlasterOwnerCharacter = nullptr;
+	UPROPERTY()
+	class ABlasterPlayerController* BlasterOwnerController = nullptr;
 	
 	UPROPERTY(VisibleAnywhere, Category= "武器属性")
 	USkeletalMeshComponent* WeaponMesh;
@@ -102,5 +108,15 @@ private:
 	//这把武器镜头缩放速度
 	UPROPERTY(EditAnywhere, Category= "武器属性")
 	float ZoomInterpSpeed = 20.f;
+
+	UPROPERTY(EditAnywhere, Category= "武器属性", ReplicatedUsing = OnRep_Ammo)
+	int32 Ammo;//子弹数量
+
+	UFUNCTION()
+	void OnRep_Ammo();
+	//进行一轮射击，里面包含了消耗子弹的逻辑
+	void SpendRound();
 	
+	UPROPERTY(EditAnywhere, Category= "武器属性")
+	int32 MagCapacity;//弹夹数量
 };

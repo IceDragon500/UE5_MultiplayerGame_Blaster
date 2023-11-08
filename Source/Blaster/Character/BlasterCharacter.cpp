@@ -561,6 +561,10 @@ void ABlasterCharacter::Destroyed()
 
 void ABlasterCharacter::MulticastElim_Implementation()
 {
+	if(BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHUDAmmo(0);
+	}
 	bElimmed = true;
 	//实现玩家淘汰之后的逻辑
 	PlayElimMontage();
