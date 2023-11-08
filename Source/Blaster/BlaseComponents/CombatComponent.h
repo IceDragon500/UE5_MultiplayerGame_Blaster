@@ -25,9 +25,10 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	//处理需要
+	//处理需要复制的变量
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	//装备武器的逻辑
 	void EquipWeapon(AWeapon* WeaponToEquip);
 	
 protected:
@@ -142,5 +143,10 @@ private:
 	void OnRep_CarriedAmmo();
 
 	TMap<EWeaponType, int32> CarriedAmmoMap;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingARAmmo = 300;
+
+	void InitializeCarriedAmmo();
 		
 };

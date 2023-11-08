@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Casing.h"
+#include "WeaponTypes.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
@@ -41,6 +42,7 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
+	FORCEINLINE EWeaponType GetWeaponTyep() const { return WeaponType; }
 
 	//开火相关的逻辑
 	virtual void Fire(const FVector& HitTarget);
@@ -121,4 +123,7 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category= "武器属性")
 	int32 MagCapacity;//最大子弹数量
+
+	UPROPERTY(EditAnywhere, Category= "武器属性")
+	EWeaponType WeaponType;
 };

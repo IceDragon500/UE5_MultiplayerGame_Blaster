@@ -199,8 +199,14 @@ void AWeapon::SetWeaponState(EWeaponState State)
 	case EWeaponState::EWS_Equipped:
 		ShowPickupWidget(false);
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		WeaponMesh->SetSimulatePhysics(true);
-		WeaponMesh->SetEnableGravity(true);
+
+		/*
+		 *根据我的搜索结果，这个错误通常是由于物体的“启用碰撞”属性设置为“查询”或“无碰撞”，但“模拟物理”被设置为“是”导致的。
+		 *将“启用碰撞”属性更改为其他值或确保物体的“模拟物理”标志未设置即可解决此问题。
+		 */
+		WeaponMesh->SetSimulatePhysics(false);//这里两个需要设置成false，否则会报错
+		WeaponMesh->SetEnableGravity(false);
+		
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
 	case EWeaponState::EWS_Dropped:

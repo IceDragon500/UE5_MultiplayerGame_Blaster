@@ -46,8 +46,11 @@ void UCombatComponent::BeginPlay()
 
 		DefaultFOV = Character->GetFollowCamera()->FieldOfView;
 		CurrentFOV = DefaultFOV;
+		if(Character->HasAuthority())
+		{
+			InitializeCarriedAmmo();
+		}
 	}
-	
 }
 
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -119,6 +122,16 @@ bool UCombatComponent::CanFire()
 
 void UCombatComponent::OnRep_CarriedAmmo()
 {
+	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->GetController()) : Controller;
+	if(Controller)
+	{
+		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+	}
+}
+
+void UCombatComponent::InitializeCarriedAmmo()
+{
+	CarriedAmmoMap.Add(EWeaponType::EWT_AssaultRifle, 300);
 }
 
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
@@ -141,20 +154,36 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	//判断是否有效
 	if(Character == nullptr || WeaponToEquip == nullptr) return;
 
+	//如果当前手上有武器（就是不是空指针），则执行武器的Dropped方法
 	if(EquippedWeapon)
 	{
 		EquippedWeapon->Dropped();
 	}
+
+	//将装备的武器设置为传入的WeaponToEquip
 	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
-	if(HandSocket)
+	if(const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket")))
 	{
 		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
 	}
 
-	EquippedWeapon->SetOwner(Character);
-	EquippedWeapon->SetHUDAmmo();
+	EquippedWeapon->SetOwner(Character);//设置武器的拥有者 为当前玩家
+	EquippedWeapon->SetHUDAmmo();//显示武器当前的弹药至界面上
+
+	//如果CarriedAmmoMap中可以找到装备武器的类型，那我们就可以从map中找到武器类型对应的CarriedAmmo的数量
+	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponTyep()))
+	{
+		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponTyep()];
+	}
+
+	//将当前CarriedAmmo设置显示至界面
+	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->GetController()) : Controller;
+	if(Controller)
+	{
+		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+	}
+	
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
 	
