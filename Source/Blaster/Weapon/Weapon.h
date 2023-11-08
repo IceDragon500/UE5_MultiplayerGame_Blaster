@@ -62,6 +62,8 @@ public:
 	//是否可以自动开火
 	UPROPERTY(EditAnywhere, Category= "武器属性")
 	bool bAutomatic = true;
+	//子弹是否为空
+	bool IsEmpty();
 	
 protected:
 	virtual void BeginPlay() override;
@@ -110,7 +112,7 @@ private:
 	float ZoomInterpSpeed = 20.f;
 
 	UPROPERTY(EditAnywhere, Category= "武器属性", ReplicatedUsing = OnRep_Ammo)
-	int32 Ammo;//子弹数量
+	int32 Ammo;//当前子弹数量
 
 	UFUNCTION()
 	void OnRep_Ammo();
@@ -118,5 +120,5 @@ private:
 	void SpendRound();
 	
 	UPROPERTY(EditAnywhere, Category= "武器属性")
-	int32 MagCapacity;//弹夹数量
+	int32 MagCapacity;//最大子弹数量
 };

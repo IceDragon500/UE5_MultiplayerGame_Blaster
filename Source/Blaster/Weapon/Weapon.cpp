@@ -74,6 +74,11 @@ void AWeapon::Fire(const FVector& HitTarget)
 	
 }
 
+bool AWeapon::IsEmpty()
+{
+	return Ammo <=0 ? true : false ;
+}
+
 // Called when the game starts or when spawned
 void AWeapon::BeginPlay()
 {
@@ -237,10 +242,6 @@ void AWeapon::OnRep_Ammo()
 
 void AWeapon::SpendRound()
 {
-	--Ammo;
+	Ammo = FMath::Clamp(Ammo -1, 0, MagCapacity);
 	SetHUDAmmo();
 }
-
-
-
-
