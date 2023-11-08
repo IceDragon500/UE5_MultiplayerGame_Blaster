@@ -37,6 +37,7 @@ public:
 	UPROPERTY(EditAnywhere, Category= "玩家状态")
 	TSubclassOf<UUserWidget> CharacterOverlayClass;
 
+	UPROPERTY()
 	UCharacterOverlay* CharacterOverlay;
 
 protected:

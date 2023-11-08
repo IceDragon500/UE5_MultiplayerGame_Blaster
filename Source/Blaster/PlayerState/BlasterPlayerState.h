@@ -16,11 +16,25 @@ class BLASTER_API ABlasterPlayerState : public APlayerState
 	GENERATED_BODY()
 
 public:
-	virtual void OnRep_Score() override;
+	//AActor::GetLifetimeReplicatedProps
+	//返回用于网络复制的属性，所有具有原生复制属性的角色类都需要重载该属性
+	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
+	virtual void OnRep_Score() override;//胜利增加的分数
+	
+	UFUNCTION()
+	virtual void OnRep_Defeats();//失败增加的分数
+	
 	void AddToScore(float ScoreAmount);
+	void AddToDefeats(int32 DefeatsAmount);
+	
 protected:
 
 private:
+	UPROPERTY()
 	ABlasterCharacter* Character;
+	UPROPERTY()
 	ABlasterPlayerController* Controller;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Defeats)
+	int32 Defeats;
 };

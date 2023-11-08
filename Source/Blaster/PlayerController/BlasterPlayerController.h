@@ -20,6 +20,7 @@ public:
 
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDScore(float Score);
+	void SetHUDDefeats(int32 Score);
 	virtual void OnPossess(APawn* InPawn) override;
 
 protected:
@@ -27,6 +28,7 @@ protected:
 	
 
 private:
+	UPROPERTY()
 	ABlasterHUD* BlasterHUD;
 	
 };

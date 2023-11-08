@@ -2,6 +2,7 @@
 
 
 #include "BlasterPlayerState.h"
+#include "Net/UnrealNetwork.h"
 
 void ABlasterPlayerState::AddToScore(float ScoreAmount)
 {
@@ -18,6 +19,14 @@ void ABlasterPlayerState::AddToScore(float ScoreAmount)
 	}
 }
 
+void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ABlasterPlayerState, Defeats);
+	
+}
+
 void ABlasterPlayerState::OnRep_Score()
 {
 	Super::OnRep_Score();
@@ -30,6 +39,38 @@ void ABlasterPlayerState::OnRep_Score()
 			Controller->SetHUDScore(GetScore());
 		}
 	}	
+}
+
+void ABlasterPlayerState::OnRep_Defeats()
+{
+	Character = Cast<ABlasterCharacter>(GetPawn());
+	if(Character)
+	{
+		Controller = Cast<ABlasterPlayerController>(Character->Controller);
+		if(Controller)
+		{
+			Controller->SetHUDDefeats(Defeats);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnRep_Defeats失败"))
+	}
+}
+
+void ABlasterPlayerState::AddToDefeats(int32 DefeatsAmount)
+{
+	Defeats += DefeatsAmount;
+	//Score += ScoreAmount;
+	Character = Cast<ABlasterCharacter>(GetPawn());
+	if(Character)
+	{
+		Controller = Cast<ABlasterPlayerController>(Character->Controller);
+		if(Controller)
+		{
+			Controller->SetHUDDefeats(Defeats);
+		}
+	}
 }
 
 

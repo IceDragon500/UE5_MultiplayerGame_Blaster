@@ -65,10 +65,13 @@ protected:
 
 private:
 	//角色实例
+	UPROPERTY()
 	ABlasterCharacter* Character;
 	//角色控制器实例
+	UPROPERTY()
 	ABlasterPlayerController* Controller;
 	//角色HUD实例
+	UPROPERTY()
 	ABlasterHUD* HUD;
 
 	//已经装备上的武器

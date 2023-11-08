@@ -53,6 +53,7 @@ private:
 	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
 	bool bWeaponEquipped;
 
+	UPROPERTY()
 	AWeapon* EquippedWeapon;
 
 	//是否蹲下

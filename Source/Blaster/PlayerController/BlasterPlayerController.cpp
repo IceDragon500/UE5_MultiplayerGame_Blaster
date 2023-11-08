@@ -35,7 +35,6 @@ void ABlasterPlayerController::SetHUDHealth(float Health, float MaxHealth)
 
 	if(BlasterHUD == nullptr)
 	{
-		UE_LOG(LogTemp,Warning,TEXT("BlasterHUD失败"));
 		BlasterHUD = Cast<ABlasterHUD>(GetHUD());
 	}
 
@@ -62,5 +61,15 @@ void ABlasterPlayerController::SetHUDScore(float Score)
 		FString ScoreText = FString::Printf(TEXT("%d"), FMath::FloorToInt(Score));
 		BlasterHUD->CharacterOverlay->ScoreAmount->SetText(FText::FromString(ScoreText));
 	}
-	
+}
+
+void ABlasterPlayerController::SetHUDDefeats(int32 Score)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	bool bHUDValid = BlasterHUD && BlasterHUD->CharacterOverlay && BlasterHUD->CharacterOverlay->DefeatsAmount;
+	if(bHUDValid)
+	{
+		FString DefeatsText = FString::Printf(TEXT("%d"), Score);
+		BlasterHUD->CharacterOverlay->DefeatsAmount->SetText(FText::FromString(DefeatsText));
+	}
 }

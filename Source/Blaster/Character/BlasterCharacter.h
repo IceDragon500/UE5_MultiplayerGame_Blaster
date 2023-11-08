@@ -167,6 +167,7 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "BlasterPlayer");
 	ABlasterPlayerController* BlasterPlayerController;
 
+	UPROPERTY()
 	class ABlasterPlayerState* BlasterPlayerState;
 	
 	UPROPERTY(VisibleAnywhere, Category = "BlasterPlayer|摄像机")
