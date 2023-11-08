@@ -6,6 +6,7 @@
 #include "Blaster/HUD/BlasterHUD.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/Weapon/Weapon.h"
+#include "Blaster/Weapon/WeaponTypes.h"
 #include "Components/ActorComponent.h"
 #include "CombatComponent.generated.h"
 
@@ -120,7 +121,10 @@ private:
 	void InterpFOV(float DeltaTime);
 
 	FTimerHandle FireTimer;
-	
+
+	/*
+	 *开火相关内容
+	 */
 	bool bCanFire = true;
 	//开始开火计时器
 	void StartFireTimer();
@@ -128,5 +132,15 @@ private:
 	void FireTimerFinished();
 
 	bool CanFire();
+
+	//Carried ammo for the currently-equipped weapon
+	//为当前装备的武器携带弹药
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_CarriedAmmo)
+	int32 CarriedAmmo;
+
+	UFUNCTION()
+	void OnRep_CarriedAmmo();
+
+	TMap<EWeaponType, int32> CarriedAmmoMap;
 		
 };

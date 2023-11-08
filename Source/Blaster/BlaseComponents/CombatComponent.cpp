@@ -30,9 +30,10 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	//复制已经装备的武器，当他有变化的时候会复制给所有客户端
+	//在这里注册需要复制的值，这样才能与对应的Rep方法
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, bAiming);
+	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
 }
 
 void UCombatComponent::BeginPlay()
@@ -114,6 +115,10 @@ bool UCombatComponent::CanFire()
 	if(EquippedWeapon == nullptr) return false;
 	//return !EquippedWeapon->IsEmpty() || !bCanFire;
 	return !EquippedWeapon->IsEmpty();
+}
+
+void UCombatComponent::OnRep_CarriedAmmo()
+{
 }
 
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)

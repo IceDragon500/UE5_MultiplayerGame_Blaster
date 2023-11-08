@@ -6,7 +6,6 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Components/WidgetComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
-#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
@@ -213,6 +212,11 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		WeaponMesh->SetEnableGravity(true);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		break;
+	case EWeaponState::EWS_Initial:
+		break;
+	case EWeaponState::EWS_MAX:
+		break;
+	default: ;
 	}
 }
 
@@ -232,6 +236,11 @@ void AWeapon::OnRep_WeaponState()
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		ShowPickupWidget(true);
 		break;
+	case EWeaponState::EWS_Initial:
+		break;
+	case EWeaponState::EWS_MAX:
+		break;
+	default: ;
 	}
 }
 
