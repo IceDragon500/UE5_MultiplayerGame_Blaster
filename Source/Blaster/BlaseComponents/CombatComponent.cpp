@@ -205,6 +205,8 @@ void UCombatComponent::FinishReloading()
 	if(Character->HasAuthority())
 	{
 		CombatState = ECombatState::ECS_Unoccupied;
+		//子弹计算逻辑
+		UpdateAmmoValues();
 	}
 	if(bFireButtonPressed)
 	{
@@ -213,8 +215,8 @@ void UCombatComponent::FinishReloading()
 }
 
 void UCombatComponent::ServerReload_Implementation()
-{
-	if(Character == nullptr) return;
+{	
+	//将状态更改为换弹
 	CombatState = ECombatState::ECS_Reloading;
 	HandleReload();
 }
@@ -239,9 +241,40 @@ void UCombatComponent::OnRep_CombatState()
 	}
 }
 
+void UCombatComponent::UpdateAmmoValues()
+{
+	if(Character == nullptr || EquippedWeapon == nullptr) return;
+	int32 ReloadAmount = AmountToReload();
+	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponTyep()))
+	{
+		CarriedAmmoMap[EquippedWeapon->GetWeaponTyep()] -= ReloadAmount;
+		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponTyep()];
+	}
+	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->GetController()) : Controller;
+	if(Controller)
+	{
+		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+	}
+	EquippedWeapon->AddAmmo(-ReloadAmount);
+}
+
 void UCombatComponent::HandleReload()
 {
 	Character->PlayReloadMontage();
+}
+
+int32 UCombatComponent::AmountToReload()
+{
+	if(EquippedWeapon == nullptr) return 0;
+	int32 RoomInMag = EquippedWeapon->GetMagCapacity() - EquippedWeapon->GetAmmo();
+
+	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponTyep()))
+	{
+		int32 AmountCarried = CarriedAmmoMap[EquippedWeapon->GetWeaponTyep()];
+		int32 Least = FMath::Min(RoomInMag, AmountCarried);
+		return FMath::Clamp(RoomInMag, 0, Least);
+	}
+	return 0;
 }
 
 void UCombatComponent::OnRep_EquippedWeapon()

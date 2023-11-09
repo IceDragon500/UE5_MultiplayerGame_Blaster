@@ -80,6 +80,8 @@ protected:
 
 	void HandleReload();
 
+	int32 AmountToReload();
+
 private:
 	//角色实例
 	UPROPERTY()
@@ -146,7 +148,7 @@ private:
 	void StartFireTimer();
 	//结束开火计时器
 	void FireTimerFinished();
-
+	//只用来判断当前是否可以开火的方法
 	bool CanFire();
 
 	//Carried ammo for the currently-equipped weapon
@@ -154,20 +156,28 @@ private:
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_CarriedAmmo)
 	int32 CarriedAmmo;
 
+	//为当前装备的武器携带弹药的复制方法
 	UFUNCTION()
 	void OnRep_CarriedAmmo();
 
+	//用来存放武器类型与武器子弹数量的map
+	//不直接写当前武器有多少子弹，而是通过武器类型来区分
 	TMap<EWeaponType, int32> CarriedAmmoMap;
 
 	UPROPERTY(EditAnywhere)
 	int32 StartingARAmmo = 300;
 
+	//初始化弹药，如果有新增类型的武器，需要在这里添加
 	void InitializeCarriedAmmo();
 
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState = ECombatState::ECS_Unoccupied;
 
+	//复制CombateState变化的方法
 	UFUNCTION()
 	void OnRep_CombatState();
+
+	//子弹计算逻辑
+	void UpdateAmmoValues();
 		
 };

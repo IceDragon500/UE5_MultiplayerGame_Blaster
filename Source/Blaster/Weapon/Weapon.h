@@ -34,15 +34,19 @@ public:
 	void ShowPickupWidget(bool bShowWidget);//显示拾取界面
 	void Dropped();//扔出武器
 	virtual void OnRep_Owner() override;
-	void SetHUDAmmo();
-public:
-	
+	void SetHUDAmmo();	
 	void SetWeaponState(EWeaponState State);
+	void AddAmmo(int32 AmmoToAdd);
+
+	
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return  AreaSphere; }
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
 	FORCEINLINE EWeaponType GetWeaponTyep() const { return WeaponType; }
+	FORCEINLINE int32 GetAmmo() const { return Ammo; }
+	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
+	
 
 	//开火相关的逻辑
 	virtual void Fire(const FVector& HitTarget);
