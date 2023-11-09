@@ -70,6 +70,10 @@ public:
 	bool bAutomatic = true;
 	//子弹是否为空
 	bool IsEmpty();
+
+	//装备武器的声音
+	UPROPERTY(EditAnywhere, Category= "武器属性")
+	USoundCue* EquipSound;
 	
 protected:
 	virtual void BeginPlay() override;

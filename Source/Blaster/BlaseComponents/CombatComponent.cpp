@@ -185,10 +185,37 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	{
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
 	}
+
+	//播放装备武器的声音
+	if(EquippedWeapon->EquipSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound,Character->GetActorLocation());
+	}
 	
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
 	
+}
+
+void UCombatComponent::OnRep_EquippedWeapon()
+{
+	if(EquippedWeapon && Character)
+	{
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
+		if(HandSocket)
+		{
+			HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
+		}
+		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+		Character->bUseControllerRotationYaw = true;
+		
+		//播放装备武器的声音
+		if(EquippedWeapon->EquipSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound,Character->GetActorLocation());
+		}
+	}
 }
 
 void UCombatComponent::Reload()
@@ -275,21 +302,6 @@ int32 UCombatComponent::AmountToReload()
 		return FMath::Clamp(RoomInMag, 0, Least);
 	}
 	return 0;
-}
-
-void UCombatComponent::OnRep_EquippedWeapon()
-{
-	if(EquippedWeapon && Character)
-	{
-		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
-		if(HandSocket)
-		{
-			HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
-		}
-		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
-		Character->bUseControllerRotationYaw = true;
-	}
 }
 
 void UCombatComponent::TraceUnderCrosehairs(FHitResult& TraceHitResult)

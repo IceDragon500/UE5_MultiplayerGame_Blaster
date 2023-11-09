@@ -113,4 +113,10 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
 	bool bUseFABRIK;
+
+	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
+	bool bUseAimOffset;
+
+	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
+	bool bTransformRightHand;
 };
