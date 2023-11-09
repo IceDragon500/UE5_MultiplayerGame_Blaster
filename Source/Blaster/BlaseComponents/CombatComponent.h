@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Blaster/BlasterTypes/CombatState.h"
 #include "Blaster/HUD/BlasterHUD.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/Weapon/Weapon.h"
@@ -33,6 +34,9 @@ public:
 
 	//武器换弹
 	void Reload();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
 	
 protected:
 	// Called when the game starts
@@ -73,6 +77,8 @@ protected:
 	//服务器上的换弹
 	UFUNCTION(Server, Reliable)
 	void ServerReload();
+
+	void HandleReload();
 
 private:
 	//角色实例
@@ -157,5 +163,11 @@ private:
 	int32 StartingARAmmo = 300;
 
 	void InitializeCarriedAmmo();
+
+	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+	ECombatState CombatState = ECombatState::ECS_Unoccupied;
+
+	UFUNCTION()
+	void OnRep_CombatState();
 		
 };

@@ -110,4 +110,7 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
 	bool bElimmed;
+
+	UPROPERTY(BlueprintReadOnly, Category="角色", meta=(AllowPrivateAccess = "true"))
+	bool bUseFABRIK;
 };

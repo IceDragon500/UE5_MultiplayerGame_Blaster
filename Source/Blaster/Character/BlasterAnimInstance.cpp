@@ -135,5 +135,5 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotation, DeltaSeconds, 30.f);
 		}
 	}
-	//GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Blue, FString::Printf(TEXT("Yaw: %f"), Yaw));
+	bUseFABRIK = BlasterCharacter->GetCombatState() != ECombatState::ECS_Reloading;
 }

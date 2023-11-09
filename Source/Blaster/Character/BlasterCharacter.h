@@ -74,6 +74,8 @@ public:
 
 	FVector GetHitTarget() const;
 
+	ECombatState GetCombatState() const;
+
 	void Elim();
 	//被淘汰之后的逻辑
 	UFUNCTION(NetMulticast, Reliable)
@@ -190,7 +192,7 @@ private:
 	AWeapon* OverlappingWeapon;
 
 	//创建战斗组件CombatComponent
-	UPROPERTY(VisibleAnywhere, Category = "BlasterPlayer")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BlasterPlayer", meta=(AllowPrivateAccess = "true"))
 	UCombatComponent* Combat;
 	
 	float AO_Yaw;//瞄准偏移Yaw
