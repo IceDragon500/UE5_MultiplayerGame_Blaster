@@ -157,14 +157,16 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ThisClass::Jump);
 		
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ThisClass::FireButtonPressed);
-		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &ThisClass::FIreButtonReleased);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &ThisClass::FireButtonReleased);
 		
 		EnhancedInputComponent->BindAction(EKeyAction, ETriggerEvent::Triggered, this, &ThisClass::EKeyPressed);
+
+		EnhancedInputComponent->BindAction(RKeyAction, ETriggerEvent::Triggered, this, &ThisClass::ReloadButtonPressed);
 		
 		EnhancedInputComponent->BindAction(Crouching, ETriggerEvent::Started, this, &ThisClass::CrouchKeyPressed);//注意这里是ETriggerEvent::Started
 		
-		EnhancedInputComponent->BindAction(Aiming,ETriggerEvent::Started, this, &ThisClass::AimKeyPressed);
-		EnhancedInputComponent->BindAction(Aiming,ETriggerEvent::Completed, this, &ThisClass::AImKeyReleased);
+		EnhancedInputComponent->BindAction(Aiming,ETriggerEvent::Started, this, &ThisClass::AimButtonPressed);
+		EnhancedInputComponent->BindAction(Aiming,ETriggerEvent::Completed, this, &ThisClass::AimButtonReleased);
 		
 	}
 }
@@ -235,11 +237,19 @@ void ABlasterCharacter::FireButtonPressed(const FInputActionValue& Value)
 	}
 }
 
-void ABlasterCharacter::FIreButtonReleased(const FInputActionValue& Value)
+void ABlasterCharacter::FireButtonReleased(const FInputActionValue& Value)
 {
 	if(Combat)
 	{
 		Combat->FireButtonPressed(false);
+	}
+}
+
+void ABlasterCharacter::ReloadButtonPressed(const FInputActionValue& Value)
+{
+	if(Combat)
+	{
+		Combat->Reload();
 	}
 }
 
@@ -282,7 +292,7 @@ void ABlasterCharacter::CrouchKeyPressed(const FInputActionValue& Value)
 	}
 }
 
-void ABlasterCharacter::AimKeyPressed(const FInputActionValue& Value)
+void ABlasterCharacter::AimButtonPressed(const FInputActionValue& Value)
 {
 	if(Combat)
 	{
@@ -290,7 +300,7 @@ void ABlasterCharacter::AimKeyPressed(const FInputActionValue& Value)
 	}
 }
 
-void ABlasterCharacter::AImKeyReleased(const FInputActionValue& Value)
+void ABlasterCharacter::AimButtonReleased(const FInputActionValue& Value)
 {
 	if(Combat)
 	{
@@ -531,6 +541,31 @@ void ABlasterCharacter::PlayElimMontage()
 	if(AnimInstance && ElimMontage)
 	{
 		AnimInstance->Montage_Play(ElimMontage);
+	}
+}
+
+void ABlasterCharacter::PlayReloadMontage()
+{
+	if(Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+	
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && ReloadMontage)
+	{
+		AnimInstance->Montage_Play(ReloadMontage);
+		FName SectionName;
+
+		switch (Combat->EquippedWeapon->GetWeaponTyep()) {
+		case EWeaponType::EWT_AssaultRifle:
+			SectionName = FName("Rifle") ;
+			break;
+		case EWeaponType::EWT_Rifle:
+			break;
+		case EWeaponType::EWT_MAX:
+			break;
+		default: ;
+		}
+		
+		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
 

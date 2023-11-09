@@ -69,6 +69,8 @@ public:
 	void PlayFireMontage(bool bAiming);
 	//播放死亡动画
 	void PlayElimMontage();
+	//播放换弹动画
+	void PlayReloadMontage();
 
 	FVector GetHitTarget() const;
 
@@ -103,7 +105,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
 	UInputAction* AttackAction;
 	void FireButtonPressed(const FInputActionValue& Value);
-	void FIreButtonReleased(const FInputActionValue& Value);
+	void FireButtonReleased(const FInputActionValue& Value);
+
+	//增强输入-R键功能
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
+	UInputAction* RKeyAction;
+	void ReloadButtonPressed(const FInputActionValue& Value);
 
 	//增强输入-E键功能
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
@@ -118,8 +125,8 @@ protected:
 	//增强输入-瞄准
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
 	UInputAction* Aiming;
-	void AimKeyPressed(const FInputActionValue& Value);
-	void AImKeyReleased(const FInputActionValue& Value);
+	void AimButtonPressed(const FInputActionValue& Value);
+	void AimButtonReleased(const FInputActionValue& Value);
 	float CalculateSpeed();
 	void CalculateAO_Pitch();
 
@@ -162,8 +169,6 @@ private:
 	float CameraThreshold = 200.f;
 
 	
-
-private:
 	UPROPERTY(VisibleAnywhere, Category = "BlasterPlayer");
 	ABlasterPlayerController* BlasterPlayerController;
 
@@ -206,6 +211,10 @@ private:
 	//死亡动画
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|战斗")
 	UAnimMontage* ElimMontage;
+
+	//换弹动画
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|战斗")
+	UAnimMontage* ReloadMontage;
 
 	//是否旋转根骨骼
 	bool bRotateRootBone;
