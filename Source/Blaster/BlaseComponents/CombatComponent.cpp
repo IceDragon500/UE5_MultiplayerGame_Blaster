@@ -3,6 +3,7 @@
 
 #include "CombatComponent.h"
 
+#include "InputTriggers.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
@@ -52,6 +53,11 @@ void UCombatComponent::BeginPlay()
 			InitializeCarriedAmmo();
 		}
 	}
+}
+
+void UCombatComponent::InitializeCarriedAmmo()
+{
+	CarriedAmmoMap.Add(EWeaponType::EWT_AssaultRifle, 300);
 }
 
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -117,8 +123,8 @@ void UCombatComponent::FireTimerFinished()
 bool UCombatComponent::CanFire()
 {
 	if(EquippedWeapon == nullptr) return false;
-	//return !EquippedWeapon->IsEmpty() || !bCanFire;
-	return !EquippedWeapon->IsEmpty();
+	return !EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied;
+	//return !EquippedWeapon->IsEmpty();
 }
 
 void UCombatComponent::OnRep_CarriedAmmo()
@@ -130,11 +136,6 @@ void UCombatComponent::OnRep_CarriedAmmo()
 	}
 }
 
-void UCombatComponent::InitializeCarriedAmmo()
-{
-	CarriedAmmoMap.Add(EWeaponType::EWT_AssaultRifle, 300);
-}
-
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	MulticastFire(TraceHitTarget);
@@ -143,7 +144,7 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	if(EquippedWeapon == nullptr) return;
-	if(Character)
+	if(Character && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayFireMontage(bAiming);  //执行角色身上的开火逻辑：播放开火动画
 		EquippedWeapon->Fire(TraceHitTarget); //执行武器上的开火逻辑：播放武器开火动画和特效音效
@@ -205,6 +206,10 @@ void UCombatComponent::FinishReloading()
 	{
 		CombatState = ECombatState::ECS_Unoccupied;
 	}
+	if(bFireButtonPressed)
+	{
+		Fire();
+	}
 }
 
 void UCombatComponent::ServerReload_Implementation()
@@ -218,6 +223,10 @@ void UCombatComponent::OnRep_CombatState()
 {
 	switch (CombatState) {
 	case ECombatState::ECS_Unoccupied:
+		if(bFireButtonPressed)
+		{
+			Fire();
+		}
 		break;
 	case ECombatState::ECS_Reloading:
 		HandleReload();
