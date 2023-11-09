@@ -118,6 +118,10 @@ void UCombatComponent::FireTimerFinished()
 	{
 		Fire();
 	}
+	if(EquippedWeapon->IsEmpty())
+	{
+		Reload();
+	}
 }
 
 bool UCombatComponent::CanFire()
@@ -192,9 +196,14 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound,Character->GetActorLocation());
 	}
 	
+	//如果拾取的武器是空子弹的，但是身上有携带有子弹，则执行换弹
+	if(EquippedWeapon->IsEmpty())
+	{
+		Reload();
+	}
+	
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
-	
 }
 
 void UCombatComponent::OnRep_EquippedWeapon()
