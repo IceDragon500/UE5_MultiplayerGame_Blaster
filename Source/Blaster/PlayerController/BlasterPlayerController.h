@@ -37,6 +37,7 @@ public:
 	virtual void ReceivedPlayer() override;
 	//从GameMode设置MatchState
 	void OnMatchStateSet(FName State);
+	void HandleMatchHasStarted();
 	
 protected:
 	virtual void BeginPlay() override;

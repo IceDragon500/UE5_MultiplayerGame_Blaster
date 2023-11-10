@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Announcement.h"
 #include "CharacterOverlay.h"
 #include "GameFramework/HUD.h"
 #include "BlasterHUD.generated.h"
@@ -34,14 +35,21 @@ public:
 
 	FORCEINLINE void SetHUDPackage(const FHUDPackage& Package) { HUDPackage = Package; }
 
-	UPROPERTY(EditAnywhere, Category= "玩家状态")
-	TSubclassOf<UUserWidget> CharacterOverlayClass;
-
+	//创建CharacterOverlay角色主界面
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UCharacterOverlay> CharacterOverlayClass;
 	UPROPERTY()
 	UCharacterOverlay* CharacterOverlay;
-
-	//创建CharacterOverlay
 	void AddCharacterOverlay();
+
+	//创建Announcement公告界面
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UAnnouncement> AnnouncementClass;
+	UPROPERTY()
+	UAnnouncement* Announcement;
+	void AddAnnouncement();
+
+	
 
 protected:
 	virtual  void BeginPlay() override;

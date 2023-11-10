@@ -77,9 +77,25 @@ ABlasterCharacter::ABlasterCharacter()
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	BlasterPlayerController = Cast<ABlasterPlayerController>(Controller);
 	
+	//这段代码修复了一个问题
+	//当GameMode中启用延迟开始时 bDelayStart = true
+	//会导致作为服务器的客户端无法操作，是因为上面的PlayerController转换失败了，导致if里面的增强输入没有生效
+	//解决办法是用如下的if判断
+	if(const ULocalPlayer* Player = GEngine && GetWorld() ? GEngine->GetFirstGamePlayer(GetWorld()) : nullptr)
+	{
+		UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(Player);
+		if(Subsystem)
+		{
+			Subsystem->AddMappingContext(InputContext, 0);
+		}
+		else
+		{
+			UE_LOG(LogTemp,Warning,TEXT("增强输入Subsystem初始化失败"));
+		}
+	}
+	/*
+	BlasterPlayerController = Cast<ABlasterPlayerController>(Controller);//这里在GameMode启用bDelayedStart = true时，服务器端会失败
 	if(BlasterPlayerController)
 	{
 		//设置增强输入
@@ -93,7 +109,11 @@ void ABlasterCharacter::BeginPlay()
 			UE_LOG(LogTemp,Warning,TEXT("增强输入Subsystem初始化失败"));
 		}
 	}
-
+	else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("BlasterPlayerController获取失败"));
+	}
+	*/
 	UpdateHUDHealth();
 
 	if(HasAuthority())
