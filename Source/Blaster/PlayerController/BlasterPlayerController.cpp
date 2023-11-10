@@ -17,6 +17,25 @@ void ABlasterPlayerController::BeginPlay()
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
 }
 
+void ABlasterPlayerController::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	SetHUDTime();
+	CheckTimeSync(DeltaSeconds);
+	
+}
+
+void ABlasterPlayerController::CheckTimeSync(float DeltaTime)
+{
+	TimeSyncRunningTime += DeltaTime;
+	if(IsLocalController() && TimeSyncRunningTime > TimeSyncFrequency)
+	{
+		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
+		TimeSyncRunningTime = 0.f;
+	}
+}
+
+
 void ABlasterPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
@@ -27,6 +46,8 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 		SetHUDHealth(BlasterCharacter->GetHealth(), BlasterCharacter->GetMaxHealth());
 	}
 }
+
+
 
 void ABlasterPlayerController::SetHUDHealth(float Health, float MaxHealth)
 {
@@ -93,5 +114,71 @@ void ABlasterPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 	{
 		FString CarriedAmmoText = FString::Printf(TEXT("%d"), Ammo);
 		BlasterHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(CarriedAmmoText));
+	}
+}
+
+void ABlasterPlayerController::SetHUDMatchCountdown(float CountdownTime)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	bool bHUDValid = BlasterHUD && BlasterHUD->CharacterOverlay && BlasterHUD->CharacterOverlay->MatchCountdownText;
+	if(bHUDValid)
+	{
+		int32 Minutes = FMath::FloorToInt(CountdownTime / 60.f);
+		int32 Seconds = CountdownTime - Minutes * 60;
+		FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
+		BlasterHUD->CharacterOverlay->MatchCountdownText->SetText(FText::FromString(CountdownText));
+	}
+}
+
+void ABlasterPlayerController::SetHUDTime()
+{
+	/*
+	*在这句话中，FMath::CeilToInt()的作用是把MatchTime - GetWorld()->GetTimeSeconds()的结果进行向上取整。也就是说如果结果的小数部分大于或等于0.5，则会返回下一个整数。
+	*假设MatchTime表示总的游戏时长，并且GetWorld()->GetTimeSeconds()返回的是当前游戏中的实时时间。那么SecondsLeft就会存储游戏中还剩多少秒结束。
+	*具体的值取决于MatchTime和GetWorld()->GetTimeSeconds()的具体数值。比如如果MatchTime是90秒，而当前时间为60秒，那么SecondsLeft就是30秒。如果MatchTime是180秒，当前时间为60秒，那么SecondsLeft就是120秒。
+	 */
+	uint32 SecondsLeft = FMath::CeilToInt(MatchTime - GetServerTime());
+
+	if(CountdownInt != SecondsLeft)
+	{
+		SetHUDMatchCountdown(MatchTime - GetServerTime());
+	}
+	CountdownInt = SecondsLeft;
+}
+
+
+void ABlasterPlayerController::ServerRequestServerTime_Implementation(float TimeOfClientRequest)
+{
+	float ServerTimeOfReceipt = GetWorld()->GetTimeSeconds();
+	ClientReportServerTime(TimeOfClientRequest, ServerTimeOfReceipt);
+}
+
+void ABlasterPlayerController::ClientReportServerTime_Implementation(float TimeOfClientRequest,
+	float TimeServerReceivedClientRequest)
+{
+	float RoundTripTime = GetWorld()->GetTimeSeconds() - TimeOfClientRequest;
+	float CurrentServerTime = TimeServerReceivedClientRequest + (0.5f * RoundTripTime);
+	ClientServerDelta = CurrentServerTime - GetWorld()->GetTimeSeconds();
+}
+
+float ABlasterPlayerController::GetServerTime()
+{
+	if(HasAuthority())
+	{
+		return GetWorld()->GetTimeSeconds();
+	}
+	else
+	{
+		return GetWorld()->GetTimeSeconds() + ClientServerDelta;
+	}
+	
+}
+
+void ABlasterPlayerController::ReceivedPlayer()
+{
+	Super::ReceivedPlayer();
+	if(IsLocalController())
+	{
+		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
 	}
 }
