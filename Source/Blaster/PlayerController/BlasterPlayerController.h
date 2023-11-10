@@ -20,12 +20,13 @@ public:
 
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDScore(float Score);
-	void SetHUDDefeats(int32 Score);
+	void SetHUDDefeats(int32 Defeats);
 	void SetHUDAmmo(int32 Ammo);
 	void SetHUDCarriedAmmo(int32 Ammo);
 	void SetHUDMatchCountdown(float CountdownTime);
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void Tick(float DeltaSeconds) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	//Synced with server world clock
 	//与服务器世界时钟同步
@@ -34,10 +35,13 @@ public:
 	//Sync with server clock as soon as possible
 	//尽快与服务器时钟同步
 	virtual void ReceivedPlayer() override;
+	//从GameMode设置MatchState
+	void OnMatchStateSet(FName State);
 	
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();
+	void PollInit();
 
 	/*
 	 *Sync time between client and server
@@ -72,5 +76,22 @@ private:
 	//比赛时长（秒）
 	float MatchTime = 120.f;
 	uint32 CountdownInt = 0;
+
+	//存下GameMode比赛状态
+	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
+	FName MatchState;
+	UFUNCTION()
+	void OnRep_MatchState();
+
+	UPROPERTY()
+	UCharacterOverlay* CharacterOverlay;
+
+	bool bInitializeCharacterOverlay = false;
+
+	float HUDHealth;
+	float HUDMaxHealth;
+	float HUDScore;
+	int32 HUDDefeats;
+	
 	
 };

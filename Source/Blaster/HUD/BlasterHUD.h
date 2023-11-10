@@ -40,11 +40,13 @@ public:
 	UPROPERTY()
 	UCharacterOverlay* CharacterOverlay;
 
+	//创建CharacterOverlay
+	void AddCharacterOverlay();
+
 protected:
 	virtual  void BeginPlay() override;
 
-	//创建CharacterOverlay
-	void AddCharacterOverlay();
+	
 private:
 
 	void DrawCrosshair(UTexture2D* Texture, FVector2d ViewportSize, FVector2d Spread, FLinearColor CrosshairColor);

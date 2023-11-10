@@ -25,7 +25,7 @@ public:
 	//定义一个淘汰玩家的方法
 	//ABlasterCharacter* ElimmedCharacter 被淘汰的玩家
 	//ABlasterPlayerController* VictimController 被淘汰玩家的控制器
-	//ABlasterPlayerController* AttackerControlle 攻击者的控制器
+	//ABlasterPlayerController* AttackerController 攻击者的控制器
 	virtual void PlayerEliminated(ABlasterCharacter* ElimmedCharacter, ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController);
 
 	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
@@ -40,6 +40,8 @@ public:
 protected:
 	
 	virtual void BeginPlay() override;
+
+	virtual void OnMatchStateSet() override;
 
 private:
 	//倒计时时间
