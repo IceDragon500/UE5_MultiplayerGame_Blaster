@@ -149,7 +149,7 @@ void ABlasterPlayerController::SetHUDTime()
 
 void ABlasterPlayerController::ServerRequestServerTime_Implementation(float TimeOfClientRequest)
 {
-	float ServerTimeOfReceipt = GetWorld()->GetTimeSeconds();
+	float ServerTimeOfReceipt = GetWorld()->GetTimeSeconds();//获取游戏开始的时间，从0秒开始
 	ClientReportServerTime(TimeOfClientRequest, ServerTimeOfReceipt);
 }
 
