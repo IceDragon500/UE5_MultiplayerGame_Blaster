@@ -30,9 +30,13 @@ public:
 
 	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
 
+	//定义一个游戏进行的最大时间限制
+	UPROPERTY(EditAnywhere)
+	float MatchTime = 120.f;
+	
 	//定义一个延迟开始游戏的延迟时间
 	UPROPERTY(EditAnywhere)
-	float WarmupTime = 10.f;
+	float WarmupTime = 20.f;
 	
 	//关卡开始的时间
 	float LevelStartingTime = 0.f;

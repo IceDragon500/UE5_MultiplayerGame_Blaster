@@ -15,7 +15,7 @@ ABlasterGameMode::ABlasterGameMode()
 void ABlasterGameMode::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Cyan, FString::Printf(TEXT("%f"),CountdownTime));
+	GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Cyan, FString::Printf(TEXT("MatchState:%s"),*MatchState.ToString()));
 	if(MatchState == MatchState::WaitingToStart)//如果是处在等待开始的状态下
 	{
 		//这个时间就等于倒计时时间-当前时间
