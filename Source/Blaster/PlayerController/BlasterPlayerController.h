@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+//#include "Blaster/GameMode/BlasterGameMode.h"
 #include "GameFramework/PlayerController.h"
 #include "Blaster/HUD/BlasterHUD.h"
 #include "BlasterPlayerController.generated.h"
@@ -88,11 +89,13 @@ protected:
 	//接受ServerChenckMatchState传来的比赛相关的时间和比赛状态的值
 	//然后设置到自己的比赛相关的时间和比赛状态的值
 	UFUNCTION(Client, Reliable)
-	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float StatingTime);
+	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float StatingTime, float Cooldown);
 
 private:
 	UPROPERTY()
 	ABlasterHUD* BlasterHUD;
+	UPROPERTY()
+	class ABlasterGameMode* BlasterGameMode;
 
 	//比赛时长（秒）,从GameMode中赋值
 	float MatchTime = 0.f;
@@ -100,6 +103,7 @@ private:
 	float WarmupTime = 0.f;
 	//比赛倒计时时间,从GameMode中赋值
 	float LevelStartingTime = 0.f;
+	float CooldownTime = 0.f;
 	uint32 CountdownInt = 0;
 
 	//存下GameMode比赛状态,从GameMode中赋值

@@ -6,6 +6,7 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
 #include "Blaster/HUD/BlasterHUD.h"
+#include "EnvironmentQuery/EnvQueryTypes.h"
 #include "GameFramework/GameMode.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
@@ -56,17 +57,19 @@ void ABlasterPlayerController::ServerChenckMatchState_Implementation()
 		WarmupTime = GameMode->WarmupTime;
 		MatchTime = GameMode->MatchTime;
 		LevelStartingTime = GameMode->LevelStartingTime;
+		CooldownTime = GameMode->CooldownTime;
 		MatchState = GameMode->GetMatchState();
-		ClientJoinMidgame(MatchState, WarmupTime,MatchTime, LevelStartingTime);
+		ClientJoinMidgame(MatchState, WarmupTime,MatchTime, LevelStartingTime, CooldownTime);
 	}
 }
 
-void ABlasterPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float StatingTime)
+void ABlasterPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float StatingTime, float Cooldown)
 {
 	WarmupTime = Warmup;
 	MatchTime = Match;
 	LevelStartingTime = StatingTime;
 	MatchState = StateOfMatch;
+	CooldownTime = Cooldown;
 	OnMatchStateSet(MatchState);
 	
 	if(BlasterHUD && MatchState == MatchState::WaitingToStart)
@@ -178,6 +181,11 @@ void ABlasterPlayerController::SetHUDMatchCountdown(float CountdownTime)
 	bool bHUDValid = BlasterHUD && BlasterHUD->CharacterOverlay && BlasterHUD->CharacterOverlay->MatchCountdownText;
 	if(bHUDValid)
 	{
+		if(CountdownTime < 0.f)
+		{
+			BlasterHUD->CharacterOverlay->MatchCountdownText->SetText(FText());
+			return;
+		}
 		int32 Minutes = FMath::FloorToInt(CountdownTime / 60.f);
 		int32 Seconds = CountdownTime - Minutes * 60;
 		FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
@@ -191,6 +199,11 @@ void ABlasterPlayerController::SetHUDAnnouncementCountdown(float CountdownTime)
 	bool bHUDValid = BlasterHUD && BlasterHUD->Announcement && BlasterHUD->Announcement->WarmupTime;
 	if(bHUDValid)
 	{
+		if(CountdownTime < 0.f)
+		{
+			BlasterHUD->Announcement->WarmupTime->SetText(FText());
+			return;
+		}
 		int32 Minutes = FMath::FloorToInt(CountdownTime / 60.f);
 		int32 Seconds = CountdownTime - Minutes * 60;
 		FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
@@ -209,6 +222,10 @@ void ABlasterPlayerController::SetHUDTime()
 	{
 		TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
 	}
+	else if(MatchState == MatchState::Cooldown)
+	{
+		TimeLeft = CooldownTime + WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
+	}
 
 	
 	//UE_LOG(LogTemp, Warning, TEXT("GetServerTime = %f"),GetServerTime());
@@ -219,13 +236,20 @@ void ABlasterPlayerController::SetHUDTime()
 	*具体的值取决于MatchTime和GetWorld()->GetTimeSeconds()的具体数值。比如如果MatchTime是90秒，而当前时间为60秒，那么SecondsLeft就是30秒。如果MatchTime是180秒，当前时间为60秒，那么SecondsLeft就是120秒。
 	 */
 	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
+	if(HasAuthority())
+	{
+		BlasterGameMode = BlasterGameMode == nullptr ? Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this)) :BlasterGameMode;
+		if(BlasterGameMode)
+		{
+			SecondsLeft = FMath::CeilToInt(BlasterGameMode->GetCountdownTime() + LevelStartingTime);
+		}
+	}
 	
 	if(CountdownInt != SecondsLeft)
 	{
 		//SetHUDMatchCountdown(MatchTime - GetServerTime());
-		if(MatchState == MatchState::WaitingToStart)
+		if(MatchState == MatchState::WaitingToStart || MatchState == MatchState::Cooldown )
 		{
-			
 			SetHUDAnnouncementCountdown(TimeLeft);
 		}
 		if(MatchState == MatchState::InProgress)
@@ -336,9 +360,15 @@ void ABlasterPlayerController::HandleCooldown()
 	{
 		//游戏结束后进入冷却阶段，这个时候移除界面内容  然后把等待界面显示出来
 		BlasterHUD->CharacterOverlay->RemoveFromParent();
-		if(BlasterHUD->Announcement)
+		bool bHUDValid = BlasterHUD->Announcement && BlasterHUD->Announcement->AnnouncementText && BlasterHUD->Announcement->InfoText;
+		
+		if(bHUDValid)
 		{
 			BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Visible);
+			FString AnnouncementText(TEXT("下一轮比赛："));
+			BlasterHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
+			FString InfoText(TEXT("当前第一名是！！！！"));
+			BlasterHUD->Announcement->InfoText->SetText(FText::FromString(InfoText));
 		}
 	}
 }

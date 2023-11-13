@@ -36,6 +36,8 @@ public:
 
 	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
 
+	FORCEINLINE float GetCountdownTime() const { return CountdownTime; }
+	
 	//定义一个游戏进行的最大时间限制
 	UPROPERTY(EditAnywhere)
 	float MatchTime = 120.f;
