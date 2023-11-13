@@ -5,6 +5,7 @@
 
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
+#include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/HUD/BlasterHUD.h"
 #include "EnvironmentQuery/EnvQueryTypes.h"
 #include "GameFramework/GameMode.h"
@@ -368,8 +369,40 @@ void ABlasterPlayerController::HandleCooldown()
 			BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Visible);
 			FString AnnouncementText(TEXT("下一轮比赛："));
 			BlasterHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
-			FString InfoText(TEXT("当前第一名是！！！！"));
-			BlasterHUD->Announcement->InfoText->SetText(FText::FromString(InfoText));
+
+			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
+			ABlasterPlayerState* BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
+			
+			if(BlasterGameState && BlasterPlayerState)
+			{
+				TArray<ABlasterPlayerState*> TopPlayer = BlasterGameState->TopScoringPlayers;
+				FString InfoText;
+				if(TopPlayer.Num() == 0 )
+				{
+					InfoText = FString(TEXT("没有赢家"));
+				}
+				else if(TopPlayer.Num() == 1 && TopPlayer[0] == BlasterPlayerState)
+				{
+					InfoText = FString(TEXT("你是赢家"));
+				}
+				else if(TopPlayer.Num() == 1)
+				{
+					InfoText = FString::Printf(TEXT("赢家是: \n%s"), *TopPlayer[0]->GetPlayerName());
+				}
+				else if(TopPlayer.Num() > 1)
+				{
+					InfoText = FString(TEXT("玩家"));
+					for(auto TiedPlayer : TopPlayer)
+					{
+						InfoText.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
+					}
+						
+				}
+				
+				BlasterHUD->Announcement->InfoText->SetText(FText::FromString(InfoText));
+			}
+			
+			
 		}
 	}
 	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());

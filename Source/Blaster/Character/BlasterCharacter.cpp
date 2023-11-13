@@ -643,6 +643,17 @@ void ABlasterCharacter::Destroyed()
 	{
 		ElimBotComponent->DestroyComponent();
 	}
+
+	/*
+	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	bool bMatchNotInProgress = BlasterGameMode && BlasterGameMode->GetMatchState() != MatchState::InProgress;
+
+	
+	if(Combat && Combat->EquippedWeapon && bMatchNotInProgress)
+	{
+		Combat->EquippedWeapon->Destroy();
+	}
+	*/
 }
 
 void ABlasterCharacter::MulticastElim_Implementation()
@@ -670,10 +681,13 @@ void ABlasterCharacter::MulticastElim_Implementation()
 	GetCharacterMovement()->DisableMovement();//禁止移动
 	GetCharacterMovement()->StopMovementImmediately();//禁止通过鼠标旋转角色
 	bDisableGameplay = true;//禁止角色输入
-	/*if(BlasterPlayerController)
+	
+	/*if(Combat)  //这一段在教程里面启用了132课，但是我这边先不用
 	{
-		DisableInput(BlasterPlayerController);
-	}*/
+		Combat->FireButtonPressed(false);
+	}
+	*/
+	
 	//Disable Collision关闭碰撞
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
