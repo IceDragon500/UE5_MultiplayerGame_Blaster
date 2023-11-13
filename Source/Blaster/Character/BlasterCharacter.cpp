@@ -129,6 +129,27 @@ void ABlasterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	//修改旋转
+	RotateInPlace(DeltaTime);
+	
+	//检测玩家是否靠墙，如果靠墙则隐藏玩家模型
+	HideCameraIfCharacterClose();
+
+	//轮询玩家状态，将分数重置为0
+	PollInit();
+}
+
+void ABlasterCharacter::RotateInPlace(float DeltaTime)
+{
+	/*这里在教程131课，我不想调整这个
+	if(bDisableGameplay)
+	{
+		bUseControllerRotationYaw = false;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
+	*/
+
 	//这里判断是否旋转根骨骼
 	//角色在本地/远程网络上下文中的网络角色
 	//如果当前是代理的状态，无论是
@@ -145,11 +166,6 @@ void ABlasterCharacter::Tick(float DeltaTime)
 		}
 		CalculateAO_Pitch();
 	}
-	//检测玩家是否靠墙，如果靠墙则隐藏玩家模型
-	HideCameraIfCharacterClose();
-
-	//轮询玩家状态，将分分数重置为0
-	PollInit();
 }
 
 void ABlasterCharacter::OnRep_ReplicatedMovement()
@@ -211,14 +227,16 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	//DOREPLIFETIME(ABlasterCharacter, OverlappingWeapon);
 
 	//注册需要复制的变量，使用COND_OwnerOnly，选择只会复制到所有者的客户端
-	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(ThisClass, OverlappingWeapon, COND_OwnerOnly);
 
 	//注册血量
-	DOREPLIFETIME(ABlasterCharacter, Health);
+	DOREPLIFETIME(ThisClass, Health);
+	DOREPLIFETIME(ThisClass, bDisableGameplay);
 }
 
 void ABlasterCharacter::Move(const FInputActionValue& Value)
 {
+	if(bDisableGameplay) return;
 	const FVector2d MovementVector = Value.Get<FVector2d>();
 
 	/*使用前后左右来移动角色
@@ -251,6 +269,7 @@ void ABlasterCharacter::Look(const FInputActionValue& Value)
 
 void ABlasterCharacter::FireButtonPressed(const FInputActionValue& Value)
 {
+	if(bDisableGameplay) return;
 	if(Combat)
 	{
 		Combat->FireButtonPressed(true);
@@ -259,6 +278,7 @@ void ABlasterCharacter::FireButtonPressed(const FInputActionValue& Value)
 
 void ABlasterCharacter::FireButtonReleased(const FInputActionValue& Value)
 {
+	if(bDisableGameplay) return;
 	if(Combat)
 	{
 		Combat->FireButtonPressed(false);
@@ -267,6 +287,7 @@ void ABlasterCharacter::FireButtonReleased(const FInputActionValue& Value)
 
 void ABlasterCharacter::ReloadButtonPressed(const FInputActionValue& Value)
 {
+	if(bDisableGameplay) return;
 	if(Combat)
 	{
 		Combat->Reload();
@@ -275,6 +296,7 @@ void ABlasterCharacter::ReloadButtonPressed(const FInputActionValue& Value)
 
 void ABlasterCharacter::EKeyPressed(const FInputActionValue& Value)
 {
+	if(bDisableGameplay) return;
 	if(Combat)
 	{
 		if(HasAuthority())//如果是拥有权限的服务器端，则执行下面进行武器装备
@@ -298,6 +320,7 @@ void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 
 void ABlasterCharacter::CrouchKeyPressed(const FInputActionValue& Value)
 {
+	if(bDisableGameplay) return;
 	//在Character类中，UE实现了 Crouch的网络复制的申明，我们可以直接重写下面的方法
 	//virtual void OnRep_IsCrouched();
 	// bIsCrouched:1
@@ -314,6 +337,7 @@ void ABlasterCharacter::CrouchKeyPressed(const FInputActionValue& Value)
 
 void ABlasterCharacter::AimButtonPressed(const FInputActionValue& Value)
 {
+	if(bDisableGameplay) return;
 	if(Combat)
 	{
 		Combat->SetAiming(true);
@@ -322,6 +346,7 @@ void ABlasterCharacter::AimButtonPressed(const FInputActionValue& Value)
 
 void ABlasterCharacter::AimButtonReleased(const FInputActionValue& Value)
 {
+	if(bDisableGameplay) return;
 	if(Combat)
 	{
 		Combat->SetAiming(false);
@@ -644,11 +669,12 @@ void ABlasterCharacter::MulticastElim_Implementation()
 	//disable character movement
 	GetCharacterMovement()->DisableMovement();//禁止移动
 	GetCharacterMovement()->StopMovementImmediately();//禁止通过鼠标旋转角色
-	if(BlasterPlayerController)//禁止角色输入
+	bDisableGameplay = true;//禁止角色输入
+	/*if(BlasterPlayerController)
 	{
 		DisableInput(BlasterPlayerController);
-	}
-	//Disable Collision
+	}*/
+	//Disable Collision关闭碰撞
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 

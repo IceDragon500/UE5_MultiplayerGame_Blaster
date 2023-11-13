@@ -236,6 +236,7 @@ void ABlasterPlayerController::SetHUDTime()
 	*具体的值取决于MatchTime和GetWorld()->GetTimeSeconds()的具体数值。比如如果MatchTime是90秒，而当前时间为60秒，那么SecondsLeft就是30秒。如果MatchTime是180秒，当前时间为60秒，那么SecondsLeft就是120秒。
 	 */
 	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
+	/*
 	if(HasAuthority())
 	{
 		BlasterGameMode = BlasterGameMode == nullptr ? Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this)) :BlasterGameMode;
@@ -244,10 +245,10 @@ void ABlasterPlayerController::SetHUDTime()
 			SecondsLeft = FMath::CeilToInt(BlasterGameMode->GetCountdownTime() + LevelStartingTime);
 		}
 	}
+	*/
 	
 	if(CountdownInt != SecondsLeft)
 	{
-		//SetHUDMatchCountdown(MatchTime - GetServerTime());
 		if(MatchState == MatchState::WaitingToStart || MatchState == MatchState::Cooldown )
 		{
 			SetHUDAnnouncementCountdown(TimeLeft);
@@ -370,5 +371,13 @@ void ABlasterPlayerController::HandleCooldown()
 			FString InfoText(TEXT("当前第一名是！！！！"));
 			BlasterHUD->Announcement->InfoText->SetText(FText::FromString(InfoText));
 		}
+	}
+	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
+	if(BlasterCharacter)
+	{
+		BlasterCharacter->bDisableGameplay = true;
+		//教程下面还调用了CombatComponent里面的FireButtonPressed的false逻辑，我觉得没有必要
+		//BlasterCharacter->GetCombat->FireButtonPressed(false);
+		//然后他还禁用了角色的瞄准偏移  还是觉得没有必要
 	}
 }

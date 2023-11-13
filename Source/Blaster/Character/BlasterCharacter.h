@@ -29,11 +29,7 @@ public:
 	ABlasterCharacter();
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-protected:
-	virtual void BeginPlay() override;
-
-public:
+	
 	//跳跃
 	virtual void Jump() override;
 
@@ -82,8 +78,15 @@ public:
 	void MulticastElim();
 
 	virtual void Destroyed() override;
+
+	UPROPERTY(Replicated)
+	bool bDisableGameplay = false;
 	
 protected:
+	virtual void BeginPlay() override;
+
+	void RotateInPlace(float DeltaTime);
+	
 	//增强输入
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
 	UInputMappingContext* InputContext;
