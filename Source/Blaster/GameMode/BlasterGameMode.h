@@ -7,6 +7,12 @@
 #include "GameFramework/GameMode.h"
 #include "BlasterGameMode.generated.h"
 
+namespace MatchState
+{
+	extern BLASTER_API const FName Cooldown; //游戏结束后的冷却时间，显示当前游戏的结果，和下一场开启的倒计时
+	
+}
+
 /**
  * 
  */
@@ -40,6 +46,10 @@ public:
 	
 	//关卡开始的时间
 	float LevelStartingTime = 0.f;
+
+	//冷却时长
+	UPROPERTY(EditAnywhere)
+	float CooldownTime = 30.f;
 	
 protected:
 	

@@ -36,9 +36,15 @@ public:
 	//Sync with server clock as soon as possible
 	//尽快与服务器时钟同步
 	virtual void ReceivedPlayer() override;
+	
 	//从GameMode设置MatchState
 	void OnMatchStateSet(FName State);
+	
+	////进入游戏开始阶段后，把角色主界面添加到屏幕，然后将等待界面设置为隐藏
 	void HandleMatchHasStarted();
+	
+	//游戏结束后进入冷却阶段，这个时候移除界面内容  然后把等待界面显示出来
+	void HandleCooldown();
 	
 protected:
 	virtual void BeginPlay() override;

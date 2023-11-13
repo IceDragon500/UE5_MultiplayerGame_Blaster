@@ -10,7 +10,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
-ABlasterPlayerController::ABlasterPlayerController()
+ABlasterPlayerController::ABlasterPlayerController(): BlasterHUD(nullptr), CharacterOverlay(nullptr), HUDHealth(0),
+                                                      HUDMaxHealth(0),
+                                                      HUDScore(0), HUDDefeats(0)
 {
 }
 
@@ -295,6 +297,10 @@ void ABlasterPlayerController::OnMatchStateSet(FName State)
 	{
 		HandleMatchHasStarted();
 	}
+	else if(MatchState == MatchState::Cooldown)
+	{
+		HandleCooldown();
+	}
 }
 
 void ABlasterPlayerController::OnRep_MatchState()
@@ -303,6 +309,10 @@ void ABlasterPlayerController::OnRep_MatchState()
 	{
 		HandleMatchHasStarted();
 	}
+	else if(MatchState == MatchState::Cooldown)
+	{
+		HandleCooldown();
+	}
 }
 
 void ABlasterPlayerController::HandleMatchHasStarted()
@@ -310,10 +320,25 @@ void ABlasterPlayerController::HandleMatchHasStarted()
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 	if(BlasterHUD)
 	{
+		//进入游戏开始阶段后，把角色主界面添加到屏幕，然后将等待界面设置为隐藏
 		BlasterHUD->AddCharacterOverlay();
 		if(BlasterHUD->Announcement)
 		{
 			BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+}
+
+void ABlasterPlayerController::HandleCooldown()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if(BlasterHUD)
+	{
+		//游戏结束后进入冷却阶段，这个时候移除界面内容  然后把等待界面显示出来
+		BlasterHUD->CharacterOverlay->RemoveFromParent();
+		if(BlasterHUD->Announcement)
+		{
+			BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Visible);
 		}
 	}
 }
