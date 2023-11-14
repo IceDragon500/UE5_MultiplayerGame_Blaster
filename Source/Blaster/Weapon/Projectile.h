@@ -1,7 +1,8 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
-
+/*
+ * 子弹父类
+ */
 #include "CoreMinimal.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
@@ -37,7 +38,7 @@ protected:
 	virtual void OnHit(UPrimitiveComponent* HitComp,	AActor* OtherActor,	UPrimitiveComponent* OtherComp,	FVector NormalImpulse, const FHitResult& Hit);
 
 	//对命中目标造成伤害
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "子弹属性")
 	float Damage;
 	
 private:

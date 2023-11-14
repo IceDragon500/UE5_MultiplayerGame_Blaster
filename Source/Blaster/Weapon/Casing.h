@@ -6,7 +6,9 @@
 #include "GameFramework/Actor.h"
 #include "Sound/SoundCue.h"
 #include "Casing.generated.h"
-
+/*
+ * 弹壳类
+ */
 UCLASS()
 class BLASTER_API ACasing : public AActor
 {

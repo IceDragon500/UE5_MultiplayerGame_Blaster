@@ -57,7 +57,8 @@ void UCombatComponent::BeginPlay()
 
 void UCombatComponent::InitializeCarriedAmmo()
 {
-	CarriedAmmoMap.Add(EWeaponType::EWT_AssaultRifle, 300);
+	CarriedAmmoMap.Add(EWeaponType::EWT_AssaultRifle, StartingARAmmo);
+	CarriedAmmoMap.Add(EWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
 }
 
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

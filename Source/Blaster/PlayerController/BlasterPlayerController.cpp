@@ -7,14 +7,11 @@
 #include "Blaster/GameMode/BlasterGameMode.h"
 #include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/HUD/BlasterHUD.h"
-#include "EnvironmentQuery/EnvQueryTypes.h"
 #include "GameFramework/GameMode.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
-ABlasterPlayerController::ABlasterPlayerController(): BlasterHUD(nullptr), CharacterOverlay(nullptr), HUDHealth(0),
-                                                      HUDMaxHealth(0),
-                                                      HUDScore(0), HUDDefeats(0)
+ABlasterPlayerController::ABlasterPlayerController()
 {
 }
 
@@ -347,7 +344,7 @@ void ABlasterPlayerController::HandleMatchHasStarted()
 	if(BlasterHUD)
 	{
 		//进入游戏开始阶段后，把角色主界面添加到屏幕，然后将等待界面设置为隐藏
-		BlasterHUD->AddCharacterOverlay();
+		if(BlasterHUD->CharacterOverlay == nullptr) BlasterHUD->AddCharacterOverlay();
 		if(BlasterHUD->Announcement)
 		{
 			BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);

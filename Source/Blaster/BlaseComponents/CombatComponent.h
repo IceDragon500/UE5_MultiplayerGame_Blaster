@@ -164,8 +164,12 @@ private:
 	//不直接写当前武器有多少子弹，而是通过武器类型来区分
 	TMap<EWeaponType, int32> CarriedAmmoMap;
 
+	//AR步枪的携带子弹总数
 	UPROPERTY(EditAnywhere)
 	int32 StartingARAmmo = 300;
+	//火箭发射器的携带子弹总数
+	UPROPERTY(EditAnywhere)
+	int32 StartingRocketAmmo = 10;
 
 	//初始化弹药，如果有新增类型的武器，需要在这里添加
 	void InitializeCarriedAmmo();

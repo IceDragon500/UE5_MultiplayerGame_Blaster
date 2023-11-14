@@ -1,7 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-
+/*
+ * 武器父类
+ */
 #include "CoreMinimal.h"
 #include "Casing.h"
 #include "WeaponTypes.h"
