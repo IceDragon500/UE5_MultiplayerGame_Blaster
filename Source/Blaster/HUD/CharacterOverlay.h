@@ -9,7 +9,7 @@
 #include "CharacterOverlay.generated.h"
 
 /**
- * 
+ * 主界面的UserWidget
  */
 UCLASS()
 class BLASTER_API UCharacterOverlay : public UUserWidget

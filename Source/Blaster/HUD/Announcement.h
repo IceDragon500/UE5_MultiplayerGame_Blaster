@@ -8,7 +8,7 @@
 #include "Announcement.generated.h"
 
 /**
- * 
+ * 等待界面
  */
 UCLASS()
 class BLASTER_API UAnnouncement : public UUserWidget

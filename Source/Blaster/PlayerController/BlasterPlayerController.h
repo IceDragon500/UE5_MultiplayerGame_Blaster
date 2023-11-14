@@ -9,7 +9,7 @@
 #include "BlasterPlayerController.generated.h"
 
 /**
- * 
+ * PlayerController类，这里主要是在控制HUD界面的内容显示
  */
 UCLASS()
 class BLASTER_API ABlasterPlayerController : public APlayerController

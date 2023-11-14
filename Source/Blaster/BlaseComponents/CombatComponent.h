@@ -11,6 +11,12 @@
 #include "Components/ActorComponent.h"
 #include "CombatComponent.generated.h"
 
+/*
+ * 继承自ActorComponet类
+ * 主要用来实现战斗过程中的一些逻辑，避免写在角色类里面
+ * 比如：装备武器、换弹、开火、
+ * 这类需要在角色类中 添加组件来形成功能
+ */
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BLASTER_API UCombatComponent : public UActorComponent

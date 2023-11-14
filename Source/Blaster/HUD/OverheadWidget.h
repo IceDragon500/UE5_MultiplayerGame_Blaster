@@ -7,7 +7,7 @@
 #include "OverheadWidget.generated.h"
 
 /**
- * 
+ * 角色头上的名称显示UserWidget
  */
 UCLASS()
 class BLASTER_API UOverheadWidget : public UUserWidget

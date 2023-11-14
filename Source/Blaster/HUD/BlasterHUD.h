@@ -7,7 +7,9 @@
 #include "CharacterOverlay.h"
 #include "GameFramework/HUD.h"
 #include "BlasterHUD.generated.h"
-
+/*
+ * HUD主类，其他的UserWidget需要通过这里来显示
+ */
 USTRUCT(BlueprintType)
 struct FHUDPackage
 {

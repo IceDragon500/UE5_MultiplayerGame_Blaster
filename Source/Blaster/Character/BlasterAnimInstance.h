@@ -9,7 +9,7 @@
 #include "BlasterAnimInstance.generated.h"
 
 /**
- * 
+ * 角色的动画蓝图类
  */
 UCLASS()
 class BLASTER_API UBlasterAnimInstance : public UAnimInstance

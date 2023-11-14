@@ -1,5 +1,9 @@
 ﻿#pragma once
 
+/*
+ * 用于设置原地旋转的状态
+ */
+
 UENUM(BlueprintType)
 enum class ETurningInPlace : uint8
 {

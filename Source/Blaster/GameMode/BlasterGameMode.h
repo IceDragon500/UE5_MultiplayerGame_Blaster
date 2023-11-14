@@ -6,7 +6,9 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "GameFramework/GameMode.h"
 #include "BlasterGameMode.generated.h"
-
+/*
+ * 用于Blaster地图的游戏模式
+ */
 namespace MatchState
 {
 	extern BLASTER_API const FName Cooldown; //游戏结束后的冷却时间，显示当前游戏的结果，和下一场开启的倒计时

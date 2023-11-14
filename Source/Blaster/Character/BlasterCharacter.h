@@ -12,6 +12,9 @@
 #include "Components/TimelineComponent.h"
 #include "BlasterCharacter.generated.h"
 
+/*
+ * 主要的角色类
+ */
 
 class USpringArmComponent;
 class UCameraComponent;

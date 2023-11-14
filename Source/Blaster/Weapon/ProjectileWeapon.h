@@ -8,7 +8,7 @@
 #include "ProjectileWeapon.generated.h"
 
 /**
- * 
+ * 发射子弹的武器类，例如AR，火箭发射器
  */
 UCLASS()
 class BLASTER_API AProjectileWeapon : public AWeapon
