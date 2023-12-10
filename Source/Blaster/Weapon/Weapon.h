@@ -123,16 +123,18 @@ private:
 	UPROPERTY(EditAnywhere, Category= "武器属性")
 	float ZoomInterpSpeed = 20.f;
 
+	//当前子弹数量
 	UPROPERTY(EditAnywhere, Category= "武器属性", ReplicatedUsing = OnRep_Ammo)
-	int32 Ammo;//当前子弹数量
+	int32 Ammo;
 
 	UFUNCTION()
 	void OnRep_Ammo();
 	//进行一轮射击，里面包含了消耗子弹的逻辑
 	void SpendRound();
 	
+	//最大子弹数量(弹夹容量)
 	UPROPERTY(EditAnywhere, Category= "武器属性")
-	int32 MagCapacity;//最大子弹数量
+	int32 MagCapacity;
 
 	UPROPERTY(EditAnywhere, Category= "武器属性")
 	EWeaponType WeaponType;
