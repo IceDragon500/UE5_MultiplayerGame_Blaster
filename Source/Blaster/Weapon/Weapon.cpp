@@ -18,6 +18,7 @@ AWeapon::AWeapon()
 	//因为服务器要负责所有武器对象
 	//设置为可以复制
 	bReplicates = true;
+	SetReplicateMovement(true);
 	
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	WeaponMesh->SetupAttachment(RootComponent);

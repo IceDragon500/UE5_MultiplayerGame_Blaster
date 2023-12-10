@@ -7,7 +7,6 @@
 #include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
 #include "Projectile.generated.h"
 
@@ -51,14 +50,11 @@ protected:
 	//对命中目标造成伤害
 	UPROPERTY(EditAnywhere, Category= "子弹属性")
 	float Damage;
-	
-private:
-
-	
 
 	UPROPERTY(VisibleAnywhere, Category= "子弹属性")
 	UProjectileMovementComponent* ProjectileMovementComponent;
-
+	
+private:
 	//子弹特效
 	UPROPERTY(EditAnywhere, Category= "子弹属性")
 	UParticleSystem* Tracer;

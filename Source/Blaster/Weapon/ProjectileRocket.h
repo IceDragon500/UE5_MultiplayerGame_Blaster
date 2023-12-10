@@ -6,6 +6,7 @@
 #include "Projectile.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "RocketMovementComponent.h"
 #include "ProjectileRocket.generated.h"
 
 /**
@@ -26,13 +27,6 @@ protected:
 	virtual void OnHit(UPrimitiveComponent* HitComp,	AActor* OtherActor,	UPrimitiveComponent* OtherComp,	FVector NormalImpulse, const FHitResult& Hit) override;
 	virtual void BeginPlay() override;
 
-	//触发计时器的事件
-	void DestroyTimerFinished();
-	
-private:
-	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* RocketMesh;
-
 	//导弹尾部的烟雾特效
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess = "true"))
 	UNiagaraSystem* TrailSystem;
@@ -51,7 +45,17 @@ private:
 	//创建一个火箭飞行声音的衰减
 	UPROPERTY(EditAnywhere)
 	USoundAttenuation* LooppingSoundAttenuation;
+	
+	//触发计时器的事件
+	void DestroyTimerFinished();
 
+	UPROPERTY(VisibleAnywhere)
+	URocketMovementComponent* RocketMovementComponent;
+	
+private:
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* RocketMesh;
+	
 	//用来控制导弹尾部烟雾消失的计时器
 	FTimerHandle DestroyTimer;
 
