@@ -37,14 +37,24 @@ protected:
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComp,	AActor* OtherActor,	UPrimitiveComponent* OtherComp,	FVector NormalImpulse, const FHitResult& Hit);
 
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* CollisionBox;
+	
+	//命中特效
+	UPROPERTY(EditAnywhere, Category= "子弹属性")
+	UParticleSystem* ImpactParticles;
+
+	//命中音效
+	UPROPERTY(EditAnywhere, Category= "子弹属性")
+	USoundCue* ImpactSound;
+
 	//对命中目标造成伤害
 	UPROPERTY(EditAnywhere, Category= "子弹属性")
 	float Damage;
 	
 private:
 
-	UPROPERTY(EditAnywhere)
-	UBoxComponent* CollisionBox;
+	
 
 	UPROPERTY(VisibleAnywhere, Category= "子弹属性")
 	UProjectileMovementComponent* ProjectileMovementComponent;
@@ -56,13 +66,4 @@ private:
 	//特效组件
 	UPROPERTY()
 	UParticleSystemComponent* TracerComponent;
-
-	//命中特效
-	UPROPERTY(EditAnywhere, Category= "子弹属性")
-	UParticleSystem* ImpactParticles;
-
-	//命中音效
-	UPROPERTY(EditAnywhere, Category= "子弹属性")
-	USoundCue* ImpactSound;
-
 };
