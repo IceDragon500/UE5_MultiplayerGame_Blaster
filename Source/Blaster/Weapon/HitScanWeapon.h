@@ -27,4 +27,8 @@ private:
 	//命中部位的粒子特效
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* ImpactParticles;
+
+	//命中轨迹特效
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* BeamParticles;
 };
