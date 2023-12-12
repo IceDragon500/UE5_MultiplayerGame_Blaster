@@ -182,6 +182,10 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 PistolAmmo = 120;
 
+	//角色携带冲锋枪子弹的数量
+	UPROPERTY(EditAnywhere)
+	int32 StartingSMGAmmo = 120;
+
 	//初始化弹药，如果有新增类型的武器，需要在这里添加
 	void InitializeCarriedAmmo();
 

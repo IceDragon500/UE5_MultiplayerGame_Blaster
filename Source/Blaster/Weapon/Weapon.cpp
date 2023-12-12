@@ -31,6 +31,7 @@ AWeapon::AWeapon()
 
 	AreaSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AreaShpere"));
 	AreaSphere->SetupAttachment(RootComponent);
+	AreaSphere->SetSphereRadius(80.f);
 
 	AreaSphere->SetCollisionResponseToChannels(ECollisionResponse::ECR_Ignore);
 	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);//我们先把碰撞盒子关掉

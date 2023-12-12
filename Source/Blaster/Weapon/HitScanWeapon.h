@@ -31,4 +31,16 @@ private:
 	//命中轨迹特效
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* BeamParticles;
+
+	//枪口闪光特效
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* MuzzleFlash;
+
+	//开火的音效
+	UPROPERTY(EditAnywhere)
+	USoundCue* FireSound;
+
+	//命中的音效
+	UPROPERTY(EditAnywhere)
+	USoundCue* HitSound;
 };
