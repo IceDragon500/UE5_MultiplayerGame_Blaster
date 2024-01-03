@@ -15,9 +15,11 @@ class BLASTER_API AHitScanWeapon : public AWeapon
 	GENERATED_BODY()
 public:
 
-	virtual void Fire(const FVector& HitTarget);
+	virtual void Fire(const FVector& HitTarget) override;
 	
 protected:
+
+	FVector TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget);
 
 private:
 	//射线武器的伤害值
@@ -43,4 +45,20 @@ private:
 	//命中的音效
 	UPROPERTY(EditAnywhere)
 	USoundCue* HitSound;
+
+	/**
+	 * Trace end with scatter
+	 * 以散点图结尾点击并应用
+	 */
+	//从枪口到球体的距离
+	UPROPERTY(EditAnywhere, Category= "Weapon Scatter")
+	float DistanceToSphere = 800.f;
+
+	//球体的半径
+	UPROPERTY(EditAnywhere, Category= "Weapon Scatter")
+	float SphereRadius = 75.f;
+
+	//启用或者禁用散射
+	UPROPERTY(EditAnywhere, Category= "Weapon Scatter")
+	bool bUserScatter = false;
 };

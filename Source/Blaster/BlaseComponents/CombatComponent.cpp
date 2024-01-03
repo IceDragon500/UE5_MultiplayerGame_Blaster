@@ -12,7 +12,6 @@
 #include "Materials/MaterialExpressionChannelMaskParameterColor.h"
 #include "Net/UnrealNetwork.h"
 
-#define TRACE_LENGTH 80000.f  //定义一下射线检测的长度为一个宏
 
 UCombatComponent::UCombatComponent()
 {
@@ -61,6 +60,7 @@ void UCombatComponent::InitializeCarriedAmmo()
 	CarriedAmmoMap.Add(EWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
 	CarriedAmmoMap.Add(EWeaponType::EWT_Pistol, PistolAmmo);
 	CarriedAmmoMap.Add(EWeaponType::EWT_SubmachineGun, StartingSMGAmmo);
+	CarriedAmmoMap.Add(EWeaponType::EWT_ShotGun, StartingShotGunAmmo);
 }
 
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
