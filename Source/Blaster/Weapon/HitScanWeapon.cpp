@@ -22,68 +22,43 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 	{
 		FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
 		FVector Start = SocketTransform.GetLocation();
-		FVector End = Start + (HitTarget - Start) * 1.25f;
-
+		
 		FHitResult FireHit;
-		UWorld* World = GetWorld();
-		if(World)
+		WeaponTraceHit(Start, HitTarget, FireHit);
+
+		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
+		if(BlasterCharacter && HasAuthority() && InstigatorController)
 		{
-			World->LineTraceSingleByChannel(
-				FireHit,
-				Start,
-				End,
-				ECollisionChannel::ECC_Visibility
+			UGameplayStatics::ApplyDamage(
+					BlasterCharacter,
+					Damage,
+					InstigatorController,
+					this,
+					UDamageType::StaticClass()
 				);
-			FVector BeamEnd = End;//设置特效命中点的位置与击中的位置相同
-			if(FireHit.bBlockingHit)
-			{
-				BeamEnd = FireHit.ImpactPoint;
-				ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
-				if(BlasterCharacter && HasAuthority() && InstigatorController)
-				{
-					UGameplayStatics::ApplyDamage(
-							BlasterCharacter,
-							Damage,
-							InstigatorController,
-							this,
-							UDamageType::StaticClass()
-						);
-				}
-				if(ImpactParticles)
-				{
-					UGameplayStatics::SpawnEmitterAtLocation(
-						World,
-						ImpactParticles,
-						FireHit.ImpactPoint,
-						FireHit.ImpactNormal.Rotation()
-						);
-				}
-				if(HitSound)
-				{
-					UGameplayStatics::PlaySoundAtLocation(
-						this,
-						HitSound,
-						FireHit.ImpactPoint
-						);
-				}
-			}
-			if(BeamParticles)
-			{
-				UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(
-					World,
-					BeamParticles,
-					SocketTransform
-					);
-				if(Beam)
-				{
-					Beam->SetVectorParameter(FName("Target"), BeamEnd);
-				}
-			}
 		}
+		if(ImpactParticles)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(
+				GetWorld(),
+				ImpactParticles,
+				FireHit.ImpactPoint,
+				FireHit.ImpactNormal.Rotation()
+				);
+		}
+		if(HitSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				HitSound,
+				FireHit.ImpactPoint
+				);
+		}
+		
 		if(MuzzleFlash)
 		{
 			UGameplayStatics::SpawnEmitterAtLocation(
-				World,
+				GetWorld(),
 				MuzzleFlash,
 				SocketTransform
 				);
@@ -101,6 +76,44 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 	}
 }
 
+void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit)
+{
+	UWorld* World = GetWorld();
+	if(World)
+	{
+		//这里判断一下是否使用散射 就是bUserScatter是否为true
+		//如果为true，需要散射，则按照TraceEndWithScatter方法中进行一个终点散射的计算
+		//如果为fasle，不需要散射，则按照终点是一个点来进行计算
+		FVector End = bUserScatter ? TraceEndWithScatter(TraceStart, HitTarget) : TraceStart + (HitTarget - TraceStart) * 1.25f;
+		
+		World->LineTraceSingleByChannel(
+				OutHit,
+				TraceStart,
+				End,
+				ECollisionChannel::ECC_Visibility
+				);
+		FVector BeamEnd = End;//设置特效命中点的位置与击中的位置相同
+		if(OutHit.bBlockingHit)
+		{
+			BeamEnd = OutHit.ImpactPoint;
+		}
+		if(BeamParticles)
+		{
+			UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(
+				World,
+				BeamParticles,
+				TraceStart,
+				FRotator::ZeroRotator,
+				true
+				);
+			if(Beam)
+			{
+				Beam->SetVectorParameter(FName("Target"), BeamEnd);
+			}
+		}
+	}
+}
+
 FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget)
 {
 	FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
@@ -109,9 +122,11 @@ FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVe
 	FVector EndLoc = SphereCenter + RandVec;
 	FVector ToEndLoc = EndLoc - TraceStart;
 
+	/*
 	DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, true);
 	DrawDebugSphere(GetWorld(), EndLoc, 4.f, 12, FColor::Blue, true);
 	DrawDebugLine(GetWorld(), TraceStart, FVector(TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size()), FColor::Red,true);
-
+	*/
+	
 	return FVector(TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size());//为了保证双精度值不会溢出，所以这里用不了80000那么长 所以稍微除一下
 }
