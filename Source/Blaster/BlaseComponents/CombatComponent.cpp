@@ -61,6 +61,8 @@ void UCombatComponent::InitializeCarriedAmmo()
 	CarriedAmmoMap.Add(EWeaponType::EWT_Pistol, PistolAmmo);
 	CarriedAmmoMap.Add(EWeaponType::EWT_SubmachineGun, StartingSMGAmmo);
 	CarriedAmmoMap.Add(EWeaponType::EWT_ShotGun, StartingShotGunAmmo);
+	CarriedAmmoMap.Add(EWeaponType::EWT_SniperRifle, StartingSniperAmmo);
+	
 }
 
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
