@@ -47,7 +47,8 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-	
+
+	//瞄准的方法
 	void SetAiming(bool bIsAiming);
 
 	UFUNCTION(Server, Reliable)

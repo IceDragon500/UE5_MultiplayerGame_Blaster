@@ -718,6 +718,12 @@ void ABlasterCharacter::MulticastElim_Implementation()
 	{
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ElimBotSound, GetActorLocation());
 	}
+	//这里判断当玩家使用狙击枪正在瞄准时，被淘汰，需要关闭瞄准镜界面
+	bool bHideSniperScope = IsLocallyControlled() && Combat && Combat->bAiming && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponTyep() == EWeaponType::EWT_SniperRifle; 
+	if(bHideSniperScope)
+	{
+		ShowSniperScopeWidget(false);
+	}
 }
 
 void ABlasterCharacter::ElimTimerFinished()
