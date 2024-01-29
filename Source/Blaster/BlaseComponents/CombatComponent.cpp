@@ -62,6 +62,8 @@ void UCombatComponent::InitializeCarriedAmmo()
 	CarriedAmmoMap.Add(EWeaponType::EWT_SubmachineGun, StartingSMGAmmo);
 	CarriedAmmoMap.Add(EWeaponType::EWT_ShotGun, StartingShotGunAmmo);
 	CarriedAmmoMap.Add(EWeaponType::EWT_SniperRifle, StartingSniperAmmo);
+	CarriedAmmoMap.Add(EWeaponType::EWT_GrenadeLauncher, StartingGrenadeAmmo);
+	
 	
 }
 
