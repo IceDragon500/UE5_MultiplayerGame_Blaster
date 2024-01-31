@@ -8,9 +8,9 @@
 
 AProjectileRocket::AProjectileRocket()
 {
-	RocketMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RocketMesh"));
-	RocketMesh->SetupAttachment(RootComponent);
-	RocketMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProjectileMesh"));
+	ProjectileMesh->SetupAttachment(RootComponent);
+	ProjectileMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	RocketMovementComponent = CreateDefaultSubobject<URocketMovementComponent>(TEXT("RocketMovementComponent"));
 	RocketMovementComponent->bRotationFollowsVelocity = true;
@@ -29,18 +29,8 @@ void AProjectileRocket::BeginPlay()
 		CollisionBox->OnComponentHit.AddDynamic(this, &ThisClass::OnHit);
 	}
 
-	if(TrailSystem)
-	{
-		TrailSystemComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
-		TrailSystem,  //粒子系统
-		GetRootComponent(), //附加对象，这里选择当前这个actor的root
-		FName(), //附加对象的FName 这里没有，就留空
-		GetActorLocation(), //位置
-		GetActorRotation(), //旋转
-		EAttachLocation::KeepWorldPosition,  //
-		false  //是否自动销毁，这里选false，我们想手动控制其销毁
-			);
-	}
+	SpawnTrailSystem();
+	
 	//生成一个附件的声音，可以同时设置声音衰减
 	if(ProjectileLoop && LooppingSoundAttenuation)
 	{
@@ -69,30 +59,9 @@ void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 	{
 		return;
 	}
+	ExplodeDamage();//处理爆炸伤害
 	
-	APawn* FiringPawn =	GetInstigator();
-	if(FiringPawn && HasAuthority())
-	{
-		AController* FiringController = FiringPawn->GetController();
-		if(FiringController)
-		{
-			UGameplayStatics::ApplyRadialDamageWithFalloff(
-				this,  //传入世界上下文
-				Damage,  //伤害值
-				10.f,  //最小伤害值
-				GetActorLocation(),  //命中圆点中心的位置
-				200.f,   //最小半径 最小半径内的伤害就是满额伤害
-				500.f,   //最大半径 最大半径到最小半径中间是线性递减的伤害
-				1.f,     //衰减方式,
-				UDamageType::StaticClass(),  //伤害类型
-				TArray<AActor*>(),  //被忽略的actor，创建一个数组并且添加任何你想忽略的参与者，因为我们这里是都可以受到伤害，所以传入了一个空数组
-				this,  //创造这个伤害的actor，这里是火箭弹，所以是这个子弹类创建了这个伤害，所以是this
-				FiringController   //负责造成伤害的控制器（例如，投掷手榴弹的玩家）
-				);
-		}
-	}
-	
-	GetWorldTimerManager().SetTimer(DestroyTimer, this, &ThisClass::DestroyTimerFinished, DestroyTime);
+	StartDestroyTimer();//开启自毁的倒计时
 
 	//因为在上面我们为了让拖尾的烟雾特效持续显示，做了actor延迟3秒的销毁
 	//所以我们需要先播放粒子特效和音效，然后隐藏掉模型和关闭碰撞
@@ -107,10 +76,10 @@ void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 	}
 
 	//当火箭触碰到碰撞物
-	if(RocketMesh)
+	if(ProjectileMesh)
 	{
 		//设置模型可见为不可见
-		RocketMesh->SetVisibility(false);
+		ProjectileMesh->SetVisibility(false);
 	}
 	if(CollisionBox)
 	{
@@ -132,9 +101,4 @@ void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 void AProjectileRocket::Destroyed()
 {
 	//Super::Destroyed();
-}
-
-void AProjectileRocket::DestroyTimerFinished()
-{
-	Destroy();
 }

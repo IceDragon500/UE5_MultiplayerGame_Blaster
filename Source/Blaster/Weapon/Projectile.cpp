@@ -3,6 +3,7 @@
 
 #include "Projectile.h"
 
+#include "NiagaraFunctionLibrary.h"
 #include "Blaster/Blaster.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Kismet/GameplayStatics.h"
@@ -57,11 +58,63 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	Destroy();
 }
 
+void AProjectile::SpawnTrailSystem()
+{
+	if(TrailSystem)
+	{
+		TrailSystemComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+		TrailSystem,  //粒子系统
+		GetRootComponent(), //附加对象，这里选择当前这个actor的root
+		FName(), //附加对象的FName 这里没有，就留空
+		GetActorLocation(), //位置
+		GetActorRotation(), //旋转
+		EAttachLocation::KeepWorldPosition,  //
+		false  //是否自动销毁，这里选false，我们想手动控制其销毁
+			);
+	}
+}
+
 // Called every frame
 void AProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void AProjectile::StartDestroyTimer()
+{
+	GetWorldTimerManager().SetTimer(DestroyTimer, this, &ThisClass::DestroyTimerFinished, DestroyTime);
+}
+
+void AProjectile::DestroyTimerFinished()
+{
+	Destroy();
+}
+
+void AProjectile::ExplodeDamage()
+{
+	
+	APawn* FiringPawn =	GetInstigator();
+	if(FiringPawn && HasAuthority())
+	{
+		AController* FiringController = FiringPawn->GetController();
+		if(FiringController)
+		{
+			UGameplayStatics::ApplyRadialDamageWithFalloff(
+				this,  //传入世界上下文
+				Damage,  //伤害值
+				10.f,  //最小伤害值
+				GetActorLocation(),  //命中圆点中心的位置
+				DamageInnerRadius,   //最小半径 最小半径内的伤害就是满额伤害
+				DamageOuterRadius,   //最大半径 最大半径到最小半径中间是线性递减的伤害
+				1.f,     //衰减方式,
+				UDamageType::StaticClass(),  //伤害类型
+				TArray<AActor*>(),  //被忽略的actor，创建一个数组并且添加任何你想忽略的参与者，因为我们这里是都可以受到伤害，所以传入了一个空数组
+				this,  //创造这个伤害的actor，这里是火箭弹，所以是这个子弹类创建了这个伤害，所以是this
+				FiringController   //负责造成伤害的控制器（例如，投掷手榴弹的玩家）
+				);
+		}
+	}
 }
 
 void AProjectile::Destroyed()
@@ -77,4 +130,3 @@ void AProjectile::Destroyed()
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
 	}
 }
-

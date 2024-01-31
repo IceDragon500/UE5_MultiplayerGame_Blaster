@@ -8,6 +8,8 @@
 #include "GameFramework/Actor.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Sound/SoundCue.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 #include "Projectile.generated.h"
 
 UCLASS()
@@ -27,6 +29,16 @@ protected:
 
 	virtual void BeginPlay() override;
 
+	void SpawnTrailSystem();
+
+	void StartDestroyTimer();
+	
+	//触发计时器的事件
+	void DestroyTimerFinished();
+
+	//爆炸伤害
+	void ExplodeDamage();
+
 	//HitComp 参与碰撞的组件，在这里就是我们的碰撞盒子
 	//OtherActor 被击中的actor
 	//OtherComp 被击中的组件
@@ -36,6 +48,9 @@ protected:
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComp,	AActor* OtherActor,	UPrimitiveComponent* OtherComp,	FVector NormalImpulse, const FHitResult& Hit);
 
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* ProjectileMesh;
+	
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* CollisionBox;
 	
@@ -53,6 +68,21 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category= "子弹属性")
 	UProjectileMovementComponent* ProjectileMovementComponent;
+
+	//导弹尾部的烟雾特效
+	UPROPERTY(EditAnywhere, Category= "子弹属性")
+	UNiagaraSystem* TrailSystem;
+
+	//发生导弹尾部烟雾的特效组件
+	UPROPERTY()
+	UNiagaraComponent* TrailSystemComponent;
+
+	//炸弹爆炸内圈的半径
+	UPROPERTY(EditAnywhere, Category= "子弹属性")
+	float DamageInnerRadius = 200.f;
+	//炸弹爆炸外圈的半径
+	UPROPERTY(EditAnywhere, Category= "子弹属性")
+	float DamageOuterRadius = 500.f;
 	
 private:
 	//子弹特效
@@ -62,4 +92,11 @@ private:
 	//特效组件
 	UPROPERTY()
 	UParticleSystemComponent* TracerComponent;
+
+	//用来控制导弹尾部烟雾消失的计时器
+	FTimerHandle DestroyTimer;
+
+	//轨迹烟雾消失的时间
+	UPROPERTY(EditAnywhere, Category= "子弹属性")
+	float DestroyTime = 3.f;
 };
