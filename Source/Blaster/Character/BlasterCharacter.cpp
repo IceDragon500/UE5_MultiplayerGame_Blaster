@@ -600,28 +600,29 @@ void ABlasterCharacter::PlayReloadMontage()
 		FName SectionName;
 
 		switch (Combat->EquippedWeapon->GetWeaponTyep()) {
-		case EWeaponType::EWT_AssaultRifle:
+		case EWeaponType::EWT_AssaultRifle://自动步枪
+			SectionName = FName("AssaultRifle") ;
+			break;
+		case EWeaponType::EWT_RocketLauncher://火箭发射器
+			SectionName = FName("RocketLauncher") ;
+			break;
+		case EWeaponType::EWT_Rifle://半自动步枪
 			SectionName = FName("Rifle") ;
 			break;
-		case EWeaponType::EWT_RocketLauncher:
+		case EWeaponType::EWT_Pistol://手枪
+			SectionName = FName("Pistol") ;
+			break;
+		case EWeaponType::EWT_SubmachineGun://冲锋枪
+			SectionName = FName("Pistol") ;//继续使用手枪的换弹动画，没有问题！
+			break;
+		case EWeaponType::EWT_ShotGun://来复枪
 			SectionName = FName("Rifle") ;
 			break;
-		case EWeaponType::EWT_Rifle:
+		case EWeaponType::EWT_SniperRifle://狙击枪
+			SectionName = FName("Sniper") ;
 			break;
-		case EWeaponType::EWT_Pistol:
-			SectionName = FName("Rifle") ;
-			break;
-		case EWeaponType::EWT_SubmachineGun:
-			SectionName = FName("Rifle") ;
-			break;
-		case EWeaponType::EWT_ShotGun:
-			SectionName = FName("Rifle") ;
-			break;
-		case EWeaponType::EWT_SniperRifle:
-			SectionName = FName("Rifle") ;
-			break;
-		case EWeaponType::EWT_GrenadeLauncher:
-			SectionName = FName("Rifle") ;
+		case EWeaponType::EWT_GrenadeLauncher://榴弹发射器
+			SectionName = FName("GrenadeLaunche") ;
 			break;
 		case EWeaponType::EWT_MAX:
 			break;
