@@ -78,6 +78,9 @@ public:
 	//装备武器的声音
 	UPROPERTY(EditAnywhere, Category= "武器属性")
 	USoundCue* EquipSound;
+
+	//打开自定义深度
+	void EnableCustomDepth(bool bEnable);
 	
 protected:
 	virtual void BeginPlay() override;
@@ -87,6 +90,11 @@ protected:
 
 	UFUNCTION()
 	virtual void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	virtual void OnWeaponStateSet();
+	virtual void OnEquipped();
+	virtual void OnDropped();
+	virtual void OnEquippedSecondary();
 	
 private:
 	UPROPERTY()

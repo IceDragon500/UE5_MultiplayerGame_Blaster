@@ -28,6 +28,9 @@ AWeapon::AWeapon()
 	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);//然后设置对Pawn（角色）忽略阻挡
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);//设置没有碰撞
 
+	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);//设置自定义深度模版值
+	WeaponMesh->MarkRenderStateDirty();//强制刷新自定义深度
+	EnableCustomDepth(true);
 
 	AreaSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AreaShpere"));
 	AreaSphere->SetupAttachment(RootComponent);
@@ -82,6 +85,14 @@ bool AWeapon::IsEmpty()
 bool AWeapon::IsFull()
 {
 	return Ammo == MagCapacity;
+}
+
+void AWeapon::EnableCustomDepth(bool bEnable)
+{
+	if(WeaponMesh)
+	{
+		WeaponMesh->SetRenderCustomDepth(bEnable);
+	}
 }
 
 // Called when the game starts or when spawned
@@ -199,38 +210,18 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 void AWeapon::SetWeaponState(EWeaponState State)
 {
 	WeaponState = State;
+	OnWeaponStateSet();
+}
 
+void AWeapon::OnWeaponStateSet()
+{
 	switch (WeaponState)
 	{
 	case EWeaponState::EWS_Equipped:
-		ShowPickupWidget(false);
-		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-		/*
-		 *根据我的搜索结果，这个错误通常是由于物体的“启用碰撞”属性设置为“查询”或“无碰撞”，但“模拟物理”被设置为“是”导致的。
-		 *将“启用碰撞”属性更改为其他值或确保物体的“模拟物理”标志未设置即可解决此问题。
-		 */
-		WeaponMesh->SetSimulatePhysics(false);//这里两个需要设置成false，否则会报错
-		WeaponMesh->SetEnableGravity(false);
-		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		if(WeaponType == EWeaponType::EWT_SubmachineGun)
-		{
-			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-			WeaponMesh->SetEnableGravity(true);
-			WeaponMesh->SetCollisionResponseToChannels(ECollisionResponse::ECR_Ignore);
-		}
+		OnEquipped();
 		break;
 	case EWeaponState::EWS_Dropped:
-		if(HasAuthority())
-		{
-			AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		}
-		WeaponMesh->SetSimulatePhysics(true);
-		WeaponMesh->SetEnableGravity(true);
-		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		WeaponMesh->SetCollisionResponseToChannels(ECollisionResponse::ECR_Block);
-		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
-		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+		OnDropped();
 		break;
 	case EWeaponState::EWS_Initial:
 		break;
@@ -242,34 +233,50 @@ void AWeapon::SetWeaponState(EWeaponState State)
 
 void AWeapon::OnRep_WeaponState()
 {
-	switch (WeaponState)
+	OnWeaponStateSet();
+}
+
+void AWeapon::OnEquipped()
+{
+	ShowPickupWidget(false);
+	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	/*
+	 *根据我的搜索结果，这个错误通常是由于物体的“启用碰撞”属性设置为“查询”或“无碰撞”，但“模拟物理”被设置为“是”导致的。
+	 *将“启用碰撞”属性更改为其他值或确保物体的“模拟物理”标志未设置即可解决此问题。
+	 */
+	WeaponMesh->SetSimulatePhysics(false);//这里两个需要设置成false，否则会报错
+	WeaponMesh->SetEnableGravity(false);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	if(WeaponType == EWeaponType::EWT_SubmachineGun)
 	{
-	case EWeaponState::EWS_Equipped:
-		ShowPickupWidget(false);
-		WeaponMesh->SetSimulatePhysics(false);
-		WeaponMesh->SetEnableGravity(false);
-		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		if(WeaponType == EWeaponType::EWT_SubmachineGun)
-		{
-			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-			WeaponMesh->SetEnableGravity(true);
-			WeaponMesh->SetCollisionResponseToChannels(ECollisionResponse::ECR_Ignore);
-		}
-		break;
-	case EWeaponState::EWS_Dropped:
-		WeaponMesh->SetSimulatePhysics(true);
-		WeaponMesh->SetEnableGravity(true);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		WeaponMesh->SetCollisionResponseToChannels(ECollisionResponse::ECR_Block);
-		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
-		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
-		break;
-	case EWeaponState::EWS_Initial:
-		break;
-	case EWeaponState::EWS_MAX:
-		break;
-	default: ;
+		WeaponMesh->SetEnableGravity(true);
+		WeaponMesh->SetCollisionResponseToChannels(ECollisionResponse::ECR_Ignore);
 	}
+	EnableCustomDepth(false);	
+}
+
+void AWeapon::OnDropped()
+{
+	if(HasAuthority())
+	{
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
+	WeaponMesh->SetSimulatePhysics(true);
+	WeaponMesh->SetEnableGravity(true);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	WeaponMesh->SetCollisionResponseToChannels(ECollisionResponse::ECR_Block);
+	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+
+	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
+	WeaponMesh->MarkRenderStateDirty();
+	EnableCustomDepth(true);
+}
+
+void AWeapon::OnEquippedSecondary()
+{
 }
 
 void AWeapon::AddAmmo(int32 AmmoToAdd)

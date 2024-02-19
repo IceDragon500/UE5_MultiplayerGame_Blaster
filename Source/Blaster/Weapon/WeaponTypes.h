@@ -2,6 +2,10 @@
 
 #define TRACE_LENGTH 80000.f  //定义一下射线检测的长度为一个宏
 
+#define CUSTOM_DEPTH_PURPLE 250
+#define CUSTOM_DEPTH_BLUE 251
+#define CUSTOM_DEPTH_TAN 252
+
 //武器类型的枚举
 //在这里新增武器类型后，需要在以下几个地方新增对应的数据
 //在CombatComponent.h中，添加新增武器 在角色身上携带子弹的数量
