@@ -599,7 +599,7 @@ void ABlasterCharacter::PlayReloadMontage()
 		AnimInstance->Montage_Play(ReloadMontage);
 		FName SectionName;
 
-		switch (Combat->EquippedWeapon->GetWeaponTyep()) {
+		switch (Combat->EquippedWeapon->GetWeaponType()) {
 		case EWeaponType::EWT_AssaultRifle://自动步枪
 			SectionName = FName("AssaultRifle") ;
 			break;
@@ -616,7 +616,7 @@ void ABlasterCharacter::PlayReloadMontage()
 			SectionName = FName("Pistol") ;//继续使用手枪的换弹动画，没有问题！
 			break;
 		case EWeaponType::EWT_ShotGun://来复枪
-			SectionName = FName("Rifle") ;
+			SectionName = FName("ShotGun") ;
 			break;
 		case EWeaponType::EWT_SniperRifle://狙击枪
 			SectionName = FName("Sniper") ;
@@ -723,7 +723,7 @@ void ABlasterCharacter::MulticastElim_Implementation()
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ElimBotSound, GetActorLocation());
 	}
 	//这里判断当玩家使用狙击枪正在瞄准时，被淘汰，需要关闭瞄准镜界面
-	bool bHideSniperScope = IsLocallyControlled() && Combat && Combat->bAiming && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponTyep() == EWeaponType::EWT_SniperRifle; 
+	bool bHideSniperScope = IsLocallyControlled() && Combat && Combat->bAiming && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle; 
 	if(bHideSniperScope)
 	{
 		ShowSniperScopeWidget(false);

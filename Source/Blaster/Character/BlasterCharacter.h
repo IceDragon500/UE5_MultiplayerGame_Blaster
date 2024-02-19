@@ -55,14 +55,20 @@ public:
 
 	FORCEINLINE float GetAO_Yaw() const { return  AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
+	AWeapon* GetEquippedWeapon();
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
+	FVector GetHitTarget() const;
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
 	FORCEINLINE bool IsElimmed() const { return bElimmed; }
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+	ECombatState GetCombatState() const;
+	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
+	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
+	FORCEINLINE UAnimMontage* GetReloadMotage() const { return ReloadMontage; }
 
-	AWeapon* GetEquippedWeapon();
+	
 
 	//播放开火动画
 	void PlayFireMontage(bool bAiming);
@@ -70,11 +76,7 @@ public:
 	void PlayElimMontage();
 	//播放换弹动画
 	void PlayReloadMontage();
-
-	FVector GetHitTarget() const;
-
-	ECombatState GetCombatState() const;
-
+	
 	void Elim();
 	//被淘汰之后的逻辑
 	UFUNCTION(NetMulticast, Reliable)

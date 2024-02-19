@@ -79,6 +79,11 @@ bool AWeapon::IsEmpty()
 	return Ammo <=0 ? true : false ;
 }
 
+bool AWeapon::IsFull()
+{
+	return Ammo == MagCapacity;
+}
+
 // Called when the game starts or when spawned
 void AWeapon::BeginPlay()
 {
@@ -269,12 +274,19 @@ void AWeapon::OnRep_WeaponState()
 
 void AWeapon::AddAmmo(int32 AmmoToAdd)
 {
-	Ammo = FMath::Clamp(Ammo - AmmoToAdd, 0 ,MagCapacity);
+	//这里使用了Clamp 处理当前弹药扣除变动量后的结果 避免小于0和大于最大弹夹数量的情况
+	//如果它小于0，则将其设置为0；如果它大于MagCapacity，则将其设置为MagCapacity。
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0 ,MagCapacity);
 	SetHUDAmmo();
 }
 
 void AWeapon::OnRep_Ammo()
 {
+	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
+	if(BlasterOwnerCharacter && BlasterOwnerCharacter->GetCombat() && IsFull())
+	{
+		BlasterOwnerCharacter->GetCombat()->JumpToShotgunEnd();
+	}
 	SetHUDAmmo();
 }
 

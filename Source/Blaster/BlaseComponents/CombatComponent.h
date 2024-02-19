@@ -41,8 +41,19 @@ public:
 	//武器换弹
 	void Reload();
 
+	//结束换弹动画后，触发子弹数量更新的逻辑
+	//用在AM_Reload中的动画通知
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
+
+	//散弹枪结束换弹动画后，触发子弹数量更新的逻辑
+	//用在AM_Reload中的动画通知
+	UFUNCTION(BlueprintCallable)
+	void ShotgunShellReload();
+
+	//散弹枪在满足各中换弹终止后，跳转到最后ShotgunEnd通知的方法
+	//有几种情况：1、正常换弹结束后，2、携带弹药为0，换弹需要终止
+	void JumpToShotgunEnd();
 	
 protected:
 	// Called when the game starts
@@ -87,6 +98,8 @@ protected:
 
 	void HandleReload();
 
+	//计算一下需要装多少子弹
+	//这里会判断当携带子弹数量不够的情况
 	int32 AmountToReload();
 
 private:
@@ -202,7 +215,7 @@ private:
 	//初始化弹药，如果有新增类型的武器，需要在这里添加
 	void InitializeCarriedAmmo();
 
-	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState = ECombatState::ECS_Unoccupied;
 
 	//复制CombateState变化的方法
@@ -211,5 +224,8 @@ private:
 
 	//子弹计算逻辑
 	void UpdateAmmoValues();
+
+	//用来专门更新散弹枪上弹的逻辑
+	void UpdateShotgunAmmoValues();
 		
 };

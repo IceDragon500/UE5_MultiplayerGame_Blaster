@@ -2,14 +2,11 @@
 
 
 #include "CombatComponent.h"
-
-#include "InputTriggers.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Materials/MaterialExpressionChannelMaskParameterColor.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -133,9 +130,15 @@ void UCombatComponent::FireTimerFinished()
 
 bool UCombatComponent::CanFire()
 {
+	//当没有装备武器的时候，不能发射，返回false
 	if(EquippedWeapon == nullptr) return false;
+	
+	//这个判断是为了散弹枪装弹时可以进行射击的特殊判断
+	//当装备的是散弹枪并且当前处在reload状态，并且bCanFire为true（说明这个时候散弹枪至少有一颗子弹），则返回ture
+	if(!EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_ShotGun) return true;
+
+	//只要当前装备了武器并且bCanFire为true，且为ECS_Unoccupied状态，就可以进行开火
 	return !EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied;
-	//return !EquippedWeapon->IsEmpty();
 }
 
 void UCombatComponent::OnRep_CarriedAmmo()
@@ -144,6 +147,14 @@ void UCombatComponent::OnRep_CarriedAmmo()
 	if(Controller)
 	{
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+	}
+	bool bJumpToShotgunEnd = CombatState == ECombatState::ECS_Reloading &&
+		EquippedWeapon != nullptr &&
+			EquippedWeapon->GetWeaponType() == EWeaponType::EWT_ShotGun &&
+				CarriedAmmo == 0;
+	if(bJumpToShotgunEnd)
+	{
+		JumpToShotgunEnd();
 	}
 }
 
@@ -155,6 +166,13 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	if(EquippedWeapon == nullptr) return;
+	if(Character && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_ShotGun)
+	{
+		Character->PlayFireMontage(bAiming);
+		EquippedWeapon->Fire(TraceHitTarget);
+		CombatState = ECombatState::ECS_Unoccupied;
+		return ;
+	}
 	if(Character && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayFireMontage(bAiming);  //执行角色身上的开火逻辑：播放开火动画
@@ -185,9 +203,9 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	EquippedWeapon->SetHUDAmmo();//显示武器当前的弹药至界面上
 
 	//如果CarriedAmmoMap中可以找到装备武器的类型，那我们就可以从map中找到武器类型对应的CarriedAmmo的数量
-	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponTyep()))
+	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
-		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponTyep()];
+		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
 	}
 
 	//将当前CarriedAmmo设置显示至界面
@@ -238,6 +256,7 @@ void UCombatComponent::Reload()
 {
 	if(CarriedAmmo > 0 && CombatState != ECombatState::ECS_Reloading)
 	{
+		if(EquippedWeapon->IsFull()) return; //如果当前子弹是满的，则直接返回，避免触发一个空的换弹动作
 		ServerReload();
 	}
 }
@@ -255,6 +274,37 @@ void UCombatComponent::FinishReloading()
 	{
 		Fire();
 	}
+}
+
+void UCombatComponent::UpdateAmmoValues()
+{
+	//首先判断角色和武器是否为空
+	if(Character == nullptr || EquippedWeapon == nullptr) return;
+	//通过AmountToReload方法获取，需要填充多少子弹
+	int32 ReloadAmount = AmountToReload();
+	//通过武器类型查询当前武器 角色身上携带的数量，然后从中扣除需要填充子弹的数量ReloadAmount
+	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= ReloadAmount;
+		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+	}
+	//更新HUD界面上的显示数字
+	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->GetController()) : Controller;
+	if(Controller)
+	{
+		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+	}
+	//给武器添加子弹
+	EquippedWeapon->AddAmmo(ReloadAmount);
+}
+
+void UCombatComponent::ShotgunShellReload()
+{
+	if(Character && Character->HasAuthority())
+	{
+		UpdateShotgunAmmoValues();
+	}
+	
 }
 
 void UCombatComponent::ServerReload_Implementation()
@@ -284,21 +334,42 @@ void UCombatComponent::OnRep_CombatState()
 	}
 }
 
-void UCombatComponent::UpdateAmmoValues()
+void UCombatComponent::UpdateShotgunAmmoValues()
 {
+	//专门用来处理散弹枪换弹的逻辑
+	//散弹枪是一发一发进行上单，所以我们需要每次换弹都是加1，然后更新HUD，再判断是否满，如果没有满，继续处理
 	if(Character == nullptr || EquippedWeapon == nullptr) return;
-	int32 ReloadAmount = AmountToReload();
-	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponTyep()))
+
+	//把角色身上携带的子弹数量减1
+	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
-		CarriedAmmoMap[EquippedWeapon->GetWeaponTyep()] -= ReloadAmount;
-		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponTyep()];
+		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= 1;
+		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
 	}
+
+	//更新HUD
 	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->GetController()) : Controller;
 	if(Controller)
 	{
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
 	}
-	EquippedWeapon->AddAmmo(-ReloadAmount);
+
+	//将散弹枪的子弹加1
+	EquippedWeapon->AddAmmo(1);
+	bCanFire = true; //当我们填充了1个子弹后，我们就希望可以开火，或者说我们希望在填充子弹的时候打断reload进行fire动作
+	if(EquippedWeapon->IsFull() || CarriedAmmo == 0)
+	{
+		JumpToShotgunEnd();
+	}
+}
+
+void UCombatComponent::JumpToShotgunEnd()
+{
+	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
+	if(AnimInstance && Character->GetReloadMotage())
+	{
+		AnimInstance->Montage_JumpToSection(FName("ShotGunEnd"));
+	}
 }
 
 void UCombatComponent::HandleReload()
@@ -309,11 +380,13 @@ void UCombatComponent::HandleReload()
 int32 UCombatComponent::AmountToReload()
 {
 	if(EquippedWeapon == nullptr) return 0;
+	//取得应该填充多少子弹
 	int32 RoomInMag = EquippedWeapon->GetMagCapacity() - EquippedWeapon->GetAmmo();
 
-	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponTyep()))
+	//
+	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
-		int32 AmountCarried = CarriedAmmoMap[EquippedWeapon->GetWeaponTyep()];
+		int32 AmountCarried = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
 		int32 Least = FMath::Min(RoomInMag, AmountCarried);
 		return FMath::Clamp(RoomInMag, 0, Least);
 	}
@@ -485,7 +558,7 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed ;
 	}
-	if(Character->IsLocallyControlled() && EquippedWeapon->GetWeaponTyep() == EWeaponType::EWT_SniperRifle)
+	if(Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
 	{
 		Character->ShowSniperScopeWidget(bIsAiming);
 	}

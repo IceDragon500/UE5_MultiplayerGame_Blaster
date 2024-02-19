@@ -38,16 +38,16 @@ public:
 	virtual void OnRep_Owner() override;
 	void SetHUDAmmo();	
 	void SetWeaponState(EWeaponState State);
-	void AddAmmo(int32 AmmoToAdd);
+	void AddAmmo(int32 AmmoToAdd);//给武器添加子弹的方法
 
 	
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return  AreaSphere; }
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
-	FORCEINLINE EWeaponType GetWeaponTyep() const { return WeaponType; }
-	FORCEINLINE int32 GetAmmo() const { return Ammo; }
-	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+	FORCEINLINE int32 GetAmmo() const { return Ammo; } //获取当前子弹数量(斜杠前面的数值)
+	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; } //获取最大子弹数量(弹夹容量 斜杠前面的数值)
 	
 
 	//开火相关的逻辑
@@ -72,6 +72,8 @@ public:
 	bool bAutomatic = true;
 	//子弹是否为空
 	bool IsEmpty();
+	//判断子弹是否装满，满true，不满false
+	bool IsFull();
 
 	//装备武器的声音
 	UPROPERTY(EditAnywhere, Category= "武器属性")
