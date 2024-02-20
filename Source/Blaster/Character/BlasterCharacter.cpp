@@ -139,6 +139,147 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	PollInit();
 }
 
+// Called to bind functionality to input
+void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	//增强输入的绑定方式
+	//使用CastChecked<>转换时，如果转换失败，则会抛出一个异常，Cast<>则会返回空指针
+	if(UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
+	{
+		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
+		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Completed, this, &ThisClass::Move);
+		
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Completed, this, &ThisClass::Look);
+		
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ThisClass::Jump);
+		
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ThisClass::FireButtonPressed);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &ThisClass::FireButtonReleased);
+		
+		EnhancedInputComponent->BindAction(PickupKeyAction, ETriggerEvent::Triggered, this, &ThisClass::PickupKeyPressed);
+
+		EnhancedInputComponent->BindAction(ReloadKeyAction, ETriggerEvent::Triggered, this, &ThisClass::ReloadButtonPressed);
+		
+		EnhancedInputComponent->BindAction(Crouching, ETriggerEvent::Started, this, &ThisClass::CrouchKeyPressed);//注意这里是ETriggerEvent::Started
+		
+		EnhancedInputComponent->BindAction(Aiming,ETriggerEvent::Started, this, &ThisClass::AimButtonPressed);
+		EnhancedInputComponent->BindAction(Aiming,ETriggerEvent::Completed, this, &ThisClass::AimButtonReleased);
+
+		EnhancedInputComponent->BindAction(ThrowGrenadeKeyAction, ETriggerEvent::Triggered, this, &ThisClass::ThrowGrenadePressed);
+		
+	}
+}
+
+void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	//注册需要复制的变量，这个将显示给所有客户端
+	//DOREPLIFETIME(ABlasterCharacter, OverlappingWeapon);
+
+	//注册需要复制的变量，使用COND_OwnerOnly，选择只会复制到所有者的客户端
+	DOREPLIFETIME_CONDITION(ThisClass, OverlappingWeapon, COND_OwnerOnly);
+
+	//注册血量
+	DOREPLIFETIME(ThisClass, Health);
+	DOREPLIFETIME(ThisClass, bDisableGameplay);
+}
+
+void ABlasterCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	if(Combat)
+	{
+		Combat->Character = this;
+	}
+}
+
+void ABlasterCharacter::PlayFireMontage(bool bAiming)
+{
+	if(Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && FireWeaponMontage)
+	{
+		AnimInstance->Montage_Play(FireWeaponMontage);
+		FName SectionName;
+		SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
+void ABlasterCharacter::PlayReloadMontage()
+{
+	if(Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+	
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && ReloadMontage)
+	{
+		AnimInstance->Montage_Play(ReloadMontage);
+		FName SectionName;
+
+		switch (Combat->EquippedWeapon->GetWeaponType()) {
+		case EWeaponType::EWT_AssaultRifle://自动步枪
+			SectionName = FName("AssaultRifle") ;
+			break;
+		case EWeaponType::EWT_RocketLauncher://火箭发射器
+			SectionName = FName("RocketLauncher") ;
+			break;
+		case EWeaponType::EWT_Rifle://半自动步枪
+			SectionName = FName("Rifle") ;
+			break;
+		case EWeaponType::EWT_Pistol://手枪
+			SectionName = FName("Pistol") ;
+			break;
+		case EWeaponType::EWT_SubmachineGun://冲锋枪
+			SectionName = FName("Pistol") ;//继续使用手枪的换弹动画，没有问题！
+			break;
+		case EWeaponType::EWT_ShotGun://来复枪
+			SectionName = FName("ShotGun") ;
+			break;
+		case EWeaponType::EWT_SniperRifle://狙击枪
+			SectionName = FName("Sniper") ;
+			break;
+		case EWeaponType::EWT_GrenadeLauncher://榴弹发射器
+			SectionName = FName("GrenadeLaunche") ;
+			break;
+		case EWeaponType::EWT_MAX:
+			break;
+		default: ;
+		}
+		
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
+void ABlasterCharacter::PlayElimMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && ElimMontage)
+	{
+		AnimInstance->Montage_Play(ElimMontage);
+	}
+}
+
+void ABlasterCharacter::PlayThrowGrenadeMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && ThrowGrenadeMontage)
+	{
+		AnimInstance->Montage_Play(ThrowGrenadeMontage);
+	}
+}
+
+void ABlasterCharacter::OnRep_ReplicatedMovement()
+{
+	Super::OnRep_ReplicatedMovement();
+	SimProxiesTurn();
+	TimeSinceLastMovementReplication = 0;
+}
+
 void ABlasterCharacter::RotateInPlace(float DeltaTime)
 {
 	/*这里在教程131课，我不想调整这个
@@ -168,44 +309,7 @@ void ABlasterCharacter::RotateInPlace(float DeltaTime)
 	}
 }
 
-void ABlasterCharacter::OnRep_ReplicatedMovement()
-{
-	Super::OnRep_ReplicatedMovement();
-	SimProxiesTurn();
-	TimeSinceLastMovementReplication = 0;
-}
 
-// Called to bind functionality to input
-void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	//增强输入的绑定方式
-	//使用CastChecked<>转换时，如果转换失败，则会抛出一个异常，Cast<>则会返回空指针
-	if(UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
-	{
-		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
-		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Completed, this, &ThisClass::Move);
-		
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Completed, this, &ThisClass::Look);
-		
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ThisClass::Jump);
-		
-		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ThisClass::FireButtonPressed);
-		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &ThisClass::FireButtonReleased);
-		
-		EnhancedInputComponent->BindAction(EKeyAction, ETriggerEvent::Triggered, this, &ThisClass::EKeyPressed);
-
-		EnhancedInputComponent->BindAction(RKeyAction, ETriggerEvent::Triggered, this, &ThisClass::ReloadButtonPressed);
-		
-		EnhancedInputComponent->BindAction(Crouching, ETriggerEvent::Started, this, &ThisClass::CrouchKeyPressed);//注意这里是ETriggerEvent::Started
-		
-		EnhancedInputComponent->BindAction(Aiming,ETriggerEvent::Started, this, &ThisClass::AimButtonPressed);
-		EnhancedInputComponent->BindAction(Aiming,ETriggerEvent::Completed, this, &ThisClass::AimButtonReleased);
-		
-	}
-}
 
 void ABlasterCharacter::Jump()
 {
@@ -217,21 +321,6 @@ void ABlasterCharacter::Jump()
 	{
 		Super::Jump();
 	}
-}
-
-void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	//注册需要复制的变量，这个将显示给所有客户端
-	//DOREPLIFETIME(ABlasterCharacter, OverlappingWeapon);
-
-	//注册需要复制的变量，使用COND_OwnerOnly，选择只会复制到所有者的客户端
-	DOREPLIFETIME_CONDITION(ThisClass, OverlappingWeapon, COND_OwnerOnly);
-
-	//注册血量
-	DOREPLIFETIME(ThisClass, Health);
-	DOREPLIFETIME(ThisClass, bDisableGameplay);
 }
 
 void ABlasterCharacter::Move(const FInputActionValue& Value)
@@ -294,7 +383,7 @@ void ABlasterCharacter::ReloadButtonPressed(const FInputActionValue& Value)
 	}
 }
 
-void ABlasterCharacter::EKeyPressed(const FInputActionValue& Value)
+void ABlasterCharacter::PickupKeyPressed(const FInputActionValue& Value)
 {
 	if(bDisableGameplay) return;
 	if(Combat)
@@ -315,6 +404,15 @@ void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 	if(Combat)
 	{
 		Combat->EquipWeapon(OverlappingWeapon);
+	}
+}
+
+void ABlasterCharacter::ThrowGrenadePressed(const FInputActionValue& Value)
+{
+	if(bDisableGameplay) return;
+	if(Combat)
+	{
+		Combat->ThrowGrenade();
 	}
 }
 
@@ -541,15 +639,6 @@ void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 	}
 }
 
-void ABlasterCharacter::PostInitializeComponents()
-{
-	Super::PostInitializeComponents();
-	if(Combat)
-	{
-		Combat->Character = this;
-	}
-}
-
 bool ABlasterCharacter::IsWeaponEquipped()
 {
 	return (Combat && Combat->EquippedWeapon);
@@ -564,73 +653,6 @@ AWeapon* ABlasterCharacter::GetEquippedWeapon()
 {
 	if(Combat == nullptr)  return nullptr;
 	return Combat->EquippedWeapon;
-}
-
-void ABlasterCharacter::PlayFireMontage(bool bAiming)
-{
-	if(Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
-
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if(AnimInstance && FireWeaponMontage)
-	{
-		AnimInstance->Montage_Play(FireWeaponMontage);
-		FName SectionName;
-		SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
-		AnimInstance->Montage_JumpToSection(SectionName);
-	}
-}
-
-void ABlasterCharacter::PlayElimMontage()
-{
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if(AnimInstance && ElimMontage)
-	{
-		AnimInstance->Montage_Play(ElimMontage);
-	}
-}
-
-void ABlasterCharacter::PlayReloadMontage()
-{
-	if(Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
-	
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if(AnimInstance && ReloadMontage)
-	{
-		AnimInstance->Montage_Play(ReloadMontage);
-		FName SectionName;
-
-		switch (Combat->EquippedWeapon->GetWeaponType()) {
-		case EWeaponType::EWT_AssaultRifle://自动步枪
-			SectionName = FName("AssaultRifle") ;
-			break;
-		case EWeaponType::EWT_RocketLauncher://火箭发射器
-			SectionName = FName("RocketLauncher") ;
-			break;
-		case EWeaponType::EWT_Rifle://半自动步枪
-			SectionName = FName("Rifle") ;
-			break;
-		case EWeaponType::EWT_Pistol://手枪
-			SectionName = FName("Pistol") ;
-			break;
-		case EWeaponType::EWT_SubmachineGun://冲锋枪
-			SectionName = FName("Pistol") ;//继续使用手枪的换弹动画，没有问题！
-			break;
-		case EWeaponType::EWT_ShotGun://来复枪
-			SectionName = FName("ShotGun") ;
-			break;
-		case EWeaponType::EWT_SniperRifle://狙击枪
-			SectionName = FName("Sniper") ;
-			break;
-		case EWeaponType::EWT_GrenadeLauncher://榴弹发射器
-			SectionName = FName("GrenadeLaunche") ;
-			break;
-		case EWeaponType::EWT_MAX:
-			break;
-		default: ;
-		}
-		
-		AnimInstance->Montage_JumpToSection(SectionName);
-	}
 }
 
 FVector ABlasterCharacter::GetHitTarget() const
@@ -653,26 +675,6 @@ void ABlasterCharacter::Elim()
 	}
 	MulticastElim();
 	GetWorldTimerManager().SetTimer(ElimTimer, this, &ThisClass::ElimTimerFinished, ElimDelay);
-}
-
-void ABlasterCharacter::Destroyed()
-{
-	Super::Destroyed();
-	if(ElimBotComponent)
-	{
-		ElimBotComponent->DestroyComponent();
-	}
-
-	/*
-	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
-	bool bMatchNotInProgress = BlasterGameMode && BlasterGameMode->GetMatchState() != MatchState::InProgress;
-
-	
-	if(Combat && Combat->EquippedWeapon && bMatchNotInProgress)
-	{
-		Combat->EquippedWeapon->Destroy();
-	}
-	*/
 }
 
 void ABlasterCharacter::MulticastElim_Implementation()
@@ -728,6 +730,26 @@ void ABlasterCharacter::MulticastElim_Implementation()
 	{
 		ShowSniperScopeWidget(false);
 	}
+}
+
+void ABlasterCharacter::Destroyed()
+{
+	Super::Destroyed();
+	if(ElimBotComponent)
+	{
+		ElimBotComponent->DestroyComponent();
+	}
+
+	/*
+	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	bool bMatchNotInProgress = BlasterGameMode && BlasterGameMode->GetMatchState() != MatchState::InProgress;
+
+	
+	if(Combat && Combat->EquippedWeapon && bMatchNotInProgress)
+	{
+		Combat->EquippedWeapon->Destroy();
+	}
+	*/
 }
 
 void ABlasterCharacter::ElimTimerFinished()

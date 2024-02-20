@@ -32,21 +32,36 @@ public:
 	ABlasterCharacter();
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
-	//跳跃
-	virtual void Jump() override;
-
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	void SetOverlappingWeapon(AWeapon* Weapon);
 
 	//AActor::PostInitializeComponents: Called after the actor’s components have been initialized, only during gameplay and some editor previews
 	//在角色的组件初始化后调用，仅在游戏和某些编辑器预览时调用
 	//用这个来初始化CombatComponent相关的变量
 	virtual void PostInitializeComponents() override;
-
+	//播放开火动画
+	void PlayFireMontage(bool bAiming);
+	//播放换弹动画
+	void PlayReloadMontage();
+	//播放死亡动画
+	void PlayElimMontage();
+	//播放投掷手雷的动画
+	void PlayThrowGrenadeMontage();
+	
 	virtual void OnRep_ReplicatedMovement() override;
-
+	
+	void Elim();
+	//被淘汰之后的逻辑
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastElim();
+	virtual void Destroyed() override;
+	
+	UPROPERTY(Replicated)
+	bool bDisableGameplay = false;
+	
+	//跳跃
+	virtual void Jump() override;
+	void SetOverlappingWeapon(AWeapon* Weapon);
+	
 	//返回是否已经装备武器
 	bool IsWeaponEquipped();
 
@@ -67,26 +82,7 @@ public:
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 	FORCEINLINE UAnimMontage* GetReloadMotage() const { return ReloadMontage; }
-
 	
-
-	//播放开火动画
-	void PlayFireMontage(bool bAiming);
-	//播放死亡动画
-	void PlayElimMontage();
-	//播放换弹动画
-	void PlayReloadMontage();
-	
-	void Elim();
-	//被淘汰之后的逻辑
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastElim();
-
-	virtual void Destroyed() override;
-
-	UPROPERTY(Replicated)
-	bool bDisableGameplay = false;
-
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
 	
@@ -122,13 +118,18 @@ protected:
 
 	//增强输入-R键功能
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
-	UInputAction* RKeyAction;
+	UInputAction* ReloadKeyAction;
 	void ReloadButtonPressed(const FInputActionValue& Value);
 
 	//增强输入-E键功能
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
-	UInputAction* EKeyAction;
-	void EKeyPressed(const FInputActionValue& Value);
+	UInputAction* PickupKeyAction;
+	void PickupKeyPressed(const FInputActionValue& Value);
+
+	//增强输入-T键功能
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
+	UInputAction* ThrowGrenadeKeyAction;
+	void ThrowGrenadePressed(const FInputActionValue& Value);
 
 	//增强输入-蹲
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
@@ -228,6 +229,10 @@ private:
 	//换弹动画
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|战斗")
 	UAnimMontage* ReloadMontage;
+
+	//投掷手雷动画
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|战斗")
+	UAnimMontage* ThrowGrenadeMontage;
 
 	//是否旋转根骨骼
 	bool bRotateRootBone;

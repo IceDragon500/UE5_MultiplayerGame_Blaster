@@ -218,7 +218,7 @@ void AWeapon::OnWeaponStateSet()
 	switch (WeaponState)
 	{
 	case EWeaponState::EWS_Equipped:
-		OnEquipped();
+		OnEquipped();//当前武器处于装备的情况下
 		break;
 	case EWeaponState::EWS_Dropped:
 		OnDropped();
@@ -238,6 +238,11 @@ void AWeapon::OnRep_WeaponState()
 
 void AWeapon::OnEquipped()
 {
+	/*当武器处于装备的情况下
+	 *需要关闭拾取提示界面
+	 *关闭碰撞
+	 *关闭自定义深度设置
+	*/
 	ShowPickupWidget(false);
 	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
@@ -248,6 +253,8 @@ void AWeapon::OnEquipped()
 	WeaponMesh->SetSimulatePhysics(false);//这里两个需要设置成false，否则会报错
 	WeaponMesh->SetEnableGravity(false);
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
+	//当手持冲锋枪时，我们需要将冲锋枪上的吊带设置为模拟物理效果，否则他就是僵硬的垂直
 	if(WeaponType == EWeaponType::EWT_SubmachineGun)
 	{
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -259,6 +266,10 @@ void AWeapon::OnEquipped()
 
 void AWeapon::OnDropped()
 {
+	/**
+	 * 当武器被抛出的时候，重新设置碰撞，并且忽略pawn和camera
+	 * 还需要打开自定义深度设置
+	 */
 	if(HasAuthority())
 	{
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);

@@ -10,6 +10,7 @@ enum class ECombatState : uint8
 {
 	ECS_Unoccupied UMETA(DisplayName = "Unoccupied"), //无
 	ECS_Reloading UMETA(DisplayName = "Reloading"),  //换弹中
+	ECS_ThrowingGrenade UMETA(DisplayName = "ThrowingGrenade"),  //投掷手雷
 	ECS_Other UMETA(DisplayName = "Other"),  //其他
 	
 	ECS_Max UMETA(DisplayName = "DefaultMAX")

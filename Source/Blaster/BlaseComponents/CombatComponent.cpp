@@ -184,7 +184,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	//判断是否有效
 	if(Character == nullptr || WeaponToEquip == nullptr) return;
-
+	if(CombatState != ECombatState::ECS_Unoccupied ) return;
 	//如果当前手上有武器（就是不是空指针），则执行武器的Dropped方法
 	if(EquippedWeapon)
 	{
@@ -252,13 +252,58 @@ void UCombatComponent::OnRep_EquippedWeapon()
 	}
 }
 
+void UCombatComponent::ThrowGrenade()
+{
+	if(CombatState != ECombatState::ECS_Unoccupied) return;
+	CombatState = ECombatState::ECS_ThrowingGrenade;
+	if(Character)
+	{
+		Character->PlayThrowGrenadeMontage();
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("投掷手雷")));
+		}
+		
+	}
+	if(Character && !Character->HasAuthority())
+	{
+		ServerThrowGrenade();
+	}
+	
+}
+
+void UCombatComponent::ServerThrowGrenade_Implementation()
+{
+	CombatState = ECombatState::ECS_ThrowingGrenade;
+	if(Character)
+	{
+		Character->PlayThrowGrenadeMontage();
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Cyan, FString::Printf(TEXT("投掷手雷")));
+		}
+	}
+}
+
+void UCombatComponent::ThrowGrenadeFinished()
+{
+	CombatState = ECombatState::ECS_Unoccupied;
+}
+
 void UCombatComponent::Reload()
 {
-	if(CarriedAmmo > 0 && CombatState != ECombatState::ECS_Reloading)
+	if(CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		if(EquippedWeapon->IsFull()) return; //如果当前子弹是满的，则直接返回，避免触发一个空的换弹动作
 		ServerReload();
 	}
+}
+
+void UCombatComponent::ServerReload_Implementation()
+{	
+	//将状态更改为换弹
+	CombatState = ECombatState::ECS_Reloading;
+	HandleReload();
 }
 
 void UCombatComponent::FinishReloading()
@@ -307,13 +352,6 @@ void UCombatComponent::ShotgunShellReload()
 	
 }
 
-void UCombatComponent::ServerReload_Implementation()
-{	
-	//将状态更改为换弹
-	CombatState = ECombatState::ECS_Reloading;
-	HandleReload();
-}
-
 void UCombatComponent::OnRep_CombatState()
 {
 	switch (CombatState) {
@@ -325,6 +363,12 @@ void UCombatComponent::OnRep_CombatState()
 		break;
 	case ECombatState::ECS_Reloading:
 		HandleReload();
+		break;
+	case ECombatState::ECS_ThrowingGrenade:
+		if(Character && !Character->IsLocallyControlled())
+		{
+			Character->PlayThrowGrenadeMontage();
+		}
 		break;
 	case ECombatState::ECS_Other:
 		break;

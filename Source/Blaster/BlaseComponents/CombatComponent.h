@@ -41,6 +41,17 @@ public:
 	//武器换弹
 	void Reload();
 
+	//投掷手雷
+	void ThrowGrenade();
+
+	UFUNCTION(Server, Reliable)
+	void ServerThrowGrenade();
+	
+	//结束投掷动画后，触发手雷相关更新的逻辑
+	//用在AM_ThrowGrenade中的动画通知
+	UFUNCTION(BlueprintCallable)
+	void ThrowGrenadeFinished();
+
 	//结束换弹动画后，触发子弹数量更新的逻辑
 	//用在AM_Reload中的动画通知
 	UFUNCTION(BlueprintCallable)
@@ -91,7 +102,9 @@ protected:
 
 	//设置准星
 	void SetHUDCrosshair(float DeltaTime);
-
+/*
+*主要实现换弹时的逻辑
+*/
 	//服务器上的换弹
 	UFUNCTION(Server, Reliable)
 	void ServerReload();

@@ -37,7 +37,7 @@ public:
 	void Dropped();//扔出武器
 	virtual void OnRep_Owner() override;
 	void SetHUDAmmo();	
-	void SetWeaponState(EWeaponState State);
+	void SetWeaponState(EWeaponState State);//设置武器在各种情况下的状态参数
 	void AddAmmo(int32 AmmoToAdd);//给武器添加子弹的方法
 
 	
