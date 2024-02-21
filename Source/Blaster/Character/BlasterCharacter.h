@@ -83,6 +83,7 @@ public:
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 	FORCEINLINE UAnimMontage* GetReloadMotage() const { return ReloadMontage; }
+	FORCEINLINE UStaticMeshComponent* GetAttachGrenade() const { return AttachedGrenade; }
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);

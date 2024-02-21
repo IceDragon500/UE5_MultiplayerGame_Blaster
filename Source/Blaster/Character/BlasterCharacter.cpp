@@ -75,6 +75,7 @@ ABlasterCharacter::ABlasterCharacter()
 	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Grenade"));
 	AttachedGrenade->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
 	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
 }
 
 // Called when the game starts or when spawned
@@ -98,33 +99,17 @@ void ABlasterCharacter::BeginPlay()
 			UE_LOG(LogTemp,Warning,TEXT("增强输入Subsystem初始化失败"));
 		}
 	}
-	/*
-	BlasterPlayerController = Cast<ABlasterPlayerController>(Controller);//这里在GameMode启用bDelayedStart = true时，服务器端会失败
-	if(BlasterPlayerController)
-	{
-		//设置增强输入
-		UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(BlasterPlayerController->GetLocalPlayer());
-		if(Subsystem)
-		{
-			Subsystem->AddMappingContext(InputContext, 0);
-		}
-		else
-		{
-			UE_LOG(LogTemp,Warning,TEXT("增强输入Subsystem初始化失败"));
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp,Warning,TEXT("BlasterPlayerController获取失败"));
-	}
-	*/
+	
 	UpdateHUDHealth();
-
 	if(HasAuthority())
 	{
 		//绑定ReceiveDamage到OnTakeAnyDamage，
 		//通过OnTakeAnyDamage接受伤害，执行ReceiveDamage的逻辑
 		OnTakeAnyDamage.AddDynamic(this, &ThisClass::ReceiveDamage);
+	}
+	if(AttachedGrenade)
+	{
+		AttachedGrenade->SetVisibility(false);
 	}
 }
 

@@ -93,6 +93,11 @@ protected:
 	//用在AM_ThrowGrenade中的动画通知
 	UFUNCTION(BlueprintCallable)
 	void ThrowGrenadeFinished();
+
+	void ShowAttachGrenade(bool bShowGrenade);
+
+	UFUNCTION(BlueprintCallable)
+	void LaunchGrenade();
 	
 /*
  * 瞄准的全部逻辑
