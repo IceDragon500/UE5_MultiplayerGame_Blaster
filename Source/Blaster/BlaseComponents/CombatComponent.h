@@ -34,16 +34,58 @@ public:
 
 	//处理需要复制的变量
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
+protected:
+	// Called when the game starts
+	virtual void BeginPlay() override;
+/*
+* 装备武器相关的逻辑
+*/
+	
+	void EquipWeapon(AWeapon* WeaponToEquip);//装备武器的完整逻辑
+	UFUNCTION()
+	void OnRep_EquippedWeapon();
+	void DropEquippedWeapon();//扔出武器
+	void AttachActorToRightHand(AActor* ActorToAttach);//将武器附加在右手上
+	void AttachActorToLeftHand(AActor* ActorToAttach);//将武器附加在左手上
+	void UpdateCarriedAmmo();//更新子弹的HUD和角色身上携带的子弹数量
+	void PlayEquipWeaponSound();//播放装备武器时的音效
+	void ReloadEmptyWeapon();//如果使其的武器为空子弹，尝试换弹
 
-	//装备武器的逻辑
-	void EquipWeapon(AWeapon* WeaponToEquip);
+/*
+* 武器换弹相关的逻辑
+*/
+	void Reload();//武器换弹
+	
+	UFUNCTION(Server, Reliable)
+	void ServerReload();//服务器上的换弹
+	
+	//结束换弹动画后，触发子弹数量更新的逻辑
+	//用在AM_Reload中的动画通知
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
+	
+	//散弹枪结束换弹动画后，触发子弹数量更新的逻辑
+	//用在AM_Reload中的动画通知
+	UFUNCTION(BlueprintCallable)
+	void ShotgunShellReload();
 
-	//武器换弹
-	void Reload();
-
-	//投掷手雷
-	void ThrowGrenade();
-
+	void HandleReload();
+	//计算一下需要装多少子弹
+	//这里会判断当携带子弹数量不够的情况
+	int32 AmountToReload();
+public:
+	//散弹枪在满足各中换弹终止后，跳转到最后ShotgunEnd通知的方法
+	//有几种情况：1、正常换弹结束后，2、携带弹药为0，换弹需要终止
+	void JumpToShotgunEnd();
+	
+	
+/*
+* 投掷手雷相关的逻辑
+*/
+protected:
+	void ThrowGrenade();//投掷手雷
+	
 	UFUNCTION(Server, Reliable)
 	void ServerThrowGrenade();
 	
@@ -51,37 +93,21 @@ public:
 	//用在AM_ThrowGrenade中的动画通知
 	UFUNCTION(BlueprintCallable)
 	void ThrowGrenadeFinished();
-
-	//结束换弹动画后，触发子弹数量更新的逻辑
-	//用在AM_Reload中的动画通知
-	UFUNCTION(BlueprintCallable)
-	void FinishReloading();
-
-	//散弹枪结束换弹动画后，触发子弹数量更新的逻辑
-	//用在AM_Reload中的动画通知
-	UFUNCTION(BlueprintCallable)
-	void ShotgunShellReload();
-
-	//散弹枪在满足各中换弹终止后，跳转到最后ShotgunEnd通知的方法
-	//有几种情况：1、正常换弹结束后，2、携带弹药为0，换弹需要终止
-	void JumpToShotgunEnd();
 	
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
-
-	//瞄准的方法
-	void SetAiming(bool bIsAiming);
+/*
+ * 瞄准的全部逻辑
+ */
+	
+	void SetAiming(bool bIsAiming);//瞄准的方法
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetAiming(bool bIsAiming);
 
-	UFUNCTION()
-	void OnRep_EquippedWeapon();
+	
 /*
  *主要实现当开火键按下时的逻辑
  */
-	//开火逻辑
+	//完整的开火逻辑
 	void Fire();
 	
 	//服务端上进行的开火逻辑  ,传入参数为命中的位置FVector
@@ -102,18 +128,16 @@ protected:
 
 	//设置准星
 	void SetHUDCrosshair(float DeltaTime);
-/*
-*主要实现换弹时的逻辑
-*/
-	//服务器上的换弹
-	UFUNCTION(Server, Reliable)
-	void ServerReload();
-
-	void HandleReload();
-
-	//计算一下需要装多少子弹
-	//这里会判断当携带子弹数量不够的情况
-	int32 AmountToReload();
+	
+	FTimerHandle FireTimer;
+	bool bCanFire = true;
+	//开始开火计时器
+	void StartFireTimer();
+	//结束开火计时器
+	void FireTimerFinished();
+	//只用来判断当前是否可以开火的方法
+	bool CanFire();
+	
 
 private:
 	//角色实例
@@ -170,29 +194,27 @@ private:
 	float ZoomInterpSpeed= 20.f;
 
 	void InterpFOV(float DeltaTime);
-
-	FTimerHandle FireTimer;
-
-	/*
-	 *开火相关内容
-	 */
-	bool bCanFire = true;
-	//开始开火计时器
-	void StartFireTimer();
-	//结束开火计时器
-	void FireTimerFinished();
-	//只用来判断当前是否可以开火的方法
-	bool CanFire();
+	
+	
+/*
+* 弹药更新相关逻辑
+*/
+	//初始化弹药，如果有新增类型的武器，需要在这里添加
+	void InitializeCarriedAmmo();
+	//子弹计算逻辑
+	void UpdateAmmoValues();
+	//用来专门更新散弹枪上弹的逻辑
+	void UpdateShotgunAmmoValues();
 
 	//Carried ammo for the currently-equipped weapon
 	//为当前装备的武器携带弹药
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_CarriedAmmo)
 	int32 CarriedAmmo;
-
+	
 	//为当前装备的武器携带弹药的复制方法
 	UFUNCTION()
 	void OnRep_CarriedAmmo();
-
+	
 	//用来存放武器类型与武器子弹数量的map
 	//不直接写当前武器有多少子弹，而是通过武器类型来区分
 	TMap<EWeaponType, int32> CarriedAmmoMap;
@@ -225,20 +247,15 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 StartingGrenadeAmmo = 10;
 
-	//初始化弹药，如果有新增类型的武器，需要在这里添加
-	void InitializeCarriedAmmo();
-
+/*
+* 战斗状态更新相关逻辑
+*/
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState = ECombatState::ECS_Unoccupied;
-
 	//复制CombateState变化的方法
 	UFUNCTION()
 	void OnRep_CombatState();
 
-	//子弹计算逻辑
-	void UpdateAmmoValues();
-
-	//用来专门更新散弹枪上弹的逻辑
-	void UpdateShotgunAmmoValues();
+	
 		
 };
