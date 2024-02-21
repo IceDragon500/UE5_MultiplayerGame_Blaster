@@ -46,20 +46,21 @@ public:
 	void PlayElimMontage();
 	//播放投掷手雷的动画
 	void PlayThrowGrenadeMontage();
+	//用来播放受击动画
+	void PlayHitReactMontage();
+
 	
 	virtual void OnRep_ReplicatedMovement() override;
 	
-	void Elim();
-	//被淘汰之后的逻辑
-	UFUNCTION(NetMulticast, Reliable)
+	void Elim();//被淘汰之后的逻辑
+	UFUNCTION(NetMulticast, Reliable)//被淘汰之后的逻辑
 	void MulticastElim();
 	virtual void Destroyed() override;
 	
 	UPROPERTY(Replicated)
 	bool bDisableGameplay = false;
 	
-	//跳跃
-	virtual void Jump() override;
+	virtual void Jump() override;//跳跃
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	
 	//返回是否已经装备武器
@@ -90,66 +91,57 @@ protected:
 	virtual void BeginPlay() override;
 
 	void RotateInPlace(float DeltaTime);
+/*
+ * 增强输入
+ */
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
+	UInputMappingContext* InputContext;//增强输入
 	
-	//增强输入
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
-	UInputMappingContext* InputContext;
-
-	//增强输入-移动
-	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
-	UInputAction* MovementAction;
+	UInputAction* MovementAction;//增强输入-移动
 	void Move(const FInputActionValue& Value);
-
 	
-	//增强输入-鼠标
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
-	UInputAction* LookAction;
+	UInputAction* LookAction;//增强输入-鼠标
 	void Look(const FInputActionValue& Value);
-
-	//增强输入-跳
+	
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
-	UInputAction* JumpAction;
-
-	//增强输入-鼠标左键攻击 
+	UInputAction* JumpAction;//增强输入-跳
+	
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
-	UInputAction* AttackAction;
+	UInputAction* AttackAction;//增强输入-鼠标左键攻击 
 	void FireButtonPressed(const FInputActionValue& Value);
 	void FireButtonReleased(const FInputActionValue& Value);
-
-	//增强输入-R键功能
+	
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
-	UInputAction* ReloadKeyAction;
+	UInputAction* ReloadKeyAction;//增强输入-R键功能
 	void ReloadButtonPressed(const FInputActionValue& Value);
-
-	//增强输入-E键功能
+	
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
-	UInputAction* PickupKeyAction;
+	UInputAction* PickupKeyAction;//增强输入-E键功能
 	void PickupKeyPressed(const FInputActionValue& Value);
-
-	//增强输入-T键功能
+	UFUNCTION(Server, Reliable)
+	void ServerEquipButtonPressed();
+	
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
-	UInputAction* ThrowGrenadeKeyAction;
+	UInputAction* ThrowGrenadeKeyAction;//增强输入-T键功能
 	void ThrowGrenadePressed(const FInputActionValue& Value);
-
-	//增强输入-蹲
+	
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
-	UInputAction* Crouching;
+	UInputAction* Crouching;//增强输入-蹲
 	void CrouchKeyPressed(const FInputActionValue& Value);
-
-	//增强输入-瞄准
+	
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
-	UInputAction* Aiming;
+	UInputAction* Aiming;//增强输入-瞄准
 	void AimButtonPressed(const FInputActionValue& Value);
 	void AimButtonReleased(const FInputActionValue& Value);
-	float CalculateSpeed();
-	void CalculateAO_Pitch();
+	
+	float CalculateSpeed();//获取速度
+	void CalculateAO_Pitch();//获取旋转
 
-	//用来计算瞄准偏移
-	void AimOffset(float DeltaTime);
-	void SimProxiesTurn();
-
-	//用来播放受击动画
-	void PlayHitReactMontage();
+	
+	void AimOffset(float DeltaTime);//用来计算瞄准偏移
+	void SimProxiesTurn();//模拟转向
 
 	//受到伤害
 	//收到伤害的方法
@@ -169,15 +161,14 @@ private:
 	//是一个接收到服务器replicate后需要执行的函数，replicate过程是单向的，所以On_RepXXX只能再客户端执行
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
-
-	UFUNCTION(Server, Reliable)
-	void ServerEquipButtonPressed();
+	
 
 	//用来处理原地转身
 	void TurnInPlace(float DeltaTime);
 
 	//用来处理靠墙时，隐藏角色模型
 	void HideCameraIfCharacterClose();
+	
 	//摄像机靠墙阈值
 	UPROPERTY(EditAnywhere)
 	float CameraThreshold = 200.f;
@@ -304,5 +295,12 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category="BlasterPlayer|角色淘汰")
 	USoundCue* ElimBotSound;
+
+/**
+ * Grenade手雷
+ */
+
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* AttachedGrenade;
 	
 };

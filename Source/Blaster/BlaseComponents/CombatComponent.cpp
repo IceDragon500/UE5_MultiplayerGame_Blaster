@@ -2,8 +2,6 @@
 
 
 #include "CombatComponent.h"
-
-#include "AudioMixerDevice.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
@@ -177,9 +175,11 @@ void UCombatComponent::ReloadEmptyWeapon()
 */
 void UCombatComponent::Reload()
 {
-	if(CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied)
+	if(CarriedAmmo > 0
+		&& CombatState == ECombatState::ECS_Unoccupied
+		&& EquippedWeapon
+		&& EquippedWeapon->IsFull())//如果当前子弹是满的，则直接返回，避免触发一个空的换弹动作
 	{
-		if(EquippedWeapon->IsFull()) return; //如果当前子弹是满的，则直接返回，避免触发一个空的换弹动作
 		ServerReload();
 	}
 }
