@@ -266,6 +266,10 @@ void UCombatComponent::ThrowGrenade()
 	{
 		ServerThrowGrenade();
 	}
+	if(Character && Character->HasAuthority())
+	{
+		
+	}
 }
 
 void UCombatComponent::ServerThrowGrenade_Implementation()
@@ -297,6 +301,33 @@ void UCombatComponent::ShowAttachGrenade(bool bShowGrenade)
 void UCombatComponent::LaunchGrenade()
 {
 	ShowAttachGrenade(false);
+	if(Character && Character->IsLocallyControlled())
+	{
+		ServerLaunchGrenade(HitTarget);
+	}
+	
+}
+
+void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuantize& Target)
+{
+	if(Character && Character->HasAuthority() && GrenadeClass)
+	{
+		const FVector StartingLocation = Character->GetAttachGrenade()->GetComponentLocation();
+		FVector ToTarget = Target - StartingLocation;
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = Character;
+		SpawnParams.Instigator = Character;
+		UWorld* World = GetWorld();
+		if (World)
+		{
+			World->SpawnActor<AProjectile>(
+				GrenadeClass,
+				StartingLocation,
+				ToTarget.Rotation(),
+				SpawnParams
+				);
+		}
+	}
 }
 
 /*
