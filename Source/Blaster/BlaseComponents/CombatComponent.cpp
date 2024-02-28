@@ -178,17 +178,20 @@ void UCombatComponent::Reload()
 	if(CarriedAmmo > 0
 		&& CombatState == ECombatState::ECS_Unoccupied
 		&& EquippedWeapon
-		&& EquippedWeapon->IsFull())//如果当前子弹是满的，则直接返回，避免触发一个空的换弹动作
+		&& !EquippedWeapon->IsFull())//如果当前子弹是满的，则直接返回，避免触发一个空的换弹动作
 	{
 		ServerReload();
+		HandleReload();
 	}
 }
 
 void UCombatComponent::ServerReload_Implementation()
-{	
+{
+	if(Character == nullptr || EquippedWeapon == nullptr ) return;
 	//将状态更改为换弹
 	CombatState = ECombatState::ECS_Reloading;
-	HandleReload();
+	if(!Character->IsLocallyControlled()) HandleReload();
+	
 }
 
 void UCombatComponent::FinishReloading()
@@ -225,7 +228,10 @@ void UCombatComponent::JumpToShotgunEnd()
 
 void UCombatComponent::HandleReload()
 {
-	Character->PlayReloadMontage();
+	if(Character)
+	{
+		Character->PlayReloadMontage();
+	}
 }
 
 int32 UCombatComponent::AmountToReload()
