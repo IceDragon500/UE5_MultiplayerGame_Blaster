@@ -259,6 +259,19 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 StartingGrenadeAmmo = 10;
 
+	//当前手雷数量
+	UPROPERTY(ReplicatedUsing = OnRep_Grenades)
+	int32 Grenades = 4;
+
+	UFUNCTION()
+	void OnRep_Grenades();
+	
+	//最大手雷数量
+	UPROPERTY(EditAnywhere)
+	int32 MaxGrenades = 10;
+
+	void UpdateHUDGrenades();
+
 /*
 * 战斗状态更新相关逻辑
 */
@@ -268,6 +281,8 @@ private:
 	UFUNCTION()
 	void OnRep_CombatState();
 
+public:
+	FORCEINLINE int32 GetGrenades() const {return Grenades;}
 	
 		
 };

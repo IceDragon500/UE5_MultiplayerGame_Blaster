@@ -785,6 +785,8 @@ void ABlasterCharacter::PlayHitReactMontage()
 void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
 	AController* InstigatroController, AActor* DamageCasuer)
 {
+	if(bElimmed) return; //防止在被击杀之后，播放死亡特效时被反复击杀
+	
 	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
 	UpdateHUDHealth();
 	PlayHitReactMontage();
