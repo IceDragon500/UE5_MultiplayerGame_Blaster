@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "InputActionValue.h"
 #include "Blaster/BlaseComponents/CombatComponent.h"
+#include "Blaster/BlaseComponents/BuffComponent.h"
 #include "Blaster/BlasterTypes/TurningInPlace.h"
 #include "GameFramework/Character.h"
 #include "Blaster/Interface/InteractWithCrosshairsInterface.h"
@@ -198,6 +199,10 @@ private:
 	//创建战斗组件CombatComponent
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BlasterPlayer", meta=(AllowPrivateAccess = "true"))
 	UCombatComponent* Combat;
+
+	//创建Buff组件
+	UPROPERTY(VisibleAnywhere, Category = "BlasterPlayer", meta=(AllowPrivateAccess = "true"))
+	UBuffComponent* Buff;
 	
 	float AO_Yaw;//瞄准偏移Yaw
 	float InterpAO_Yaw;//用来计算转身的Yaw

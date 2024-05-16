@@ -47,6 +47,9 @@ ABlasterCharacter::ABlasterCharacter()
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);//指定组件是可以被复制的 网络相关
 
+	Buff = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComponent"));
+	Buff->SetIsReplicated(true);
+
 	//蹲下的设置，这里我们使用角色移动组件里面的蹲下功能
 	//设置可以蹲下
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
@@ -183,6 +186,10 @@ void ABlasterCharacter::PostInitializeComponents()
 	if(Combat)
 	{
 		Combat->Character = this;
+	}
+	if(Buff)
+	{
+		Buff->Character = this;
 	}
 }
 
