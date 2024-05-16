@@ -84,7 +84,7 @@ public:
 /*
 * 投掷手雷相关的逻辑
 */
-protected:
+public:
 	void ThrowGrenade();//投掷手雷
 	
 	UFUNCTION(Server, Reliable)
@@ -105,11 +105,16 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void ServerLaunchGrenade(const FVector_NetQuantize& Target);
+
+public:
+	//拾取弹药
+	//用来做弹药拾取，数量的更新操作
+	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
 	
 /*
  * 瞄准的全部逻辑
  */
-	
+protected:	
 	void SetAiming(bool bIsAiming);//瞄准的方法
 
 	UFUNCTION(Server, Reliable)
@@ -230,6 +235,9 @@ private:
 	//用来存放武器类型与武器子弹数量的map
 	//不直接写当前武器有多少子弹，而是通过武器类型来区分
 	TMap<EWeaponType, int32> CarriedAmmoMap;
+
+	UPROPERTY(EditAnywhere)
+	int32 MaxCarriedAmmo = 500;//单种弹药携带最大数量
 
 	//角色携带AR步枪子弹的数量
 	UPROPERTY(EditAnywhere)
