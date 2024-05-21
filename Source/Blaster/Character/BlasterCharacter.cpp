@@ -584,10 +584,11 @@ void ABlasterCharacter::HideCameraIfCharacterClose()
 	}
 }
 
-void ABlasterCharacter::OnRep_Health()
+void ABlasterCharacter::OnRep_Health(float LastHealth)
 {
 	UpdateHUDHealth();
-	if(!bElimmed)
+	//if(!bElimmed || Health < LastHealth)
+	if(Health < LastHealth)
 	{
 		PlayHitReactMontage();
 	}

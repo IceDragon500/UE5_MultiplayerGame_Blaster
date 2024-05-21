@@ -79,6 +79,7 @@ public:
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
 	FORCEINLINE bool IsElimmed() const { return bElimmed; }
 	FORCEINLINE float GetHealth() const { return Health; }
+	FORCEINLINE void SetHealth(float Amount) { Health = Amount; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
@@ -90,6 +91,9 @@ public:
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
+
+	//更新显示血量的HUD
+	void UpdateHUDHealth();
 	
 protected:
 	virtual void BeginPlay() override;
@@ -151,9 +155,6 @@ protected:
 	//收到伤害的方法
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatroController, AActor* DamageCasuer);
-
-	//更新显示血量的HUD
-	void UpdateHUDHealth();
 
 	//初始化分数相关的操作
 	//Poll for any relelvant classes and initialize our hud
@@ -247,12 +248,12 @@ private:
 
 	//当前血量
 	//将其绑定至OnRep_Health方法，进行网络复制
-	UPROPERTY(ReplicatedUsing= OnRep_Health, VisibleAnywhere, Category= "BlasterPlayer|角色状态")
+	UPROPERTY(ReplicatedUsing= OnRep_Health, EditAnywhere, Category= "BlasterPlayer|角色状态")
 	float Health = 100.f;
 
 	//我们需要在血量值变化的时候，进行复制
 	UFUNCTION()
-	void OnRep_Health();
+	void OnRep_Health(float LastHealth);
 
 	//是否被淘汰
 	bool bElimmed = false;

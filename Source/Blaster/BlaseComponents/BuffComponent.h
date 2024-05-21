@@ -24,14 +24,19 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-public:	
+public:
+	void Heal(float HealAmount, float HealingTime);
+	
 protected:
-	
-	
+	void HealRmapUp(float DeltaTime);
+
 private:
 	UPROPERTY()
 	ABlasterCharacter* Character;
-	
+
+	bool bHealing = false;//当前是否在恢复治疗中
+	float HealingRate = 0;//每秒恢复的治疗量 = 总治疗量HealAmount / 治疗时间 HealingTime
+	float AmountToHeal = 0;
 
 		
 };
