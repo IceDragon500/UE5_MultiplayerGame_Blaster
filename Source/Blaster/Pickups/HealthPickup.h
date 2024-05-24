@@ -21,10 +21,10 @@ protected:
 	
 private:
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "属性修改")
 	float HealAmount = 100.f;//可以治疗的点数
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "属性修改")
 	float HealingTime = 5.f;//回复的时间 ，这里是设计了一个缓慢回复的效果
 	
 };

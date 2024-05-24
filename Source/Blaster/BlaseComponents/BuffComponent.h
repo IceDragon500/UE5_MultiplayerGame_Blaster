@@ -29,7 +29,13 @@ public:
 	void Heal(float HealAmount, float HealingTime);
 	//处理速度相关
 	void BuffSpeed(float BuffbaseSpeed, float BuffCrouchSpeed, float BuffTime);
+	//初始化移动速度，需要在Character初始化Component的方法中进行调用
 	void SetInitialSpeed(float BaseSpeed, float CrouchSpeed);
+
+	//处理跳跃相关
+	void BuffJump(float BuffJumpVelocity, float BuffTime);
+	//初始化跳跃速度，需要在Character初始化Component的方法中进行调用
+	void SetInitialJumpVelocity(float Velocity);
 	
 protected:
 	//tick中检查治疗
@@ -51,11 +57,19 @@ private:
 	 */
 
 	FTimerHandle SpeedBuffTimer;
-	void ResetSpeed();
+	void ResetSpeed();//重置速度
 	float InitialBaseSpeed;//初始的移动速度
 	float InitialCrouchSpeed;//初始的蹲下移动速度
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastSpeedBuff(float BaseSpeed, float CrouchSpeed);
-		
+
+	/**
+	 * Jump buff
+	 */
+	FTimerHandle JumpBuffTimer;
+	void ResetJump();//重置跳跃速度
+	float InitialJumpVelocity;
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastJumpBuff(float JumpVelocity);
 };

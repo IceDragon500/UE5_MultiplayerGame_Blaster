@@ -190,8 +190,8 @@ void ABlasterCharacter::PostInitializeComponents()
 	if(BuffComponent)
 	{
 		BuffComponent->Character = this;
-		//Buff->SetInitialSpeed(GetCharacterMovement()->MaxWalkSpeed, GetCharacterMovement()->MaxWalkSpeedCrouched);
-		UE_LOG(LogTemp,Warning, TEXT("XXX"));
+		BuffComponent->SetInitialSpeed(GetCharacterMovement()->MaxWalkSpeed, GetCharacterMovement()->MaxWalkSpeedCrouched);
+		BuffComponent->SetInitialJumpVelocity(GetCharacterMovement()->JumpZVelocity);
 	}
 }
 
@@ -318,6 +318,10 @@ void ABlasterCharacter::Jump()
 	else
 	{
 		Super::Jump();
+	}
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, FString::Printf(TEXT("JumpZVelocity: %f"), GetCharacterMovement()->JumpZVelocity));
 	}
 }
 

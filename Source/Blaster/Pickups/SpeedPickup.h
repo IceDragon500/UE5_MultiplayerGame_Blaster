@@ -18,12 +18,12 @@ protected:
 	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 private:
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "属性修改")
 	float BaseSpeedBuff = 1600.f;//移动速度增加到1600
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "属性修改")
 	float CrouchSpeedBuff = 850.f;//蹲下移动速度增加到850
 
-	UPROPERTY(EditAnywhere)
-	float SpeedBuffTime = 30.f;//移速增加持续时间
+	UPROPERTY(EditAnywhere, Category= "属性修改")
+	float SpeedBuffTime = 10.f;//移速增加持续时间
 };
