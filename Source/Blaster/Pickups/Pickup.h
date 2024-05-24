@@ -6,6 +6,7 @@
 #include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
 #include "Sound/SoundCue.h"
+#include "NiagaraCommon.h"
 #include "Pickup.generated.h"
 
 UCLASS()
@@ -39,6 +40,12 @@ private:
 	
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* PickupMesh;
+
+	UPROPERTY(VisibleAnywhere)
+	UNiagaraComponent* PickupEffectComponent;//添加一个奶瓜组件用来实现血包的模型
+
+	UPROPERTY(EditAnywhere)
+	UNiagaraSystem* PickupEffect;//添加一个奶瓜特效，用来实现拾取血包后的治疗效果
 	
 
 };

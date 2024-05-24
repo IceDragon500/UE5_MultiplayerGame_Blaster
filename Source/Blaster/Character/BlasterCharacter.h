@@ -87,7 +87,7 @@ public:
 	FORCEINLINE UAnimMontage* GetReloadMotage() const { return ReloadMontage; }
 	FORCEINLINE UStaticMeshComponent* GetAttachGrenade() const { return AttachedGrenade; }
 
-	FORCEINLINE UBuffComponent* GetBuff() const { return Buff; }
+	FORCEINLINE UBuffComponent* GetBuff() const { return BuffComponent; }
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
@@ -205,7 +205,7 @@ private:
 
 	//创建Buff组件
 	UPROPERTY(VisibleAnywhere, Category = "BlasterPlayer", meta=(AllowPrivateAccess = "true"))
-	UBuffComponent* Buff;
+	UBuffComponent* BuffComponent;
 	
 	float AO_Yaw;//瞄准偏移Yaw
 	float InterpAO_Yaw;//用来计算转身的Yaw

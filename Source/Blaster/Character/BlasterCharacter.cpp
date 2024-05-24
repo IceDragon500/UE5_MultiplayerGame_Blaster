@@ -47,8 +47,8 @@ ABlasterCharacter::ABlasterCharacter()
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);//指定组件是可以被复制的 网络相关
 
-	Buff = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComponent"));
-	Buff->SetIsReplicated(true);
+	BuffComponent = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComponent"));
+	BuffComponent->SetIsReplicated(true);
 
 	//蹲下的设置，这里我们使用角色移动组件里面的蹲下功能
 	//设置可以蹲下
@@ -187,9 +187,11 @@ void ABlasterCharacter::PostInitializeComponents()
 	{
 		Combat->Character = this;
 	}
-	if(Buff)
+	if(BuffComponent)
 	{
-		Buff->Character = this;
+		BuffComponent->Character = this;
+		//Buff->SetInitialSpeed(GetCharacterMovement()->MaxWalkSpeed, GetCharacterMovement()->MaxWalkSpeedCrouched);
+		UE_LOG(LogTemp,Warning, TEXT("XXX"));
 	}
 }
 
