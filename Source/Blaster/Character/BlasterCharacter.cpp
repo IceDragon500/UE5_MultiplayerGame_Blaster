@@ -177,6 +177,8 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	//注册血量
 	DOREPLIFETIME(ThisClass, Health);
+	//注册护盾值
+	DOREPLIFETIME(ThisClass, Shield);
 	DOREPLIFETIME(ThisClass, bDisableGameplay);
 }
 
@@ -603,11 +605,28 @@ void ABlasterCharacter::OnRep_Health(float LastHealth)
 void ABlasterCharacter::UpdateHUDHealth()
 {
 	BlasterPlayerController = Cast<ABlasterPlayerController>(Controller);
-	if(BlasterPlayerController == nullptr)
-	{
-		return;
-	}
+	if(BlasterPlayerController == nullptr) return;
+
 	BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+}
+
+
+
+void ABlasterCharacter::OnRep_Shield(float LastShield)
+{
+	UpdateHUDShield();
+	if(Shield < LastShield)
+	{
+		PlayHitReactMontage();
+	}
+}
+
+void ABlasterCharacter::UpdateHUDShield()
+{
+	BlasterPlayerController = Cast<ABlasterPlayerController>(Controller);
+	if (BlasterPlayerController == nullptr) return;
+
+	BlasterPlayerController->SetHUDShield(Shield, MaxShield);
 }
 
 void ABlasterCharacter::PollInit()

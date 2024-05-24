@@ -78,9 +78,15 @@ public:
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
 	FORCEINLINE bool IsElimmed() const { return bElimmed; }
+	
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE void SetHealth(float Amount) { Health = Amount; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+
+	FORCEINLINE float GetShield() const { return Shield; }
+	FORCEINLINE void SetShield(float Amount) { Shield = Amount; }
+	FORCEINLINE float GetMaxShield() const { return MaxShield; }
+	
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
@@ -94,6 +100,8 @@ public:
 
 	//更新显示血量的HUD
 	void UpdateHUDHealth();
+
+	void UpdateHUDShield();
 	
 protected:
 	virtual void BeginPlay() override;
@@ -242,18 +250,27 @@ private:
 	float ProxyYaw;
 	float TimeSinceLastMovementReplication;//上次运动复制后的时间
 
-	//角色健康值
-	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|角色状态")
-	float MaxHealth = 100.f;
-
-	//当前血量
-	//将其绑定至OnRep_Health方法，进行网络复制
+	/**
+	 * 角色健康值
+	 */
 	UPROPERTY(ReplicatedUsing= OnRep_Health, EditAnywhere, Category= "BlasterPlayer|角色状态")
-	float Health = 100.f;
-
-	//我们需要在血量值变化的时候，进行复制
+	float Health = 100.f;//当前血量,将其绑定至OnRep_Health方法，进行网络复制
+	
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|角色状态")
+	float MaxHealth = 100.f;//最大生命值
+	
 	UFUNCTION()
-	void OnRep_Health(float LastHealth);
+	void OnRep_Health(float LastHealth);//我们需要在血量值变化的时候，进行复制
+
+	/**
+	 * 角色护盾值
+	 */
+	UPROPERTY(ReplicatedUsing= OnRep_Shield, EditAnywhere, Category= "BlasterPlayer|角色状态")
+	float Shield = 100.f;//当前护盾值
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|角色状态")
+	float MaxShield = 100.f;//最大护盾值
+	UFUNCTION()
+	void OnRep_Shield(float LastShield);
 
 	//是否被淘汰
 	bool bElimmed = false;
