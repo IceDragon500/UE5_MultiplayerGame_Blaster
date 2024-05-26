@@ -104,6 +104,7 @@ void ABlasterCharacter::BeginPlay()
 	}
 	
 	UpdateHUDHealth();
+	UpdateHUDShield();
 	if(HasAuthority())
 	{
 		//绑定ReceiveDamage到OnTakeAnyDamage，
@@ -320,10 +321,6 @@ void ABlasterCharacter::Jump()
 	else
 	{
 		Super::Jump();
-	}
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, FString::Printf(TEXT("JumpZVelocity: %f"), GetCharacterMovement()->JumpZVelocity));
 	}
 }
 
@@ -604,10 +601,12 @@ void ABlasterCharacter::OnRep_Health(float LastHealth)
 
 void ABlasterCharacter::UpdateHUDHealth()
 {
-	BlasterPlayerController = Cast<ABlasterPlayerController>(Controller);
-	if(BlasterPlayerController == nullptr) return;
-
-	BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	if(BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+	}
+	
 }
 
 
@@ -623,10 +622,11 @@ void ABlasterCharacter::OnRep_Shield(float LastShield)
 
 void ABlasterCharacter::UpdateHUDShield()
 {
-	BlasterPlayerController = Cast<ABlasterPlayerController>(Controller);
-	if (BlasterPlayerController == nullptr) return;
-
-	BlasterPlayerController->SetHUDShield(Shield, MaxShield);
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	if(BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHUDShield(Shield, MaxShield);
+	}
 }
 
 void ABlasterCharacter::PollInit()
@@ -819,9 +819,26 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	AController* InstigatroController, AActor* DamageCasuer)
 {
 	if(bElimmed) return; //防止在被击杀之后，播放死亡特效时被反复击杀
+
+	float DamageToHealth = Damage;
+	if(Shield > 0.f)
+	{
+		if(Shield >= Damage)
+		{
+			Shield = FMath::Clamp(Shield - Damage, 0.f, MaxShield);
+			DamageToHealth = 0.f;
+		}
+		else
+		{
+			Shield = 0.f;
+			DamageToHealth = FMath::Clamp(DamageToHealth - Shield, 0.f, Damage);
+		}
+	}
 	
-	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
+	Health = FMath::Clamp(Health - DamageToHealth, 0.f, MaxHealth);
+	
 	UpdateHUDHealth();
+	UpdateHUDShield();
 	PlayHitReactMontage();
 
 	//当血量为0的时候，处理淘汰的逻辑
