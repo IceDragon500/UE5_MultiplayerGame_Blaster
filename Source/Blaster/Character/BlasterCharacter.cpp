@@ -105,6 +105,7 @@ void ABlasterCharacter::BeginPlay()
 	
 	UpdateHUDHealth();
 	UpdateHUDShield();
+	
 	if(HasAuthority())
 	{
 		//绑定ReceiveDamage到OnTakeAnyDamage，
@@ -820,22 +821,22 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 {
 	if(bElimmed) return; //防止在被击杀之后，播放死亡特效时被反复击杀
 
-	float DamageToHealth = Damage;
+	float DamageToHealth = Damage;//扣除血量的值
 	if(Shield > 0.f)
 	{
-		if(Shield >= Damage)
+		if(Shield >= Damage) //当盾比伤害多的时候，也就是伤害不足以减少health，这里就只需要扣除盾里面的值就可以了
 		{
 			Shield = FMath::Clamp(Shield - Damage, 0.f, MaxShield);
 			DamageToHealth = 0.f;
 		}
-		else
+		else//否则就是伤害比护盾值多，所以要先把护盾置0，然后扣除护盾值，再看看有多少打在Health上了
 		{
 			Shield = 0.f;
 			DamageToHealth = FMath::Clamp(DamageToHealth - Shield, 0.f, Damage);
 		}
 	}
 	
-	Health = FMath::Clamp(Health - DamageToHealth, 0.f, MaxHealth);
+	Health = FMath::Clamp(Health - DamageToHealth, 0.f, MaxHealth); //生命值计算
 	
 	UpdateHUDHealth();
 	UpdateHUDShield();

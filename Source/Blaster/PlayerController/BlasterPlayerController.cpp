@@ -84,6 +84,7 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 	if(BlasterCharacter)
 	{
 		SetHUDHealth(BlasterCharacter->GetHealth(), BlasterCharacter->GetMaxHealth());
+		SetHUDShield(BlasterCharacter->GetShield(), BlasterCharacter->GetMaxShield());
 	}
 }
 
@@ -92,12 +93,12 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 void ABlasterPlayerController::SetHUDHealth(float Health, float MaxHealth)
 {
 	//先判断BlasterHUD是否为空，如果为空则创建，如果不为空，则不改变
-	//BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 
-	if(BlasterHUD == nullptr)
+	/*if(BlasterHUD == nullptr)
 	{
 		BlasterHUD = Cast<ABlasterHUD>(GetHUD());
-	}
+	}*/
 
 	//因为这里需要直接使用到CharacterOverlay中的具体指针变量，所以都需要检查一下是否为空
 	bool bHUDValid = BlasterHUD && BlasterHUD->CharacterOverlay && BlasterHUD->CharacterOverlay->HealthBar && BlasterHUD->CharacterOverlay->HealthText;
@@ -109,6 +110,7 @@ void ABlasterPlayerController::SetHUDHealth(float Health, float MaxHealth)
 		//设置血条上的文字，为了避免出现小数点，用FMath::CeilToInt进行四舍五入
 		FString HealthText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(Health), FMath::CeilToInt(MaxHealth));
 		//设置文字，这里是FText类型，需要FString转换为FText
+		UE_LOG(LogTemp, Warning, TEXT("HealthText: %s"), *HealthText);
 		BlasterHUD->CharacterOverlay->HealthText->SetText(FText::FromString(HealthText));
 	}
 	else
@@ -131,8 +133,10 @@ void ABlasterPlayerController::SetHUDShield(float Shield, float MaxShield)
 	if(bHUDValid)
 	{
 		const float ShieldPercent = Shield / MaxShield;
+		UE_LOG(LogTemp, Warning, TEXT("ShieldPercent: %f"), ShieldPercent);
 		BlasterHUD->CharacterOverlay->ShieldBar->SetPercent(ShieldPercent);
 		FString ShieldText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(Shield), FMath::CeilToInt(MaxShield));
+		UE_LOG(LogTemp, Warning, TEXT("ShieldText: %s"), *ShieldText);
 		BlasterHUD->CharacterOverlay->ShieldText->SetText(FText::FromString(ShieldText));
 	}
 	else
