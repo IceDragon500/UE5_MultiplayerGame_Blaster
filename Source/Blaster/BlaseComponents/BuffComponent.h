@@ -27,6 +27,8 @@ protected:
 public:
 	//处理治疗相关
 	void Heal(float HealAmount, float HealingTime);
+	//处理护盾相关
+	void ReplenishShield(float ShieldAmount, float ShieldTime);
 	//处理速度相关
 	void BuffSpeed(float BuffbaseSpeed, float BuffCrouchSpeed, float BuffTime);
 	//初始化移动速度，需要在Character初始化Component的方法中进行调用
@@ -39,7 +41,9 @@ public:
 	
 protected:
 	//tick中检查治疗
-	void HealRmapUp(float DeltaTime);
+	void HealRampUp(float DeltaTime);
+	//tick中检查护盾
+	void ShieldRampUp(float DeltaTime);
 
 private:
 	UPROPERTY()
@@ -51,6 +55,13 @@ private:
 	bool bHealing = false;//当前是否在恢复治疗中
 	float HealingRate = 0;//每秒恢复的治疗量 = 总治疗量HealAmount / 治疗时间 HealingTime
 	float AmountToHeal = 0;
+
+	/**
+	 * Shield buff
+	 */
+	bool bShield = false;//当前是否在恢复治疗中
+	float ShieldRate = 0;//每秒恢复的治疗量 = 总治疗量HealAmount / 治疗时间 HealingTime
+	float AmountToShield = 0;
 
 	/**
 	 * Speed buff

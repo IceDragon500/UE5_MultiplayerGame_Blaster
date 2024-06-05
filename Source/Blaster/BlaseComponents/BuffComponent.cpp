@@ -31,7 +31,8 @@ void UBuffComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
-	HealRmapUp(DeltaTime);
+	HealRampUp(DeltaTime);
+	ShieldRampUp(DeltaTime);
 }
 
 void UBuffComponent::Heal(float HealAmount, float HealingTime)
@@ -41,11 +42,17 @@ void UBuffComponent::Heal(float HealAmount, float HealingTime)
 	AmountToHeal += HealAmount;
 }
 
-void UBuffComponent::HealRmapUp(float DeltaTime)
+void UBuffComponent::ReplenishShield(float ShieldAmount, float ShieldTime)
+{
+	bShield = true;
+	ShieldRate = ShieldAmount / ShieldTime;
+	AmountToShield += ShieldAmount;
+}
+
+void UBuffComponent::HealRampUp(float DeltaTime)
 {
 	//如果当前不能治疗，或者已经被击败，则返回为空
 	if(!bHealing || Character == nullptr  || Character->IsElimmed()) return;
-	UE_LOG(LogTemp, Warning, TEXT("HealRmapUp"))
 
 	const float HealThisFrame = HealingRate * DeltaTime;
 	Character->SetHealth(FMath::Clamp(Character->GetHealth()+ HealThisFrame, 0.f , Character->GetMaxHealth()));
@@ -57,6 +64,21 @@ void UBuffComponent::HealRmapUp(float DeltaTime)
 	{
 		bHealing = false;
 		AmountToHeal = 0.f;
+	}
+}
+
+void UBuffComponent::ShieldRampUp(float DeltaTime)
+{
+	if (!bShield || Character == nullptr || Character->IsElimmed()) return;
+	const float ShieldThisFrame = ShieldRate * DeltaTime;
+	Character->SetShield(FMath::Clamp(Character->GetShield() + ShieldThisFrame, 0.f, Character->GetMaxShield()));
+	Character->UpdateHUDShield();
+	AmountToShield -= ShieldThisFrame;
+
+	if(AmountToShield <= 0.f || Character->GetShield() >= Character->GetMaxShield())
+	{
+		bShield = false;
+		AmountToShield = 0.f;
 	}
 }
 

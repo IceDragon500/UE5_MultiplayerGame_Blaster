@@ -266,7 +266,7 @@ private:
 	 * 角色护盾值
 	 */
 	UPROPERTY(ReplicatedUsing= OnRep_Shield, EditAnywhere, Category= "BlasterPlayer|角色状态")
-	float Shield = 100.f;//当前护盾值
+	float Shield = 12.f;//当前护盾值
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|角色状态")
 	float MaxShield = 100.f;//最大护盾值
 	UFUNCTION()
