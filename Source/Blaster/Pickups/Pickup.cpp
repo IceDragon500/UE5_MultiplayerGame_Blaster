@@ -40,8 +40,12 @@ void APickup::BeginPlay()
 	Super::BeginPlay();
 	if(HasAuthority())
 	{
-		OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnSphereOverlap);
-	}
+		GetWorldTimerManager().SetTimer(
+			BindOverlapTimer,
+			this,
+			&ThisClass::BindOverlapTimerFinish,
+			BindOverlapTime);
+	}//做这个操作 可以避免PickupActor在生成的一瞬间触发碰撞，导致OnDestroy无法实现
 }
 
 void APickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -62,6 +66,11 @@ void APickup::Destroyed()
 	{
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, PickupEffect, GetActorLocation(), GetActorRotation());
 	}
+}
+
+void APickup::BindOverlapTimerFinish()
+{
+	OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnSphereOverlap);
 }
 
 void APickup::Tick(float DeltaTime)

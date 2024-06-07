@@ -46,6 +46,10 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	UNiagaraSystem* PickupEffect;//添加一个奶瓜特效，用来实现拾取血包后的治疗效果
+
+	FTimerHandle BindOverlapTimer; //用来控制碰撞生效的间隔时间
+	float BindOverlapTime = 0.25f;
+	void BindOverlapTimerFinish();
 	
 
 };

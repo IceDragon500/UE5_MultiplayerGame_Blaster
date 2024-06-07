@@ -59,7 +59,7 @@ private:
 	/**
 	 * Shield buff
 	 */
-	bool bShield = false;//当前是否在恢复治疗中
+	bool bShield = false;//当前是否在恢复护盾中
 	float ShieldRate = 0;//每秒恢复的治疗量 = 总治疗量HealAmount / 治疗时间 HealingTime
 	float AmountToShield = 0;
 
