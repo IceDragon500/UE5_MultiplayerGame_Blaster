@@ -28,10 +28,9 @@ AWeapon::AWeapon()
 	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);//然后设置对Pawn（角色）忽略阻挡
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);//设置没有碰撞
 
-	WeaponMesh->SetRenderCustomDepth(true);
-	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);//设置自定义深度模版值
-	//WeaponMesh->MarkRenderStateDirty();//强制刷新自定义深度
-	//EnableCustomDepth(true);
+	EnableCustomDepth(true);
+	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_PURPLE);//设置自定义深度模版值
+	WeaponMesh->MarkRenderStateDirty();//强制刷新自定义深度
 
 	AreaSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AreaShpere"));
 	AreaSphere->SetupAttachment(RootComponent);
