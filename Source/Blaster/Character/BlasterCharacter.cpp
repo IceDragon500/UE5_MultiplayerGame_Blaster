@@ -102,6 +102,9 @@ void ABlasterCharacter::BeginPlay()
 			UE_LOG(LogTemp,Warning,TEXT("增强输入Subsystem初始化失败"));
 		}
 	}
+
+	SpawnDefaultWeapon();
+	UpdateHUDAmmo();
 	
 	UpdateHUDHealth();
 	UpdateHUDShield();
@@ -627,6 +630,33 @@ void ABlasterCharacter::UpdateHUDShield()
 	if(BlasterPlayerController)
 	{
 		BlasterPlayerController->SetHUDShield(Shield, MaxShield);
+	}
+}
+
+void ABlasterCharacter::UpdateHUDAmmo()
+{
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	if(BlasterPlayerController && Combat && Combat->EquippedWeapon)
+	{
+		BlasterPlayerController->SetHUDCarriedAmmo(Combat->CarriedAmmo);
+		BlasterPlayerController->SetHUDAmmo(Combat->EquippedWeapon->GetAmmo());
+	}
+}
+
+void ABlasterCharacter::SpawnDefaultWeapon()
+{
+	//在Blaster的地图中的时候 我们才持有默认武器
+	//在大厅的时候 不需要默认武器
+	//所以我们需要获取一下GameMode
+	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	UWorld* World = GetWorld();
+	if(BlasterGameMode && World && !bElimmed && DefaultWeaponClass)
+	{
+		AWeapon* StatringWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
+		if(Combat)
+		{
+			Combat->EquipWeapon(StatringWeapon);
+		}
 	}
 }
 

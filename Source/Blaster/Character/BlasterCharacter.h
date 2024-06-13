@@ -100,8 +100,12 @@ public:
 
 	//更新显示血量的HUD
 	void UpdateHUDHealth();
-
+	//更新显示护盾的HUD
 	void UpdateHUDShield();
+
+	void UpdateHUDAmmo();
+
+	void SpawnDefaultWeapon();
 	
 protected:
 	virtual void BeginPlay() override;
@@ -328,5 +332,11 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* AttachedGrenade;
+
+	/***
+	 * Default Weapon默认武器
+	 */
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> DefaultWeaponClass;
 	
 };

@@ -85,6 +85,7 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 	{
 		SetHUDHealth(BlasterCharacter->GetHealth(), BlasterCharacter->GetMaxHealth());
 		SetHUDShield(BlasterCharacter->GetShield(), BlasterCharacter->GetMaxShield());
+		BlasterCharacter->UpdateHUDAmmo();
 	}
 }
 
@@ -133,10 +134,8 @@ void ABlasterPlayerController::SetHUDShield(float Shield, float MaxShield)
 	if(bHUDValid)
 	{
 		const float ShieldPercent = Shield / MaxShield;
-		UE_LOG(LogTemp, Warning, TEXT("ShieldPercent: %f"), ShieldPercent);
 		BlasterHUD->CharacterOverlay->ShieldBar->SetPercent(ShieldPercent);
 		FString ShieldText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(Shield), FMath::CeilToInt(MaxShield));
-		UE_LOG(LogTemp, Warning, TEXT("ShieldText: %s"), *ShieldText);
 		BlasterHUD->CharacterOverlay->ShieldText->SetText(FText::FromString(ShieldText));
 	}
 	else
@@ -188,6 +187,11 @@ void ABlasterPlayerController::SetHUDAmmo(int32 Ammo)
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
 		BlasterHUD->CharacterOverlay->WeaponAmmoAmount->SetText(FText::FromString(AmmoText));
 	}
+	else
+	{
+		bHUDWeaponAmmo = true;
+		HUDWeaponAmmo = Ammo;
+	}
 }
 
 void ABlasterPlayerController::SetHUDCarriedAmmo(int32 Ammo)
@@ -198,6 +202,11 @@ void ABlasterPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 	{
 		FString CarriedAmmoText = FString::Printf(TEXT("%d"), Ammo);
 		BlasterHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(CarriedAmmoText));
+	}
+	else
+	{
+		bInitializeCarriedAmmo = true;
+		HUDCarriedAmmo = Ammo;
 	}
 }
 
@@ -316,6 +325,9 @@ void ABlasterPlayerController::PollInit()
 				if(bInitializeShield) SetHUDShield(HUDShield, HUDMaxShield);
 				if(bInitializeScore) SetHUDScore(HUDScore);
 				if(bInitializeDefeats) SetHUDDefeats(HUDDefeats);
+				if(bHUDWeaponAmmo) SetHUDAmmo(HUDWeaponAmmo);
+				if(bInitializeCarriedAmmo) SetHUDCarriedAmmo(HUDCarriedAmmo);
+				
 				ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
 				if(BlasterCharacter && BlasterCharacter->GetCombat())
 				{
@@ -324,6 +336,8 @@ void ABlasterPlayerController::PollInit()
 			}
 		}
 	}
+
+	
 }
 
 void ABlasterPlayerController::ServerRequestServerTime_Implementation(float TimeOfClientRequest)
