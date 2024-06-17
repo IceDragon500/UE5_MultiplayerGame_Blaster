@@ -393,6 +393,7 @@ void ABlasterCharacter::PickupKeyPressed(const FInputActionValue& Value)
 	if(bDisableGameplay) return;
 	if(Combat)
 	{
+		/*
 		if(HasAuthority())//如果是拥有权限的服务器端，则执行下面进行武器装备
 		{
 			Combat->EquipWeapon(OverlappingWeapon);
@@ -401,6 +402,8 @@ void ABlasterCharacter::PickupKeyPressed(const FInputActionValue& Value)
 		{
 			ServerEquipButtonPressed();
 		}
+		*/
+		ServerEquipButtonPressed();
 	}
 }
 
@@ -722,10 +725,18 @@ ECombatState ABlasterCharacter::GetCombatState() const
 
 void ABlasterCharacter::Elim()
 {
-	if(Combat && Combat->EquippedWeapon)
+	if(Combat)
 	{
-		Combat->EquippedWeapon->Dropped();
+		if(Combat->EquippedWeapon)
+		{
+			Combat->EquippedWeapon->Dropped();
+		}
+		if(Combat->SecondaryWeapon)
+		{
+			Combat->SecondaryWeapon->Dropped();
+		}
 	}
+
 	MulticastElim();
 	GetWorldTimerManager().SetTimer(ElimTimer, this, &ThisClass::ElimTimerFinished, ElimDelay);
 }

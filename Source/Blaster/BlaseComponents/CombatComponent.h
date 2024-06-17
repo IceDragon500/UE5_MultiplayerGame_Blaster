@@ -46,11 +46,19 @@ protected:
 	void EquipWeapon(AWeapon* WeaponToEquip);//装备武器的完整逻辑
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
+	UFUNCTION()
+	void OnRep_SecondaryWeapon();
+
+	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);//装备主武器
+	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);//装备副武器
+	
+	
 	void DropEquippedWeapon();//扔出武器
 	void AttachActorToRightHand(AActor* ActorToAttach);//将武器附加在右手上
 	void AttachActorToLeftHand(AActor* ActorToAttach);//将武器附加在左手上
+	void AttachActorToBackpack(AActor* ActorToAttach);
 	void UpdateCarriedAmmo();//更新子弹的HUD和角色身上携带的子弹数量
-	void PlayEquipWeaponSound();//播放装备武器时的音效
+	void PlayEquipWeaponSound(AWeapon* WeaponToEquip);//播放装备武器时的音效
 	void ReloadEmptyWeapon();//如果使其的武器为空子弹，尝试换弹
 
 /*
@@ -168,8 +176,11 @@ private:
 	ABlasterHUD* HUD;
 
 	//已经装备上的武器
-	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
+
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_SecondaryWeapon)
+	AWeapon* SecondaryWeapon;
 
 	//是否在瞄准
 	UPROPERTY(Replicated)

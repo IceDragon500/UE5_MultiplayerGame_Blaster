@@ -54,8 +54,10 @@ public:
 	virtual void OnRep_ReplicatedMovement() override;
 	
 	void Elim();//被淘汰之后的逻辑
+	
 	UFUNCTION(NetMulticast, Reliable)//被淘汰之后的逻辑
 	void MulticastElim();
+	
 	virtual void Destroyed() override;
 	
 	UPROPERTY(Replicated)

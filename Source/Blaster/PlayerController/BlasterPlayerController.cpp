@@ -336,8 +336,6 @@ void ABlasterPlayerController::PollInit()
 			}
 		}
 	}
-
-	
 }
 
 void ABlasterPlayerController::ServerRequestServerTime_Implementation(float TimeOfClientRequest)

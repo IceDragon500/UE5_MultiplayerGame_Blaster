@@ -47,6 +47,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	//在这里注册需要复制的值，这样才能与对应的Rep方法
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
+	DOREPLIFETIME(UCombatComponent, SecondaryWeapon);
 	DOREPLIFETIME(UCombatComponent, bAiming);
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
 	DOREPLIFETIME(UCombatComponent, CombatState);
@@ -74,6 +75,26 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	//判断是否有效
 	if(Character == nullptr || WeaponToEquip == nullptr) return;
 	if(CombatState != ECombatState::ECS_Unoccupied ) return;
+
+	if(EquippedWeapon != nullptr && SecondaryWeapon == nullptr)
+	{
+		EquipSecondaryWeapon(WeaponToEquip);
+		UE_LOG(LogTemp, Warning, TEXT("1E Key"));
+	}
+	else
+	{
+		EquipPrimaryWeapon(WeaponToEquip);
+		UE_LOG(LogTemp, Warning, TEXT("2E Key"));
+	}
+	
+	
+	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+	Character->bUseControllerRotationYaw = true;
+}
+
+void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
+{
+	if(WeaponToEquip == nullptr) return;
 	
 	//如果当前手上有武器（就是不是空指针），则执行武器的DropEquippedWeapon方法
 	DropEquippedWeapon();
@@ -83,20 +104,38 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 
 	//将武器EquippedWeapon附加在右手上
-	AttachActorToRightHand(EquippedWeapon);
+	AttachActorToRightHand(WeaponToEquip);
 
 	EquippedWeapon->SetOwner(Character);//设置武器的拥有者 为当前玩家
 	EquippedWeapon->SetHUDAmmo();//显示武器当前的弹药至界面上
 
+	//更新一下弹药
 	UpdateCarriedAmmo();
 
-	PlayEquipWeaponSound();
-	
+	//播放装备武器的音效
+	PlayEquipWeaponSound(WeaponToEquip);
+
+	//如果装备的武器是空子弹，则还需要重新换弹
 	ReloadEmptyWeapon();
-	
-	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
-	Character->bUseControllerRotationYaw = true;
+
+	EquippedWeapon->EnableCustomDepth(false);
 }
+
+void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
+{
+	if(WeaponToEquip == nullptr) return;
+	SecondaryWeapon = WeaponToEquip;
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	AttachActorToBackpack(WeaponToEquip);
+	//播放装备武器的音效
+	PlayEquipWeaponSound(WeaponToEquip);
+
+	SecondaryWeapon->GetWeaponMesh()->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
+	SecondaryWeapon->GetWeaponMesh()->MarkRenderStateDirty();
+
+	SecondaryWeapon->SetOwner(Character);//设置武器的拥有者 为当前玩家	
+}
+
 void UCombatComponent::OnRep_EquippedWeapon()
 {
 	if(EquippedWeapon && Character)
@@ -105,11 +144,24 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		AttachActorToRightHand(EquippedWeapon);
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
-		
-		//播放装备武器的声音
-		PlayEquipWeaponSound();
+		PlayEquipWeaponSound(EquippedWeapon);//播放装备武器的声音
+		EquippedWeapon->EnableCustomDepth(false);
 	}
 }
+
+void UCombatComponent::OnRep_SecondaryWeapon()
+{
+	if(SecondaryWeapon && Character)
+	{
+		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		AttachActorToBackpack(SecondaryWeapon);
+		PlayEquipWeaponSound(SecondaryWeapon);//播放装备武器的声音
+		
+		SecondaryWeapon->GetWeaponMesh()->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
+		SecondaryWeapon->GetWeaponMesh()->MarkRenderStateDirty();
+	}
+}
+
 void UCombatComponent::DropEquippedWeapon()
 {
 	if(EquippedWeapon)
@@ -137,6 +189,18 @@ void UCombatComponent::AttachActorToLeftHand(AActor* ActorToAttach)
 		HandSocket->AttachActor(ActorToAttach, Character->GetMesh());
 	}
 }
+
+void UCombatComponent::AttachActorToBackpack(AActor* ActorToAttach)
+{
+	if(Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr ) return;
+
+	const USkeletalMeshSocket* BackpackSocket = Character->GetMesh()->GetSocketByName(FName("BackpackSocket"));
+	if(BackpackSocket)
+	{
+		BackpackSocket->AttachActor(ActorToAttach, Character->GetMesh());
+	}
+}
+
 void UCombatComponent::UpdateCarriedAmmo()
 {
 	if( EquippedWeapon == nullptr ) return;
@@ -153,12 +217,15 @@ void UCombatComponent::UpdateCarriedAmmo()
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
 	}
 }
-void UCombatComponent::PlayEquipWeaponSound()
+void UCombatComponent::PlayEquipWeaponSound(AWeapon* WeaponToEquip)
 {
 	//播放装备武器的声音
-	if(Character && EquippedWeapon && EquippedWeapon->EquipSound)
+	if(Character && WeaponToEquip && WeaponToEquip->EquipSound)
 	{
-		UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound,Character->GetActorLocation());
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			WeaponToEquip->EquipSound,
+			Character->GetActorLocation());
 	}
 }
 
