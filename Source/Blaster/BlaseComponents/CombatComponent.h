@@ -60,7 +60,12 @@ protected:
 	void UpdateCarriedAmmo();//更新子弹的HUD和角色身上携带的子弹数量
 	void PlayEquipWeaponSound(AWeapon* WeaponToEquip);//播放装备武器时的音效
 	void ReloadEmptyWeapon();//如果使其的武器为空子弹，尝试换弹
+/*
+* 交换武器的逻辑
+*/
+	void SwapWeapons();
 
+	
 /*
 * 武器换弹相关的逻辑
 */
@@ -302,6 +307,7 @@ private:
 
 public:
 	FORCEINLINE int32 GetGrenades() const {return Grenades;}
+	bool ShouldSwapWeapons();
 	
 		
 };

@@ -79,12 +79,10 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	if(EquippedWeapon != nullptr && SecondaryWeapon == nullptr)
 	{
 		EquipSecondaryWeapon(WeaponToEquip);
-		UE_LOG(LogTemp, Warning, TEXT("1E Key"));
 	}
 	else
 	{
 		EquipPrimaryWeapon(WeaponToEquip);
-		UE_LOG(LogTemp, Warning, TEXT("2E Key"));
 	}
 	
 	
@@ -117,21 +115,15 @@ void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
 
 	//如果装备的武器是空子弹，则还需要重新换弹
 	ReloadEmptyWeapon();
-
-	EquippedWeapon->EnableCustomDepth(false);
 }
 
 void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 {
 	if(WeaponToEquip == nullptr) return;
 	SecondaryWeapon = WeaponToEquip;
-	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 	AttachActorToBackpack(WeaponToEquip);
-	//播放装备武器的音效
-	PlayEquipWeaponSound(WeaponToEquip);
-
-	SecondaryWeapon->GetWeaponMesh()->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
-	SecondaryWeapon->GetWeaponMesh()->MarkRenderStateDirty();
+	PlayEquipWeaponSound(WeaponToEquip);//播放装备武器的音效
 
 	SecondaryWeapon->SetOwner(Character);//设置武器的拥有者 为当前玩家	
 }
@@ -146,6 +138,7 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		Character->bUseControllerRotationYaw = true;
 		PlayEquipWeaponSound(EquippedWeapon);//播放装备武器的声音
 		EquippedWeapon->EnableCustomDepth(false);
+		//EquippedWeapon->SetHUDAmmo();
 	}
 }
 
@@ -153,12 +146,9 @@ void UCombatComponent::OnRep_SecondaryWeapon()
 {
 	if(SecondaryWeapon && Character)
 	{
-		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 		AttachActorToBackpack(SecondaryWeapon);
 		PlayEquipWeaponSound(SecondaryWeapon);//播放装备武器的声音
-		
-		SecondaryWeapon->GetWeaponMesh()->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
-		SecondaryWeapon->GetWeaponMesh()->MarkRenderStateDirty();
 	}
 }
 
@@ -236,6 +226,28 @@ void UCombatComponent::ReloadEmptyWeapon()
 	{
 		Reload();
 	}
+}
+
+bool UCombatComponent::ShouldSwapWeapons()
+{
+	return (EquippedWeapon != nullptr && SecondaryWeapon != nullptr);
+}
+
+void UCombatComponent::SwapWeapons()
+{
+	AWeapon* TempWeapon = EquippedWeapon;
+	EquippedWeapon = SecondaryWeapon;
+	SecondaryWeapon = TempWeapon;
+	
+	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	AttachActorToRightHand(EquippedWeapon);
+	EquippedWeapon->SetHUDAmmo();
+	UpdateCarriedAmmo();
+	PlayEquipWeaponSound(EquippedWeapon);
+
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
+	AttachActorToBackpack(SecondaryWeapon);
+	
 }
 
 /*

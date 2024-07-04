@@ -220,19 +220,21 @@ void AWeapon::SetWeaponState(EWeaponState State)
 
 void AWeapon::OnWeaponStateSet()
 {
-	switch (WeaponState)
+	switch(WeaponState)
 	{
+	case EWeaponState::EWS_Initial:
+		break;
 	case EWeaponState::EWS_Equipped:
 		OnEquipped();//当前武器处于装备的情况下
+		break;
+	case EWeaponState::EWS_EquippedSecondary:
+		OnEquippedSecondary();
 		break;
 	case EWeaponState::EWS_Dropped:
 		OnDropped();
 		break;
-	case EWeaponState::EWS_Initial:
-		break;
 	case EWeaponState::EWS_MAX:
 		break;
-	default: ;
 	}
 }
 
@@ -266,7 +268,7 @@ void AWeapon::OnEquipped()
 		WeaponMesh->SetEnableGravity(true);
 		WeaponMesh->SetCollisionResponseToChannels(ECollisionResponse::ECR_Ignore);
 	}
-	
+	EnableCustomDepth(false);
 }
 
 void AWeapon::OnDropped()
@@ -293,6 +295,24 @@ void AWeapon::OnDropped()
 
 void AWeapon::OnEquippedSecondary()
 {
+
+	ShowPickupWidget(false);
+	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponMesh->SetSimulatePhysics(false);//这里两个需要设置成false，否则会报错
+	WeaponMesh->SetEnableGravity(false);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	if(WeaponType == EWeaponType::EWT_SubmachineGun)
+	{
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		WeaponMesh->SetEnableGravity(true);
+		WeaponMesh->SetCollisionResponseToChannels(ECollisionResponse::ECR_Ignore);
+	}
+	EnableCustomDepth(true);
+	if(WeaponMesh)
+	{
+		WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
+		WeaponMesh->MarkRenderStateDirty();
+	}
 }
 
 void AWeapon::AddAmmo(int32 AmmoToAdd)

@@ -34,7 +34,6 @@ void APickupSpawnPoint::SpawnPickup()
 		if(HasAuthority() && SpawnedPickup)
 		{
 			SpawnedPickup->OnDestroyed.AddDynamic(this, &ThisClass::StartSpawnPickupTimer);
-			UE_LOG(LogTemp,Warning,TEXT("OnDestroyed"));
 		}
 		
 	}

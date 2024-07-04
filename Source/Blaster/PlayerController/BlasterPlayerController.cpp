@@ -111,7 +111,6 @@ void ABlasterPlayerController::SetHUDHealth(float Health, float MaxHealth)
 		//设置血条上的文字，为了避免出现小数点，用FMath::CeilToInt进行四舍五入
 		FString HealthText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(Health), FMath::CeilToInt(MaxHealth));
 		//设置文字，这里是FText类型，需要FString转换为FText
-		UE_LOG(LogTemp, Warning, TEXT("HealthText: %s"), *HealthText);
 		BlasterHUD->CharacterOverlay->HealthText->SetText(FText::FromString(HealthText));
 	}
 	else
