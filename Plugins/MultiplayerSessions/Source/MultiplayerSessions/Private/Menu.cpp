@@ -15,7 +15,7 @@ void UMenu::MenuSetup(int32 NumOfPublicConnections, FString TypeOfMatch, FString
 
 	AddToViewport();//将UI设置在界面上
 	SetVisibility(ESlateVisibility::Visible); //设置UI是可见的Visible
-	bIsFocusable = true;
+	//bIsFocusable = true;
 
 	//
 	//设置输入模式，需要先取得playcontroller控件，然后设置输入模式

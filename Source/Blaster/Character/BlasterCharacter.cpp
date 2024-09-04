@@ -732,6 +732,7 @@ ECombatState ABlasterCharacter::GetCombatState() const
 
 void ABlasterCharacter::Elim()
 {
+	//DropOrDestroyWeapons(); 我这里没有使用与教程一致的方法
 	if(Combat)
 	{
 		if(Combat->EquippedWeapon)
@@ -747,6 +748,7 @@ void ABlasterCharacter::Elim()
 	MulticastElim();
 	GetWorldTimerManager().SetTimer(ElimTimer, this, &ThisClass::ElimTimerFinished, ElimDelay);
 }
+
 
 void ABlasterCharacter::MulticastElim_Implementation()
 {
@@ -849,6 +851,7 @@ void ABlasterCharacter::StartDissolve()
 		DissolveTimeline->Play();
 	}
 }
+
 
 void ABlasterCharacter::PlayHitReactMontage()
 {
