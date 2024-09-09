@@ -95,6 +95,10 @@ protected:
 	UFUNCTION(Client, Reliable)
 	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float StatingTime, float Cooldown);
 
+	void HighPingWaring();//播放ping的动画
+	void StopHighPingWaring();//停止播放ping的动画
+	void CheckPing(float DeltaTime);//检查ping值，在设定的时候显示和关闭ping的动画
+
 private:
 	UPROPERTY()
 	ABlasterHUD* BlasterHUD;
@@ -141,6 +145,18 @@ private:
 
 	float HUDWeaponAmmo;
 	bool bHUDWeaponAmmo = false;
+
+	float HighPingRunningTime = 0.f;
 	
+	UPROPERTY(EditAnywhere)
+	float HighPingDration = 5.f;//显示ping图标的时间 默认5秒
+
+	float PingAnimationRunningTime = 0.f;
+	
+	UPROPERTY(EditAnywhere)
+	float CheckPingFrequency = 20.f;//间隔检查ping的的时间，默认20秒检查一次
+
+	UPROPERTY(EditAnywhere)
+	float HighPingThreshold = 50.f;//超过设定值，就显示延迟图标
 	
 };

@@ -46,6 +46,12 @@ public:
 
 	UPROPERTY(meta=(BindWidget))
 	UTextBlock* GrenadesText;
+
+	UPROPERTY(meta=(BindWidget))
+	class UImage* HighPingImage;
+
+	UPROPERTY(meta=(BindWidgetAnim), Transient)//Transient仅表示此属性不会序列化到磁盘
+	UWidgetAnimation* HighPingAnimation;
 	
 protected:
 private:
