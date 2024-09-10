@@ -3,9 +3,21 @@
 
 #include "BlasterHUD.h"
 
+#include "Widgets/Text/ISlateEditableTextWidget.h"
+
 void ABlasterHUD::BeginPlay()
 {
 	Super::BeginPlay();
+	/*
+	 *这部分添加是遵从了有人提出的一个问题解决方法
+	CharacterOverlay init first ,add later to fix HUD Health not set issue
+	这样设置后，同时将AddCharacterOverlay中CharacterOverlay的Create 注释掉就可以了
+	APlayerController* PlayerController = GetOwningPlayerController();
+	if(PlayerController && CharacterOverlayClass)
+	{
+		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
+	}
+	*/
 }
 
 void ABlasterHUD::AddCharacterOverlay()

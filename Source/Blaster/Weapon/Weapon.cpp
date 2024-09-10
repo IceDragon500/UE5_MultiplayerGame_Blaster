@@ -72,9 +72,11 @@ void AWeapon::Fire(const FVector& HitTarget)
 			
 		}
 	}
-	//TODO 进行一轮的射击逻辑（比如扣除子弹数量）
-	SpendRound();
-	
+	if(HasAuthority())
+	{
+		//TODO 进行一轮的射击逻辑（比如扣除子弹数量）
+		SpendRound();
+	}
 }
 
 bool AWeapon::IsEmpty()

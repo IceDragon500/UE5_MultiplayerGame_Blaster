@@ -30,6 +30,7 @@ public:
 	
 protected:
 
+	//virtual void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld) override;  5.2不再使用这个语句
 	virtual void NativeDestruct() override;
 
 	

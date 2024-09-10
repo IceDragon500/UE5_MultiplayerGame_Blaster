@@ -139,6 +139,7 @@ protected:
  */
 	//完整的开火逻辑
 	void Fire();
+	void LocalFire(const FVector_NetQuantize& TraceHitTarget);
 	
 	//服务端上进行的开火逻辑  ,传入参数为命中的位置FVector
 	//这里使用FVector_NetQuantize进行一定的网络优化

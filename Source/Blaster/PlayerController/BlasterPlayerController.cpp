@@ -249,6 +249,7 @@ void ABlasterPlayerController::SetHUDAmmo(int32 Ammo)
 	if(bHUDValid)
 	{
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
+		UE_LOG(LogTemp, Warning, TEXT("%d"), Ammo);
 		BlasterHUD->CharacterOverlay->WeaponAmmoAmount->SetText(FText::FromString(AmmoText));
 	}
 	else
