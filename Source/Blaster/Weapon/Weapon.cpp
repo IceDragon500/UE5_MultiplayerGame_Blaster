@@ -105,8 +105,8 @@ void AWeapon::BeginPlay()
 	// 如果当前LocalRole是否为ROLE_Authority，就是当前引擎对这个实例是否有权威性
 	// if(GetLocalRole() == ENetRole::ROLE_Authority)
 	// HasAuthority()和上面那个判断是一致的
-	if(HasAuthority())
-	{
+	//if(HasAuthority())  这里注释掉 是为了让客户端可以直接显示拾取的界面，但是是否可以拾取可以还是在服务器端进行判断 这样避免延迟导致玩家接触到可拾取武器时，因为延迟无法显示拾取的提示
+	//{
 		//如果有，我们则将武器的碰撞盒子设置为查询和物理
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		//并且，将盒子碰撞与Pawn设置为重叠
@@ -114,7 +114,7 @@ void AWeapon::BeginPlay()
 		//将碰撞方法与碰撞球体进行绑定
 		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnSphereOverlap);
 		AreaSphere->OnComponentEndOverlap.AddDynamic(this,&ThisClass::OnSphereEndOverlap);
-	}
+	//}
 
 	if(PickupWidget)
 	{

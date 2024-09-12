@@ -7,7 +7,7 @@
 #include "HitScanWeapon.generated.h"
 
 /**
- * 
+ * 直接命中的武器，一般是手枪步枪狙击之类的
  */
 UCLASS()
 class BLASTER_API AHitScanWeapon : public AWeapon

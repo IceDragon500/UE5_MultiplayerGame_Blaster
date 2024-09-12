@@ -474,7 +474,10 @@ void UCombatComponent::Fire()
 	{
 		bCanFire = false;
 		ServerFire(HitTarget);  //对命中目标点进行开火逻辑 这一步需要放在服务器上做
-		//LocalFire(HitTarget); //在本地播放枪口火焰和音效
+		if(Character && !Character->HasAuthority())//这一段是177讲下方的问答中，有人给出了一次按键两次设计的解决方式
+		{
+			LocalFire(HitTarget); //在本地播放枪口火焰和音效
+		}
 		if(EquippedWeapon)//修改开火时的准星扩张程度
 			{
 			CrosshairShootingFactor = 0.2f;
@@ -508,22 +511,8 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	//如果角色是本地控制并且没有权限，那我们知道这是由开火玩家控制的角色
-	//if(Character && Character->IsLocallyControlled() && !Character->HasAuthority()) return;
-	//LocalFire(TraceHitTarget);
-	
-	if(EquippedWeapon == nullptr) return;
-	if(Character && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_ShotGun)
-	{
-		Character->PlayFireMontage(bAiming);
-		EquippedWeapon->Fire(TraceHitTarget);
-		CombatState = ECombatState::ECS_Unoccupied;
-		return ;
-	}
-	if(Character && CombatState == ECombatState::ECS_Unoccupied)
-	{
-		Character->PlayFireMontage(bAiming);  //执行角色身上的开火逻辑：播放开火动画
-		EquippedWeapon->Fire(TraceHitTarget); //执行武器上的开火逻辑：播放武器开火动画和特效音效
-	}
+	if(Character && Character->IsLocallyControlled() && !Character->HasAuthority()) return;
+	LocalFire(TraceHitTarget);
 }
 
 void UCombatComponent::TraceUnderCrosehairs(FHitResult& TraceHitResult)
