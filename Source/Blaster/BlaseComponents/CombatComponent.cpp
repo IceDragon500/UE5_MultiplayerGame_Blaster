@@ -473,17 +473,54 @@ void UCombatComponent::Fire()
 	if(CanFire())
 	{
 		bCanFire = false;
-		ServerFire(HitTarget);  //对命中目标点进行开火逻辑 这一步需要放在服务器上做
+		
+		if(EquippedWeapon)//修改开火时的准星扩张程度
+		{
+			CrosshairShootingFactor = 0.2f;
+			
+			switch(EquippedWeapon->FireType) {
+			case EFireType::EFT_HitScan:
+				FireHitScanWeapon();
+				break;
+			case EFireType::EFT_Projectile:
+				FireProjectileWeapon();
+				break;
+			case EFireType::EFT_Shotgun:
+				FireShotgun();
+				break;
+			case EFireType::EFT_MAX:
+				break;
+			}
+		
+		}
+		StartFireTimer();
+	}
+}
+
+void UCombatComponent::FireProjectileWeapon()
+{
+	if(Character && !Character->HasAuthority())//这一段是177讲下方的问答中，有人给出了一次按键两次设计的解决方式
+	{
+		LocalFire(HitTarget); //在本地播放枪口火焰和音效
+	}
+	ServerFire(HitTarget);  //对命中目标点进行开火逻辑 这一步需要放在服务器上做
+}
+
+void UCombatComponent::FireHitScanWeapon()
+{
+	if(EquippedWeapon)
+	{
+		HitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndWithScatter(HitTarget) : HitTarget;
 		if(Character && !Character->HasAuthority())//这一段是177讲下方的问答中，有人给出了一次按键两次设计的解决方式
 		{
 			LocalFire(HitTarget); //在本地播放枪口火焰和音效
 		}
-		if(EquippedWeapon)//修改开火时的准星扩张程度
-			{
-			CrosshairShootingFactor = 0.2f;
-			}
-		StartFireTimer();
+		ServerFire(HitTarget);  //对命中目标点进行开火逻辑 这一步需要放在服务器上做
 	}
+}
+
+void UCombatComponent::FireShotgun()
+{
 }
 
 void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)

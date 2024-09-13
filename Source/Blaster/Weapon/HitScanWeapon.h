@@ -17,9 +17,9 @@ public:
 
 	virtual void Fire(const FVector& HitTarget) override;
 	
+	
 protected:
-
-	FVector TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget);
+	
 	void WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit);
 	
 	//命中部位的粒子特效
@@ -48,20 +48,4 @@ private:
 	UPROPERTY(EditAnywhere)
 	USoundCue* FireSound;
 	
-
-	/**
-	 * Trace end with scatter
-	 * 以散点图结尾点击并应用
-	 */
-	//从枪口到球体的距离
-	UPROPERTY(EditAnywhere, Category= "Weapon Scatter")
-	float DistanceToSphere = 800.f;
-
-	//球体的半径
-	UPROPERTY(EditAnywhere, Category= "Weapon Scatter")
-	float SphereRadius = 75.f;
-
-	//启用或者禁用散射
-	UPROPERTY(EditAnywhere, Category= "Weapon Scatter")
-	bool bUserScatter = false;
 };

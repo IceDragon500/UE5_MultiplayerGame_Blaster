@@ -6,7 +6,6 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "Particles/ParticleSystemComponent.h"
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
@@ -81,10 +80,12 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 	UWorld* World = GetWorld();
 	if(World)
 	{
-		//这里判断一下是否使用散射 就是bUserScatter是否为true
+		//这里判断一下是否使用散射 就是bUseScatter是否为true
 		//如果为true，需要散射，则按照TraceEndWithScatter方法中进行一个终点散射的计算
 		//如果为fasle，不需要散射，则按照终点是一个点来进行计算
-		FVector End = bUserScatter ? TraceEndWithScatter(TraceStart, HitTarget) : TraceStart + (HitTarget - TraceStart) * 1.25f;
+		//FVector End = bUseScatter ? TraceEndWithScatter(TraceStart, HitTarget) : TraceStart + (HitTarget - TraceStart) * 1.25f;
+		//这里的修改是179课的内容，我们希望在Fire方法进行前算出TraceEndWithScatter(TraceStart, HitTarget)
+		FVector End = TraceStart + (HitTarget - TraceStart) * 1.25f;
 		
 		World->LineTraceSingleByChannel(
 				OutHit,
@@ -97,6 +98,9 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 		{
 			BeamEnd = OutHit.ImpactPoint;
 		}
+
+		DrawDebugSphere(GetWorld(), BeamEnd,16.f, 12, FColor::Orange, true);
+		
 		if(BeamParticles)
 		{
 			UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(
@@ -112,21 +116,4 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 			}
 		}
 	}
-}
-
-FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget)
-{
-	FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
-	FVector SphereCenter = TraceStart + ToTargetNormalized * DistanceToSphere;
-	FVector RandVec = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadius);
-	FVector EndLoc = SphereCenter + RandVec;
-	FVector ToEndLoc = EndLoc - TraceStart;
-
-	/*
-	DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, true);
-	DrawDebugSphere(GetWorld(), EndLoc, 4.f, 12, FColor::Blue, true);
-	DrawDebugLine(GetWorld(), TraceStart, FVector(TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size()), FColor::Red,true);
-	*/
-	
-	return FVector(TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size());//为了保证双精度值不会溢出，所以这里用不了80000那么长 所以稍微除一下
 }

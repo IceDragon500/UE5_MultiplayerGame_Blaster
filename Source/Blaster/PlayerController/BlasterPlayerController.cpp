@@ -249,7 +249,6 @@ void ABlasterPlayerController::SetHUDAmmo(int32 Ammo)
 	if(bHUDValid)
 	{
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
-		UE_LOG(LogTemp, Warning, TEXT("%d"), Ammo);
 		BlasterHUD->CharacterOverlay->WeaponAmmoAmount->SetText(FText::FromString(AmmoText));
 	}
 	else
@@ -342,9 +341,6 @@ void ABlasterPlayerController::SetHUDTime()
 	{
 		TimeLeft = CooldownTime + WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
 	}
-
-	
-	//UE_LOG(LogTemp, Warning, TEXT("GetServerTime = %f"),GetServerTime());
 	
 	/*
 	*在这句话中，FMath::CeilToInt()的作用是把MatchTime - GetWorld()->GetTimeSeconds()的结果进行向上取整。也就是说如果结果的小数部分大于或等于0.5，则会返回下一个整数。

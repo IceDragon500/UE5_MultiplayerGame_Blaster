@@ -22,6 +22,16 @@ enum class EWeaponState : uint8
 	EWS_MAX UMETA(DisplayName = "DefaultMAX")//武器状态默认值
 };
 
+UENUM(BlueprintType)
+enum class EFireType : uint8
+{
+	EFT_HitScan UMETA(DisplayName = "Hit Scan Weapon"), //命中扫描武器 直接按照准星点命中目标的武器
+	EFT_Projectile UMETA(DisplayName = "Projectile Weapon"), //射弹武器 需要射出弹丸的 带抛物线的武器
+	EFT_Shotgun UMETA(DisplayName = "Shotgun Weapon"), //射弹武器 根据中心点，有随机散射的武器
+
+	EFT_MAX UMETA(DisplayName = "DefaultMAX")//武器状态默认值
+};
+
 
 
 UCLASS()
@@ -40,7 +50,7 @@ public:
 	void SetHUDAmmo();	
 	void SetWeaponState(EWeaponState State);//设置武器在各种情况下的状态参数
 	void AddAmmo(int32 AmmoToAdd);//给武器添加子弹的方法
-
+	FVector TraceEndWithScatter(const FVector& HitTarget);
 	
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return  AreaSphere; }
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
@@ -82,6 +92,18 @@ public:
 
 	//打开自定义深度
 	void EnableCustomDepth(bool bEnable);
+
+	bool bDestroyWeapon = false;
+
+
+	UPROPERTY(EditAnywhere)
+	EFireType FireType = EFireType::EFT_HitScan;
+	
+	
+	//启用或者禁用散射
+	UPROPERTY(EditAnywhere, Category= "Weapon Scatter")
+	bool bUseScatter = false;
+
 	
 protected:
 	virtual void BeginPlay() override;
@@ -149,4 +171,16 @@ private:
 
 	UPROPERTY(EditAnywhere, Category= "武器属性")
 	EWeaponType WeaponType;
+
+	/**
+ * Trace end with scatter
+ * 以散点图结尾点击并应用
+ */
+	//从枪口到球体的距离
+	UPROPERTY(EditAnywhere, Category= "Weapon Scatter")
+	float DistanceToSphere = 800.f;
+
+	//球体的半径
+	UPROPERTY(EditAnywhere, Category= "Weapon Scatter")
+	float SphereRadius = 75.f;
 };
