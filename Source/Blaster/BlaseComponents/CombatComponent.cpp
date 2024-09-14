@@ -3,6 +3,7 @@
 
 #include "CombatComponent.h"
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/Weapon/Shotgun.h"
 #include "Camera/CameraComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -499,11 +500,15 @@ void UCombatComponent::Fire()
 
 void UCombatComponent::FireProjectileWeapon()
 {
-	if(Character && !Character->HasAuthority())//这一段是177讲下方的问答中，有人给出了一次按键两次设计的解决方式
+	if(EquippedWeapon)
 	{
-		LocalFire(HitTarget); //在本地播放枪口火焰和音效
+		HitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndWithScatter(HitTarget) : HitTarget;
+		if(Character && !Character->HasAuthority())//这一段是177讲下方的问答中，有人给出了一次按键两次设计的解决方式
+		{
+			LocalFire(HitTarget); //在本地播放枪口火焰和音效
+		}
+		ServerFire(HitTarget);  //对命中目标点进行开火逻辑 这一步需要放在服务器上做
 	}
-	ServerFire(HitTarget);  //对命中目标点进行开火逻辑 这一步需要放在服务器上做
 }
 
 void UCombatComponent::FireHitScanWeapon()
@@ -521,6 +526,15 @@ void UCombatComponent::FireHitScanWeapon()
 
 void UCombatComponent::FireShotgun()
 {
+	AShotgun* Shotgun = Cast<AShotgun>(EquippedWeapon);
+	if(Shotgun)
+	{
+		TArray<FVector> HitTargets;
+		Shotgun->ShotGunTraceEndWithScatter(HitTarget,HitTargets);
+		
+	}
+	
+	
 }
 
 void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)

@@ -118,6 +118,18 @@ protected:
 	virtual void OnEquipped();
 	virtual void OnDropped();
 	virtual void OnEquippedSecondary();
+
+/**
+ * Trace end with scatter
+ * 以散点图结尾点击并应用
+ */
+	//从枪口到球体的距离
+	UPROPERTY(EditAnywhere, Category= "Weapon Scatter")
+	float DistanceToSphere = 800.f;
+
+	//球体的半径
+	UPROPERTY(EditAnywhere, Category= "Weapon Scatter")
+	float SphereRadius = 75.f;
 	
 private:
 	UPROPERTY()
@@ -171,16 +183,5 @@ private:
 
 	UPROPERTY(EditAnywhere, Category= "武器属性")
 	EWeaponType WeaponType;
-
-	/**
- * Trace end with scatter
- * 以散点图结尾点击并应用
- */
-	//从枪口到球体的距离
-	UPROPERTY(EditAnywhere, Category= "Weapon Scatter")
-	float DistanceToSphere = 800.f;
-
-	//球体的半径
-	UPROPERTY(EditAnywhere, Category= "Weapon Scatter")
-	float SphereRadius = 75.f;
+	
 };
