@@ -144,6 +144,7 @@ protected:
 	void FireShotgun();
 	
 	void LocalFire(const FVector_NetQuantize& TraceHitTarget);
+	void ShotgunLocalFire(const TArray<FVector_NetQuantize>& TraceHitTargets);
 	
 	//服务端上进行的开火逻辑  ,传入参数为命中的位置FVector
 	//这里使用FVector_NetQuantize进行一定的网络优化
@@ -153,6 +154,12 @@ protected:
 	//多播的开火逻辑  ,传入参数为命中的位置FVector
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
+	
+	UFUNCTION(Server, Reliable)
+	void ServerShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTargets);
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTargets);
 	
 	//进行射线检测
 	//调用Character 和 Weapon中的fire方法

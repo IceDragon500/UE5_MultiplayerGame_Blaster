@@ -529,9 +529,13 @@ void UCombatComponent::FireShotgun()
 	AShotgun* Shotgun = Cast<AShotgun>(EquippedWeapon);
 	if(Shotgun)
 	{
-		TArray<FVector> HitTargets;
+		TArray<FVector_NetQuantize> HitTargets;
 		Shotgun->ShotGunTraceEndWithScatter(HitTarget,HitTargets);
-		
+		if(Character && !Character->HasAuthority())//这一段是177讲下方的问答中，有人给出了一次按键两次设计的解决方式
+		{
+			ShotgunLocalFire(HitTargets);
+		}
+		ServerShotgunFire(HitTargets);
 	}
 	
 	
@@ -540,17 +544,23 @@ void UCombatComponent::FireShotgun()
 void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
 {
 	if(EquippedWeapon == nullptr) return;
-	if(Character && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_ShotGun)
-	{
-		Character->PlayFireMontage(bAiming);
-		EquippedWeapon->Fire(TraceHitTarget);
-		CombatState = ECombatState::ECS_Unoccupied;
-		return ;
-	}
 	if(Character && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayFireMontage(bAiming);  //执行角色身上的开火逻辑：播放开火动画
 		EquippedWeapon->Fire(TraceHitTarget); //执行武器上的开火逻辑：播放武器开火动画和特效音效
+	}
+}
+
+void UCombatComponent::ShotgunLocalFire(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	AShotgun* Shotgun = Cast<AShotgun>(EquippedWeapon);
+	
+	if(EquippedWeapon == nullptr || Character == nullptr) return;
+	if(CombatState == ECombatState::ECS_Reloading || CombatState == ECombatState::ECS_Unoccupied)
+	{
+		Character->PlayFireMontage(bAiming);
+		CombatState = ECombatState::ECS_Unoccupied;
+		Shotgun->FireShotgun(TraceHitTargets);
 	}
 }
 
@@ -564,6 +574,18 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 	//如果角色是本地控制并且没有权限，那我们知道这是由开火玩家控制的角色
 	if(Character && Character->IsLocallyControlled() && !Character->HasAuthority()) return;
 	LocalFire(TraceHitTarget);
+}
+
+void UCombatComponent::ServerShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	MulticastShotgunFire(TraceHitTargets);
+}
+
+void UCombatComponent::MulticastShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	//如果角色是本地控制并且没有权限，那我们知道这是由开火玩家控制的角色
+	if(Character && Character->IsLocallyControlled() && !Character->HasAuthority()) return;
+	ShotgunLocalFire(TraceHitTargets);
 }
 
 void UCombatComponent::TraceUnderCrosehairs(FHitResult& TraceHitResult)
