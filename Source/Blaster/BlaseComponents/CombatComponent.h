@@ -200,8 +200,15 @@ private:
 	AWeapon* SecondaryWeapon;
 
 	//是否在瞄准
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing=OnRep_Aiming)
 	bool bAiming;
+
+	//用于本地判断瞄准键是否按下
+	bool bAimButtonPressed = false;
+
+	//复制瞄准状态，避免延迟的时候出现问题
+	UFUNCTION()
+	void OnRep_Aiming();
 
 	//基础移动速度
 	UPROPERTY(EditAnywhere , Category= "战斗设置", meta=( AllowPrivateAccess = true))

@@ -447,6 +447,8 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 	{
 		Character->ShowSniperScopeWidget(bIsAiming);
 	}
+	//如果角色是本地控制的，则需要改变设置本地的bAimButtonPressed与服务器同步的bIsAiming一致
+	if(Character->IsLocallyControlled()) bAimButtonPressed = bIsAiming;
 }
 
 void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
@@ -749,6 +751,14 @@ bool UCombatComponent::CanFire()
 
 	//只要当前装备了武器并且bCanFire为true，且为ECS_Unoccupied状态，就可以进行开火
 	return !EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied;
+}
+
+void UCombatComponent::OnRep_Aiming()
+{
+	if(Character && Character->IsLocallyControlled())
+	{
+		bAiming = bAimButtonPressed;
+	}
 }
 
 /*
