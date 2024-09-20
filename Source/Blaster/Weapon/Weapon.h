@@ -169,11 +169,27 @@ private:
 	float ZoomInterpSpeed = 20.f;
 
 	//当前子弹数量
-	UPROPERTY(EditAnywhere, Category= "武器属性", ReplicatedUsing = OnRep_Ammo)
+	UPROPERTY(EditAnywhere, Category= "武器属性")
 	int32 Ammo;
 
-	UFUNCTION()
-	void OnRep_Ammo();
+	//UFUNCTION() 这里因为我们需要使用服务器对账的方式核对Ammo 避免在有延迟的情况下出现子弹归0但是无法换弹的问题
+	// 所以我们这里不在使用复制的方法复制ammo
+	// 我们需要一个单独的RPC方式去处理ammo 或者说 去处理AddAmmo()方法
+	//void OnRep_Ammo();
+	//下面两个方法就是用来取代这里的注释内容
+
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateAmmo(int32 ServerAmmo);
+	
+	UFUNCTION(Client, Reliable)
+	void ClientAddAmmo(int32 AmmoToAdd);
+
+	//the number of unprocessed server requests for ammo
+	//Incremented in SpendRound, decremented in ClientUpdateAmmo.
+	//未处理的服务器请求数量
+	//在 SpendRound 中递增，在 ClientUpdateAmmo 中递减
+	int32 AmmoSequence = 0;
+	
 	//进行一轮射击，里面包含了消耗子弹的逻辑
 	void SpendRound();
 	

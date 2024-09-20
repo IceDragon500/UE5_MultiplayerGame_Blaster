@@ -73,11 +73,10 @@ void AWeapon::Fire(const FVector& HitTarget)
 			
 		}
 	}
-	if(HasAuthority())
-	{
-		//TODO 进行一轮的射击逻辑（比如扣除子弹数量）
-		SpendRound();
-	}
+
+	//TODO 进行一轮的射击逻辑（比如扣除子弹数量）
+	SpendRound();
+
 }
 
 bool AWeapon::IsEmpty()
@@ -135,7 +134,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	//将WeaponState注册，这样可以复制
 	DOREPLIFETIME(AWeapon, WeaponState);
-	DOREPLIFETIME(AWeapon, Ammo);
+	//DOREPLIFETIME(AWeapon, Ammo);
 	
 }
 
@@ -318,14 +317,6 @@ void AWeapon::OnEquippedSecondary()
 	}
 }
 
-void AWeapon::AddAmmo(int32 AmmoToAdd)
-{
-	//这里使用了Clamp 处理当前弹药扣除变动量后的结果 避免小于0和大于最大弹夹数量的情况
-	//如果它小于0，则将其设置为0；如果它大于MagCapacity，则将其设置为MagCapacity。
-	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0 ,MagCapacity);
-	SetHUDAmmo();
-}
-
 FVector AWeapon::TraceEndWithScatter(const FVector& HitTarget)
 {
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
@@ -350,18 +341,63 @@ FVector AWeapon::TraceEndWithScatter(const FVector& HitTarget)
 	return FVector(TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size());//为了保证双精度值不会溢出，所以这里用不了80000那么长 所以稍微除一下
 }
 
-void AWeapon::OnRep_Ammo()
+//void AWeapon::OnRep_Ammo()
+//{
+//	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
+//	if(BlasterOwnerCharacter && BlasterOwnerCharacter->GetCombat() && IsFull())
+//	{
+//		BlasterOwnerCharacter->GetCombat()->JumpToShotgunEnd();
+//	}
+//	SetHUDAmmo();
+//}
+
+void AWeapon::SpendRound()
 {
+	Ammo = FMath::Clamp(Ammo -1, 0, MagCapacity);
+	SetHUDAmmo();
+	if(HasAuthority())
+	{
+		ClientUpdateAmmo(Ammo);
+	}
+	else
+	{
+		++AmmoSequence;
+	}
+}
+
+void AWeapon::ClientUpdateAmmo_Implementation(int32 ServerAmmo)
+{
+	//我们可以只存储一个我们可以检查的序列号，这个数字将代表有多少未处理的服务器请求
+	//服务器对账的做法是
+	//首先设置我们的弹药到服务器的权威值
+	//然后我们知道我们刚刚收到了一个处理过的，我们对Sequence进行递减
+	if(HasAuthority()) return;
+	Ammo = ServerAmmo;
+	--AmmoSequence;
+	Ammo -= AmmoSequence;
+	SetHUDAmmo();
+	
+}
+
+void AWeapon::AddAmmo(int32 AmmoToAdd)
+{
+	//这里使用了Clamp 处理当前弹药扣除变动量后的结果 避免小于0和大于最大弹夹数量的情况
+	//如果它小于0，则将其设置为0；如果它大于MagCapacity，则将其设置为MagCapacity。
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
+	SetHUDAmmo();
+	ClientAddAmmo(AmmoToAdd);
+}
+
+void AWeapon::ClientAddAmmo_Implementation(int32 AmmoToAdd)
+{
+	if(HasAuthority()) return;
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
 	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
 	if(BlasterOwnerCharacter && BlasterOwnerCharacter->GetCombat() && IsFull())
 	{
 		BlasterOwnerCharacter->GetCombat()->JumpToShotgunEnd();
 	}
 	SetHUDAmmo();
-}
 
-void AWeapon::SpendRound()
-{
-	Ammo = FMath::Clamp(Ammo -1, 0, MagCapacity);
-	SetHUDAmmo();
+	
 }
