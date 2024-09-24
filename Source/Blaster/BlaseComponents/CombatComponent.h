@@ -92,6 +92,7 @@ public:
 	//散弹枪在满足各中换弹终止后，跳转到最后ShotgunEnd通知的方法
 	//有几种情况：1、正常换弹结束后，2、携带弹药为0，换弹需要终止
 	void JumpToShotgunEnd();
+	bool bLocallyReloading = false; // 是否在本地换弹
 	
 	
 /*

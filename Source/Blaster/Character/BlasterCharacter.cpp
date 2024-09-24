@@ -613,6 +613,12 @@ void ABlasterCharacter::OnRep_Health(float LastHealth)
 	}
 }
 
+bool ABlasterCharacter::IsLocallyReloading()
+{
+	if(Combat == nullptr) return false;
+	return Combat->bLocallyReloading;
+}
+
 void ABlasterCharacter::UpdateHUDHealth()
 {
 	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;

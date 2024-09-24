@@ -260,10 +260,12 @@ void UCombatComponent::Reload()
 	if(CarriedAmmo > 0
 		&& CombatState == ECombatState::ECS_Unoccupied
 		&& EquippedWeapon
-		&& !EquippedWeapon->IsFull())//如果当前子弹是满的，则直接返回，避免触发一个空的换弹动作
+		&& !EquippedWeapon->IsFull()  //如果当前子弹是满的，则直接返回，避免触发一个空的换弹动作
+		&& !bLocallyReloading)
 	{
 		ServerReload();
-		HandleReload();
+		HandleReload();//这里的调整在185课中实现
+		bLocallyReloading = true;
 	}
 }
 
@@ -279,6 +281,8 @@ void UCombatComponent::ServerReload_Implementation()
 void UCombatComponent::FinishReloading()
 {
 	if(Character == nullptr) return;
+	bLocallyReloading = false;
+	
 	if(Character->HasAuthority())
 	{
 		CombatState = ECombatState::ECS_Unoccupied;
@@ -744,6 +748,8 @@ bool UCombatComponent::CanFire()
 {
 	//当没有装备武器的时候，不能发射，返回false
 	if(EquippedWeapon == nullptr) return false;
+
+	if(bLocallyReloading) return false; //如果在换弹，也返回false
 	
 	//这个判断是为了散弹枪装弹时可以进行射击的特殊判断
 	//当装备的是散弹枪并且当前处在reload状态，并且bCanFire为true（说明这个时候散弹枪至少有一颗子弹），则返回ture
@@ -874,7 +880,7 @@ void UCombatComponent::OnRep_CombatState()
 		}
 		break;
 	case ECombatState::ECS_Reloading:
-		HandleReload();
+		if(Character && !Character->IsLocallyControlled()) HandleReload();
 		break; 
 	case ECombatState::ECS_ThrowingGrenade:
 		if(Character && !Character->IsLocallyControlled())

@@ -96,6 +96,8 @@ public:
 	FORCEINLINE UStaticMeshComponent* GetAttachGrenade() const { return AttachedGrenade; }
 
 	FORCEINLINE UBuffComponent* GetBuff() const { return BuffComponent; }
+
+	bool IsLocallyReloading();
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
