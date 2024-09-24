@@ -753,7 +753,10 @@ bool UCombatComponent::CanFire()
 	
 	//这个判断是为了散弹枪装弹时可以进行射击的特殊判断
 	//当装备的是散弹枪并且当前处在reload状态，并且bCanFire为true（说明这个时候散弹枪至少有一颗子弹），则返回ture
-	if(!EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_ShotGun) return true;
+	if(!EquippedWeapon->IsEmpty()
+		&& bCanFire
+		&& CombatState == ECombatState::ECS_Reloading
+		&& EquippedWeapon->GetWeaponType() == EWeaponType::EWT_ShotGun) return true;
 
 	//只要当前装备了武器并且bCanFire为true，且为ECS_Unoccupied状态，就可以进行开火
 	return !EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied;
