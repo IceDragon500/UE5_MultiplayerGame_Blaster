@@ -51,11 +51,14 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	friend class ABlasterCharacter;
 
+	void ShowFramePackage(const FFramePackage& framePackage, const FColor& Color);
 	
 protected:
 
 	virtual void BeginPlay() override;
 
+	//对每一帧保存时间和Box的信息
+	void SaveFramePackage(FFramePackage& Package);
 
 private:
 	UPROPERTY()

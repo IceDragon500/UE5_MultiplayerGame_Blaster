@@ -111,6 +111,9 @@ public:
 	void UpdateHUDAmmo();
 
 	void SpawnDefaultWeapon();
+
+	UPROPERTY()
+	TMap<FName, UBoxComponent*> HitCollisionBoxes;//用来储存用于服务器回退的帧包相关的boxComponent信息
 	
 protected:
 	virtual void BeginPlay() override;
@@ -238,7 +241,6 @@ protected:
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* foot_r;//右脚
 
-	
 
 private:
 	//创建一个OnRep的方法，给需要复制的变量指定这个方法
