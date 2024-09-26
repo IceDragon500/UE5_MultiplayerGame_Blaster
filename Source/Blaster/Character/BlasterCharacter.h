@@ -177,6 +177,68 @@ protected:
 	//轮询任何相关类并初始化hud
 	void PollInit();
 
+	/*
+	 * Hit boxes used for server-side rewind
+	 * 用于服务器端倒带的点击框
+	 * 这里通过给模型上添加box，记录用来给服务器回退机制使用
+	 */
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* headbox; //头部
+	
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* pelvis;//盆骨
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* spine_02;//脊柱2
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* spine_03;//脊柱3
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* upperarm_l;//左上臂
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* upperarm_r;//右上臂
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* lowerarm_l;//左下肢
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* lowerarm_r;//右下肢
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* hand_l;//左手
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* hand_r;//右手
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* backpack;//背包
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* blanket;//背上的那个毯子
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* thigh_l;//左大腿
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* thigh_r;//右大腿
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* calf_l;//左小腿
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* calf_r;//右小腿
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* foot_l;//左脚
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* foot_r;//右脚
+
+	
+
 private:
 	//创建一个OnRep的方法，给需要复制的变量指定这个方法
 	//是一个接收到服务器replicate后需要执行的函数，replicate过程是单向的，所以On_RepXXX只能再客户端执行
