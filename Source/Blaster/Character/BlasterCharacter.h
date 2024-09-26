@@ -10,6 +10,7 @@
 #include "GameFramework/Character.h"
 #include "Blaster/Interface/InteractWithCrosshairsInterface.h"
 //#include "Blaster/PlayerState/BlasterPlayerState.h"
+#include "Blaster/BlaseComponents/LagCompensationComponent.h"
 #include "Components/TimelineComponent.h"
 #include "BlasterCharacter.generated.h"
 
@@ -408,4 +409,11 @@ private:
 	//void DropOrDestroyWeapon(AWeapon* Weapon);教程中有，我的案例中未将其实现
 	//void DropOrDestroyWeapons();教程中有，我的案例中未将其实现，用来实现角色被击败后，销毁或者掉落持有的武器，在我的案例中，都设置为掉落，所以不用这个
 	//教程中的设定是：默认自带的手枪，在被击败的时候 会被摧毁，这样场地上不会平白无故的多出很多手枪，但是我这里是都掉落，不摧毁
+
+	/*
+	 * 帧存储的一些操作
+	 */
+
+	UPROPERTY(VisibleAnywhere)
+	ULagCompensationComponent* LagCompensation;
 };

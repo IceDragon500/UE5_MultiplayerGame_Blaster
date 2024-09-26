@@ -155,6 +155,10 @@ ABlasterCharacter::ABlasterCharacter()
 	foot_r = CreateDefaultSubobject<UBoxComponent>(TEXT("foot_r"));
 	foot_r->SetupAttachment(GetMesh(), FName("foot_r"));
 	foot_r->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+
+	//我们计划是只在服务器上使用它，所以没有必要让他成为复制的组件
+	LagCompensation = CreateDefaultSubobject<ULagCompensationComponent>(TEXT("LagCompensation"));
 }
 
 // Called when the game starts or when spawned
@@ -266,15 +270,30 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 void ABlasterCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+
+	//初始化Combat组件
+	//这里主要是对组件中的角色引用进行赋值，以下几个都相同道理
 	if(Combat)
 	{
 		Combat->Character = this;
 	}
+	
+	//初始化buff组件
 	if(BuffComponent)
 	{
 		BuffComponent->Character = this;
 		BuffComponent->SetInitialSpeed(GetCharacterMovement()->MaxWalkSpeed, GetCharacterMovement()->MaxWalkSpeedCrouched);
 		BuffComponent->SetInitialJumpVelocity(GetCharacterMovement()->JumpZVelocity);
+	}
+
+	//初始化LagCompensation
+	if(LagCompensation)
+	{
+		LagCompensation->Character = this;
+		if(Controller)
+		{
+			LagCompensation->Controller = Cast<ABlasterPlayerController>(Controller);
+		}
 	}
 }
 
