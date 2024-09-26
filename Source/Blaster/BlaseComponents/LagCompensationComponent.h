@@ -57,7 +57,7 @@ protected:
 
 	virtual void BeginPlay() override;
 
-	//对每一帧保存时间和Box的信息
+	//传入一个Package，对每一帧保存时间和Box的信息至Package中
 	void SaveFramePackage(FFramePackage& Package);
 
 private:
@@ -66,4 +66,9 @@ private:
 	
 	UPROPERTY()
 	ABlasterPlayerController* Controller;
+
+	TDoubleLinkedList<FFramePackage> FrameHistory;//用来保存帧包
+
+	UPROPERTY(EditAnywhere)
+	float MaxRecordTime = 4.f;//保存帧包的最大时间 
 };
