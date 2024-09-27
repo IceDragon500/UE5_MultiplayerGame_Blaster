@@ -84,7 +84,7 @@ void AShotgun::Fire(const FVector& HitTarget)
 	}
 }*/
 
-void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTarget)
+void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 {
 	AWeapon::Fire(FVector());
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
@@ -99,7 +99,7 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTarget)
 
 		// Maps hit character to number of times hit
 		TMap<ABlasterCharacter*, uint32> HitMap;
-		for(FVector_NetQuantize HitTarget : HitTarget)
+		for(FVector_NetQuantize HitTarget : HitTargets)
 		{
 			FHitResult FireHit;
 			WeaponTraceHit(Start, HitTarget, FireHit);

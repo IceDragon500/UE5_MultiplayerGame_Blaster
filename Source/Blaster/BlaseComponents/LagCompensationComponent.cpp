@@ -77,6 +77,71 @@ void ULagCompensationComponent::ShowFramePackage(const FFramePackage& framePacka
 	}
 }
 
+void ULagCompensationComponent::ServerSideRewind(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart,
+	const FVector_NetQuantize& HitLocation, float HitTime)
+{
+	bool bReturn =
+		HitCharacter == nullptr ||
+		HitCharacter->GetLagCompensation() == nullptr ||
+		HitCharacter->GetLagCompensation()->FrameHistory.GetHead() == nullptr ||
+		HitCharacter->GetLagCompensation()->FrameHistory.GetTail() == nullptr;
+
+
+	//Frame package that we check to verify a hit
+	//我们检查以验证命中的帧包
+	FFramePackage FrameToCheck;
+	bool bShouldInterpolate = true;
+	
+	//Frame histroy of the HitCharacter
+	//被击中角色的帧历史记录
+	const TDoubleLinkedList<FFramePackage>& Histroy = HitCharacter->GetLagCompensation()->FrameHistory;
+	const float OldestHistoryTime = FrameHistory.GetTail()->GetValue().Time;
+	const float NewestHistoryTime = FrameHistory.GetHead()->GetValue().Time;
+	if(OldestHistoryTime > HitTime)
+	{
+		// too far back - too laggy to do ServerSideRewind
+		//太远 - 太滞后，无法进行服务器端倒带
+		return;
+	}
+	if(OldestHistoryTime == HitTime)
+	{
+		FrameToCheck = Histroy.GetTail()->GetValue();
+		bShouldInterpolate = false;
+	}
+	if(NewestHistoryTime <= HitTime)
+	{
+		FrameToCheck = Histroy.GetHead()->GetValue();
+		bShouldInterpolate = false;
+	}
+
+	TDoubleLinkedList<FFramePackage>::TDoubleLinkedListNode* Younger = Histroy.GetHead();
+	TDoubleLinkedList<FFramePackage>::TDoubleLinkedListNode* Older = Younger;
+
+	while(Older->GetValue().Time > HitTime)
+	{
+		if(Older->GetNextNode() == nullptr) break;
+		Older = Older->GetNextNode();
+		if(Older->GetValue().Time > HitTime)
+		{
+			Younger = Older;
+		}
+	}
+	if(Older->GetValue().Time == HitTime) // highly unlikely, but we found our frame to check 可能性很小，HitTime和Older的Time完全相同
+	{
+		FrameToCheck = Older->GetValue();
+		bShouldInterpolate = false;
+	}
+
+	if(bShouldInterpolate)
+	{
+		// Interpolate between Younger and Older
+		//在两个帧包之间使用插值
+	}
+	
+	
+	if(bReturn) return;
+}
+
 void ULagCompensationComponent::SaveFramePackage(FFramePackage& Package)
 {
 	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : Character;

@@ -99,6 +99,8 @@ public:
 	FORCEINLINE UBuffComponent* GetBuff() const { return BuffComponent; }
 
 	bool IsLocallyReloading();
+
+	FORCEINLINE ULagCompensationComponent* GetLagCompensation() const { return LagCompensation; }
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);

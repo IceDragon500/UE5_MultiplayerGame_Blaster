@@ -52,6 +52,7 @@ public:
 	friend class ABlasterCharacter;
 
 	void ShowFramePackage(const FFramePackage& framePackage, const FColor& Color);
+	void ServerSideRewind(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime);
 	
 protected:
 
