@@ -60,6 +60,7 @@ protected:
 
 	//传入一个Package，对每一帧保存时间和Box的信息至Package中
 	void SaveFramePackage(FFramePackage& Package);
+	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HitTime);
 
 private:
 	UPROPERTY()
