@@ -47,13 +47,39 @@ void ULagCompensationComponent::ShowFramePackage(const FFramePackage& framePacka
 FServerSideRewindResult ULagCompensationComponent::ServerSideRewind(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart,
 	const FVector_NetQuantize& HitLocation, float HitTime)
 {
+	FFramePackage FrameToCheck = GetFrameToCheck(HitCharacter, HitTime);
+	
+	return ConfirmHit(FrameToCheck, HitCharacter, TraceStart, HitLocation);
+}
+
+FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunServerSideRewindResult(
+	const TArray<ABlasterCharacter*> HitCharacters, const FVector_NetQuantize& TraceStart,
+	const TArray<FVector_NetQuantize>& HitLocation, float HitTime)
+{
+	TArray<FFramePackage> FramesToCheck;
+	for(ABlasterCharacter* HitCharacter : HitCharacters)
+	{
+		FramesToCheck.Add(GetFrameToCheck(HitCharacter, HitTime));
+	}
+	
+	return FShotgunServerSideRewindResult();
+}
+
+FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(const TArray<FFramePackage>& FramePackages,
+	const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocation)
+{
+	return FShotgunServerSideRewindResult();
+}
+
+FFramePackage ULagCompensationComponent::GetFrameToCheck(ABlasterCharacter* HitCharacter, float HitTime)
+{
 	bool bReturn =
 		HitCharacter == nullptr ||
 		HitCharacter->GetLagCompensation() == nullptr ||
 		HitCharacter->GetLagCompensation()->FrameHistory.GetHead() == nullptr ||
 		HitCharacter->GetLagCompensation()->FrameHistory.GetTail() == nullptr;
 	
-	if(bReturn) return FServerSideRewindResult();
+	if(bReturn) return FFramePackage();
 
 	//Frame package that we check to verify a hit
 	//我们检查以验证命中的帧包
@@ -63,13 +89,13 @@ FServerSideRewindResult ULagCompensationComponent::ServerSideRewind(ABlasterChar
 	//Frame histroy of the HitCharacter
 	//被击中角色的帧历史记录
 	const TDoubleLinkedList<FFramePackage>& Histroy = HitCharacter->GetLagCompensation()->FrameHistory;
-	const float OldestHistoryTime = FrameHistory.GetTail()->GetValue().Time;
-	const float NewestHistoryTime = FrameHistory.GetHead()->GetValue().Time;
+	const float OldestHistoryTime = Histroy.GetTail()->GetValue().Time;
+	const float NewestHistoryTime = Histroy.GetHead()->GetValue().Time;
 	if(OldestHistoryTime > HitTime)
 	{
 		// too far back - too laggy to do ServerSideRewind
 		//太远 - 太滞后，无法进行服务器端倒带
-		return FServerSideRewindResult();
+		return FFramePackage();
 	}
 	if(OldestHistoryTime == HitTime)
 	{
@@ -106,13 +132,13 @@ FServerSideRewindResult ULagCompensationComponent::ServerSideRewind(ABlasterChar
 		//在两个帧包之间使用插值
 		FrameToCheck = InterpBetweenFrames(Older->GetValue(), Younger->GetValue(), HitTime);
 	}
-	
-	return ConfirmHit(FrameToCheck, HitCharacter, TraceStart, HitLocation);
+
+	return FrameToCheck;
 }
 
 void ULagCompensationComponent::ServerScoreRequest_Implementation(ABlasterCharacter* HitCharacter,
-	const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime,
-	class AWeapon* DamageCauser)
+                                                                  const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime,
+                                                                  class AWeapon* DamageCauser)
 {
 	FServerSideRewindResult Confirm = ServerSideRewind(HitCharacter, TraceStart, HitLocation, HitTime);
 	
@@ -125,23 +151,6 @@ void ULagCompensationComponent::ServerScoreRequest_Implementation(ABlasterCharac
 			DamageCauser,
 			UDamageType::StaticClass()
 			);
-	}
-}
-
-void ULagCompensationComponent::SaveFramePackage(FFramePackage& Package)
-{
-	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : Character;
-	if(Character)
-	{
-		Package.Time = GetWorld()->GetTimeSeconds();//保存当前帧的时间
-		for(auto& BoxPair : Character->HitCollisionBoxes)
-		{
-			FBoxInformation BoxInformation;
-			BoxInformation.Location = BoxPair.Value->GetComponentLocation();
-			BoxInformation.Rotation = BoxPair.Value->GetComponentRotation();
-			BoxInformation.BoxExtent = BoxPair.Value->GetScaledBoxExtent();
-			Package.HitBoxInfo.Add(BoxPair.Key, BoxInformation);
-		}
 	}
 }
 
@@ -325,6 +334,20 @@ void ULagCompensationComponent::SaveFramePackage()
 	}
 }
 
-
-
-
+void ULagCompensationComponent::SaveFramePackage(FFramePackage& Package)
+{
+	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : Character;
+	if(Character)
+	{
+		Package.Time = GetWorld()->GetTimeSeconds();//保存当前帧的时间
+		Package.Character = Character;
+		for(auto& BoxPair : Character->HitCollisionBoxes)
+		{
+			FBoxInformation BoxInformation;
+			BoxInformation.Location = BoxPair.Value->GetComponentLocation();
+			BoxInformation.Rotation = BoxPair.Value->GetComponentRotation();
+			BoxInformation.BoxExtent = BoxPair.Value->GetScaledBoxExtent();
+			Package.HitBoxInfo.Add(BoxPair.Key, BoxInformation);
+		}
+	}
+}

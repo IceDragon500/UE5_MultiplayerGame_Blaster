@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+//#include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Components/ActorComponent.h"
 #include "LagCompensationComponent.generated.h"
@@ -38,6 +39,9 @@ struct FFramePackage
 	UPROPERTY()
 	TMap<FName, FBoxInformation> HitBoxInfo;
 	
+	UPROPERTY()
+	ABlasterCharacter* Character;
+	
 };
 
 //返回一个bool的结构体FServerSideRewindResult，这个结构体要包括是否命中了、是否爆头
@@ -53,6 +57,19 @@ struct FServerSideRewindResult
 	bool bHeadShot;//是否爆头
 };
 
+USTRUCT(BlueprintType)
+struct FShotgunServerSideRewindResult
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TMap<ABlasterCharacter*, int32> HeadShots;
+
+	UPROPERTY()
+	TMap<ABlasterCharacter*, int32> BodyShots;
+
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BLASTER_API ULagCompensationComponent : public UActorComponent
 {
@@ -66,33 +83,68 @@ public:
 
 	//将存储的帧包显示在游戏中
 	void ShowFramePackage(const FFramePackage& framePackage, const FColor& Color);
-	FServerSideRewindResult ServerSideRewind(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime);
+	FServerSideRewindResult ServerSideRewind(
+		ABlasterCharacter* HitCharacter,
+		const FVector_NetQuantize& TraceStart,
+		const FVector_NetQuantize& HitLocation,
+		float HitTime);
 
 	//
 	UFUNCTION(Server, Reliable)
-	void ServerScoreRequest(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime, class AWeapon* DamageCauser);
+	void ServerScoreRequest(
+		ABlasterCharacter* HitCharacter,
+		const FVector_NetQuantize& TraceStart,
+		const FVector_NetQuantize& HitLocation,
+		float HitTime,
+		class AWeapon* DamageCauser);
 	
 protected:
 
 	virtual void BeginPlay() override;
 
+	void SaveFramePackage();
 	//传入一个Package，对每一帧保存时间和Box的信息至Package中
 	void SaveFramePackage(FFramePackage& Package);
 	
 	//传入Older和Younger两个帧包，计算出中间值，并将其返回
-	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HitTime);
+	FFramePackage InterpBetweenFrames(
+		const FFramePackage& OlderFrame,
+		const FFramePackage& YoungerFrame,
+		float HitTime);
 
 	//这里我们需要通过计算得到的FFramePackage帧包，来和被命中的角色、射击起始位置、命中位置，来判断被命中的角色是否真的被命中了
 	//我们这里需要创建这个函数，并且返回一个bool的结构体FServerSideRewindResult，这个结构体要包括是否命中了、是否爆头
-	FServerSideRewindResult ConfirmHit(const FFramePackage& Package, ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation);
+	FServerSideRewindResult ConfirmHit(
+		const FFramePackage& Package,
+		ABlasterCharacter* HitCharacter,
+		const FVector_NetQuantize& TraceStart,
+		const FVector_NetQuantize& HitLocation);
 	
 	void CacheBoxPositions(ABlasterCharacter* HitCharacter, FFramePackage& OutFramePackage);
 	void MoveBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& Package);
 	void ResetHitBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& Package);
 	void EnableCharacterMeshCollision(ABlasterCharacter* HitCharacter, ECollisionEnabled::Type CollisionEnabled);
 
-	void SaveFramePackage();
+	
+	FFramePackage GetFrameToCheck(ABlasterCharacter* HitCharacter, float HitTime);
+	
+	
+	/**
+	 * Shotgun
+	 */
 
+	FShotgunServerSideRewindResult ShotgunServerSideRewindResult(
+		const TArray<ABlasterCharacter*> HitCharacters,
+		const FVector_NetQuantize& TraceStart,
+		const TArray<FVector_NetQuantize>& HitLocation,
+		float HitTime);
+
+	FShotgunServerSideRewindResult ShotgunConfirmHit(
+		const TArray<FFramePackage>& FramePackages,
+		const FVector_NetQuantize& TraceStart,
+		const TArray<FVector_NetQuantize>& HitLocation);
+
+	
 private:
 	UPROPERTY()
 	ABlasterCharacter* Character;
