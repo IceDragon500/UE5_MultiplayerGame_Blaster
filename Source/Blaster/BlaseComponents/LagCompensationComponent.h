@@ -14,13 +14,13 @@ struct FBoxInformation
 	GENERATED_BODY()
 
 	UPROPERTY()
-	FVector Location;
+	FVector Location;//HitBox位置
 	
 	UPROPERTY()
-	FRotator Rotation;
+	FRotator Rotation;//HitBox的旋转
 
 	UPROPERTY()
-	FVector BoxExtent;
+	FVector BoxExtent;//HitBox的大小
 };
 
 //创建一个帧包的结构体
@@ -40,6 +40,19 @@ struct FFramePackage
 	
 };
 
+//返回一个bool的结构体FServerSideRewindResult，这个结构体要包括是否命中了、是否爆头
+USTRUCT(BlueprintType)
+struct FServerSideRewindResult
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	bool bHitConfirmed;//是否命中了
+	
+	UPROPERTY()
+	bool bHeadShot;//是否爆头
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BLASTER_API ULagCompensationComponent : public UActorComponent
 {
@@ -51,8 +64,9 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	friend class ABlasterCharacter;
 
+	//将存储的帧包显示在游戏中
 	void ShowFramePackage(const FFramePackage& framePackage, const FColor& Color);
-	void ServerSideRewind(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime);
+	FServerSideRewindResult ServerSideRewind(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime);
 	
 protected:
 
@@ -60,7 +74,18 @@ protected:
 
 	//传入一个Package，对每一帧保存时间和Box的信息至Package中
 	void SaveFramePackage(FFramePackage& Package);
+	
+	//传入Older和Younger两个帧包，计算出中间值，并将其返回
 	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HitTime);
+
+	//这里我们需要通过计算得到的FFramePackage帧包，来和被命中的角色、射击起始位置、命中位置，来判断被命中的角色是否真的被命中了
+	//我们这里需要创建这个函数，并且返回一个bool的结构体FServerSideRewindResult，这个结构体要包括是否命中了、是否爆头
+	FServerSideRewindResult ConfirmHit(const FFramePackage& Package, ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation);
+	
+	void CacheBoxPositions(ABlasterCharacter* HitCharacter, FFramePackage& OutFramePackage);
+	void MoveBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& Package);
+	void ResetHitBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& Package);
+	void EnableCharacterMeshCollision(ABlasterCharacter* HitCharacter, ECollisionEnabled::Type CollisionEnabled);
 
 private:
 	UPROPERTY()
@@ -69,8 +94,10 @@ private:
 	UPROPERTY()
 	ABlasterPlayerController* Controller;
 
-	TDoubleLinkedList<FFramePackage> FrameHistory;//用来保存帧包
+	//用来保存帧包
+	TDoubleLinkedList<FFramePackage> FrameHistory;
 
+	//保存帧包的最大时间 
 	UPROPERTY(EditAnywhere)
-	float MaxRecordTime = 4.f;//保存帧包的最大时间 
+	float MaxRecordTime = 2.f;
 };
