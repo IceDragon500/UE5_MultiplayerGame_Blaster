@@ -26,15 +26,34 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		WeaponTraceHit(Start, HitTarget, FireHit);
 
 		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
-		if(BlasterCharacter && HasAuthority() && InstigatorController)
+		if(BlasterCharacter && InstigatorController)
 		{
-			UGameplayStatics::ApplyDamage(
+			if(HasAuthority() && !bUseServerSideRewind)//主机上的伤害检测，不需要做服务器倒带
+			{
+				UGameplayStatics::ApplyDamage(
 					BlasterCharacter,
 					Damage,
 					InstigatorController,
 					this,
 					UDamageType::StaticClass()
 				);
+			}
+			else if(!HasAuthority() && bUseServerSideRewind)//如果使用了服务器倒带，并且不是主机
+			{
+				BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(OwnerPawn) : BlasterOwnerCharacter;
+				BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(InstigatorController) : BlasterOwnerController;
+				if(BlasterOwnerCharacter && BlasterOwnerController && BlasterOwnerCharacter->GetLagCompensation())
+				{
+					BlasterOwnerCharacter->GetLagCompensation()->ServerScoreRequest(
+						BlasterCharacter,
+						Start,
+						HitTarget,
+						BlasterOwnerController->GetServerTime() - BlasterOwnerController->SingleTripTime,
+						this
+						);
+				}
+			}
+			
 		}
 		if(ImpactParticles)
 		{

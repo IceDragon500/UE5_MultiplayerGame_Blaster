@@ -29,10 +29,6 @@ protected:
 	//命中的音效
 	UPROPERTY(EditAnywhere)
 	USoundCue* HitSound;
-
-	//射线武器的伤害值
-	UPROPERTY(EditAnywhere)
-	float Damage = 20.f;
 	
 private:
 	

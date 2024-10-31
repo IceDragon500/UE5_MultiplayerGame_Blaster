@@ -48,6 +48,8 @@ public:
 	
 	//游戏结束后进入冷却阶段，这个时候移除界面内容  然后把等待界面显示出来
 	void HandleCooldown();
+
+	float SingleTripTime = 0.f;
 	
 protected:
 	virtual void BeginPlay() override;

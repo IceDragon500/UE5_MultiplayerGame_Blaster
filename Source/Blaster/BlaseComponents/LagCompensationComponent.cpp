@@ -4,6 +4,7 @@
 #include "LagCompensationComponent.h"
 
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Kismet/GameplayStatics.h"
 #include "Misc/AssetRegistryInterface.h"
 
 
@@ -23,34 +24,7 @@ void ULagCompensationComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if(FrameHistory.Num() <= 1)
-	{
-		FFramePackage ThisFrame;
-		SaveFramePackage(ThisFrame);
-		FrameHistory.AddHead(ThisFrame);
-	}
-	else
-	{
-		//我们先获得一下FrameHistory中，头和尾相差多少时间HistoryLength，
-		//中间差的时间HistoryLength表示这个FrameHistory记录了多长时间的帧包
-		
-		//如果计算出来的时间比我们设定的长，也就是说帧包记录多了
-		//则需要删除末尾的帧包，然后再计算一次HistoryLength
-
-		float HistoryLength = FrameHistory.GetHead()->GetValue().Time - FrameHistory.GetTail()->GetValue().Time;
-		while(HistoryLength > MaxRecordTime)
-		{
-			FrameHistory.RemoveNode(FrameHistory.GetTail());
-			HistoryLength = FrameHistory.GetHead()->GetValue().Time - FrameHistory.GetTail()->GetValue().Time;
-		}
-
-		//我们继续保存帧包至FrameHistory中，直到HistoryLength长度达到while判断的标准
-		FFramePackage ThisFrame;
-		SaveFramePackage(ThisFrame);
-		FrameHistory.AddHead(ThisFrame);
-
-		ShowFramePackage(ThisFrame, FColor::Red);
-	}
+	SaveFramePackage();
 	
 }
 
@@ -136,6 +110,24 @@ FServerSideRewindResult ULagCompensationComponent::ServerSideRewind(ABlasterChar
 	return ConfirmHit(FrameToCheck, HitCharacter, TraceStart, HitLocation);
 }
 
+void ULagCompensationComponent::ServerScoreRequest_Implementation(ABlasterCharacter* HitCharacter,
+	const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime,
+	class AWeapon* DamageCauser)
+{
+	FServerSideRewindResult Confirm = ServerSideRewind(HitCharacter, TraceStart, HitLocation, HitTime);
+	
+	if(Character && HitCharacter && DamageCauser && Confirm.bHitConfirmed)
+	{
+		UGameplayStatics::ApplyDamage(
+			HitCharacter,
+			DamageCauser->GetDamage(),
+			Character->Controller,
+			DamageCauser,
+			UDamageType::StaticClass()
+			);
+	}
+}
+
 void ULagCompensationComponent::SaveFramePackage(FFramePackage& Package)
 {
 	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : Character;
@@ -167,7 +159,7 @@ FFramePackage ULagCompensationComponent::InterpBetweenFrames(const FFramePackage
 		const FName& BoxInfoName = YoungerPair.Key;
 		const FBoxInformation& OlderBox = OlderFrame.HitBoxInfo[BoxInfoName];
 		const FBoxInformation& YoungerBox = YoungerFrame.HitBoxInfo[BoxInfoName];
-
+;
 		FBoxInformation InterpBoxInfo;
 		InterpBoxInfo.Location = FMath::VInterpTo(OlderBox.Location, YoungerBox.Location, 1.f, InterpFraction);
 		InterpBoxInfo.Rotation = FMath::RInterpTo(OlderBox.Rotation, YoungerBox.Rotation, 1.f, InterpFraction);
@@ -190,12 +182,14 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 	EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::NoCollision);
 
 	// enable collision for the head first
+	//首先我们先检查一下是否命中的头部head
+	//我们先把head的box碰撞打开 检测完毕之后在关闭
 	UBoxComponent* HeadBox = HitCharacter->HitCollisionBoxes[FName("head")];
 	HeadBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	HeadBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
 	FHitResult ConfirmHitResult;
-	const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.25f;
+	const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.25f;//结束的点位置，就是从TraceStart往HitLocation的方向再延伸一点
 	UWorld* World = GetWorld();
 	if(World)
 	{
@@ -295,6 +289,39 @@ void ULagCompensationComponent::EnableCharacterMeshCollision(ABlasterCharacter* 
 	if(HitCharacter && HitCharacter->GetMesh())
 	{
 		HitCharacter->GetMesh()->SetCollisionEnabled(CollisionEnabled);
+	}
+}
+
+void ULagCompensationComponent::SaveFramePackage()
+{
+	if(Character == nullptr || !Character->HasAuthority()) return;
+	if(FrameHistory.Num() <= 1)
+	{
+		FFramePackage ThisFrame;
+		SaveFramePackage(ThisFrame);
+		FrameHistory.AddHead(ThisFrame);
+	}
+	else
+	{
+		//我们先获得一下FrameHistory中，头和尾相差多少时间HistoryLength，
+		//中间差的时间HistoryLength表示这个FrameHistory记录了多长时间的帧包
+		
+		//如果计算出来的时间比我们设定的长，也就是说帧包记录多了
+		//则需要删除末尾的帧包，然后再计算一次HistoryLength
+
+		float HistoryLength = FrameHistory.GetHead()->GetValue().Time - FrameHistory.GetTail()->GetValue().Time;
+		while(HistoryLength > MaxRecordTime)
+		{
+			FrameHistory.RemoveNode(FrameHistory.GetTail());
+			HistoryLength = FrameHistory.GetHead()->GetValue().Time - FrameHistory.GetTail()->GetValue().Time;
+		}
+
+		//我们继续保存帧包至FrameHistory中，直到HistoryLength长度达到while判断的标准
+		FFramePackage ThisFrame;
+		SaveFramePackage(ThisFrame);
+		FrameHistory.AddHead(ThisFrame);
+
+		//ShowFramePackage(ThisFrame, FColor::Red);
 	}
 }
 

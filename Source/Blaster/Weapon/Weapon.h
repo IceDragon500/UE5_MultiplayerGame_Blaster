@@ -59,6 +59,7 @@ public:
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	FORCEINLINE int32 GetAmmo() const { return Ammo; } //获取当前子弹数量(斜杠前面的数值)
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; } //获取最大子弹数量(弹夹容量 斜杠前面的数值)
+	FORCEINLINE float GetDamage() const { return Damage; } //获取当前武器的伤害值
 	
 
 	//开火相关的逻辑
@@ -130,12 +131,21 @@ protected:
 	//球体的半径
 	UPROPERTY(EditAnywhere, Category= "Weapon Scatter")
 	float SphereRadius = 75.f;
-	
-private:
+
+	//射线武器的伤害值
+	UPROPERTY(EditAnywhere)
+	float Damage = 20.f;
+
+	//作为一个开关，用来选择是否使用服务器倒带的计算方式来计算伤害
+	UPROPERTY(EditAnywhere)
+	bool bUseServerSideRewind = false;
+
 	UPROPERTY()
 	class ABlasterCharacter* BlasterOwnerCharacter = nullptr;
 	UPROPERTY()
 	class ABlasterPlayerController* BlasterOwnerController = nullptr;
+	
+private:
 	
 	UPROPERTY(VisibleAnywhere, Category= "武器属性")
 	USkeletalMeshComponent* WeaponMesh;
