@@ -52,9 +52,9 @@ FServerSideRewindResult ULagCompensationComponent::ServerSideRewind(ABlasterChar
 	return ConfirmHit(FrameToCheck, HitCharacter, TraceStart, HitLocation);
 }
 
-FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunServerSideRewindResult(
+FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunServerSideRewind(
 	const TArray<ABlasterCharacter*> HitCharacters, const FVector_NetQuantize& TraceStart,
-	const TArray<FVector_NetQuantize>& HitLocation, float HitTime)
+	const TArray<FVector_NetQuantize>& HitLocations, float HitTime)
 {
 	TArray<FFramePackage> FramesToCheck;
 	for(ABlasterCharacter* HitCharacter : HitCharacters)
@@ -62,13 +62,121 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunServerSideRewin
 		FramesToCheck.Add(GetFrameToCheck(HitCharacter, HitTime));
 	}
 	
-	return FShotgunServerSideRewindResult();
+	return ShotgunConfirmHit(FramesToCheck, TraceStart, HitLocations);
 }
 
 FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(const TArray<FFramePackage>& FramePackages,
-	const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocation)
+	const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations)
 {
-	return FShotgunServerSideRewindResult();
+	for(auto& Frame : FramePackages)
+	{
+		if(Frame.Character == nullptr) return FShotgunServerSideRewindResult();
+	}
+	
+	FShotgunServerSideRewindResult ShotgunResult;
+	TArray<FFramePackage> CurrentFrames;
+	for(auto& Frame : FramePackages)
+	{
+		FFramePackage CurrentFrame;
+		CurrentFrame.Character = Frame.Character;
+		
+		CacheBoxPositions(Frame.Character, CurrentFrame);
+		MoveBoxes(Frame.Character, Frame);
+		EnableCharacterMeshCollision(Frame.Character, ECollisionEnabled::NoCollision);
+		CurrentFrames.Add(CurrentFrame);
+	}
+
+	for(auto& Frame : FramePackages)
+	{
+		// enable collision for the head first
+		//首先我们先检查一下是否命中的头部head
+		//我们先把head的box碰撞打开 检测完毕之后在关闭
+		UBoxComponent* HeadBox = Frame.Character->HitCollisionBoxes[FName("head")];
+		HeadBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		HeadBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	}
+	
+	UWorld* World = GetWorld();
+	//还是先检查是否爆头
+	for(auto& HitLocation : HitLocations)
+	{
+		FHitResult ConfirmHitResult;
+		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.25f;//结束的点位置，就是从TraceStart往HitLocation的方向再延伸一点
+		
+		if(World)
+		{
+			World->LineTraceSingleByChannel(
+			ConfirmHitResult,
+			TraceStart,
+			TraceEnd,
+			ECollisionChannel::ECC_Visibility
+			);
+			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(ConfirmHitResult.GetActor());
+			if(BlasterCharacter)
+			{
+				if(ShotgunResult.HeadShots.Contains(BlasterCharacter))//Contains 检查是否包含指定的键
+				{
+					ShotgunResult.HeadShots[BlasterCharacter]++;
+				}
+				else
+				{
+					ShotgunResult.HeadShots.Emplace(BlasterCharacter, 1);//Emplace设置与键相关的值
+				}
+			}
+		}
+	}
+
+	//打开身体其他部分的碰撞，关闭头部的碰撞
+	for(auto& Frame : FramePackages)
+	{
+		for(auto& HitBoxPair : Frame.Character->HitCollisionBoxes)
+		{
+			if(HitBoxPair.Value != nullptr)
+			{
+				HitBoxPair.Value->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+				HitBoxPair.Value->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+			}
+		}
+		UBoxComponent* HeadBox = Frame.Character->HitCollisionBoxes[FName("head")];
+		HeadBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	//继续检查是否命中身体其他位置
+	for(auto& HitLocation : HitLocations)
+	{
+		FHitResult ConfirmHitResult;
+		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.25f;//结束的点位置，就是从TraceStart往HitLocation的方向再延伸一点
+		
+		if(World)
+		{
+			World->LineTraceSingleByChannel(
+			ConfirmHitResult,
+			TraceStart,
+			TraceEnd,
+			ECollisionChannel::ECC_Visibility
+			);
+			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(ConfirmHitResult.GetActor());
+			if(BlasterCharacter)
+			{
+				if(ShotgunResult.BodyShots.Contains(BlasterCharacter))//Contains 检查是否包含指定的键
+				{
+					ShotgunResult.BodyShots[BlasterCharacter]++;
+				}
+				else
+				{
+					ShotgunResult.BodyShots.Emplace(BlasterCharacter, 1);//Emplace设置与键相关的值
+				}
+			}
+		}
+	}
+
+	for(auto& Frame : CurrentFrames)
+	{
+		ResetHitBoxes(Frame.Character, Frame);
+		EnableCharacterMeshCollision(Frame.Character, ECollisionEnabled::QueryAndPhysics);	
+	}
+
+	return ShotgunResult;
 }
 
 FFramePackage ULagCompensationComponent::GetFrameToCheck(ABlasterCharacter* HitCharacter, float HitTime)
