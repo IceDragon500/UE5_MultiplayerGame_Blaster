@@ -38,7 +38,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 					UDamageType::StaticClass()
 				);
 			}
-			else if(!HasAuthority() && bUseServerSideRewind)//如果使用了服务器倒带，并且不是主机
+			if(!HasAuthority() && bUseServerSideRewind)//如果使用了服务器倒带，并且不是主机
 			{
 				BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(OwnerPawn) : BlasterOwnerCharacter;
 				BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(InstigatorController) : BlasterOwnerController;
