@@ -25,6 +25,20 @@ public:
 	//这样我们就不用专门给两个命中逻辑做网络复制
 	virtual void Destroyed() override;
 
+	/**
+	 * Used with server-side rewind
+	 */
+
+	//是否启用服务器倒带技术
+	bool bUserServerSideRewind = false;
+	//起始的位置
+	FVector_NetQuantize TraceStart;
+	//初始的速度 
+	FVector_NetQuantize100 InitialVelocity;//因为速度包含了方向，因此使用了精度更高的FVector_NetQuantize100
+	//初始速度
+	UPROPERTY(EditAnywhere)
+	float InitialSpeed = 15000;
+	
 protected:
 
 	virtual void BeginPlay() override;
