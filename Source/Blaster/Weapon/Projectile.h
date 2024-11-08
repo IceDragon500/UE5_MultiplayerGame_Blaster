@@ -39,6 +39,8 @@ public:
 	UPROPERTY(EditAnywhere)
 	float InitialSpeed = 15000;
 	
+	float Damage = 20.f;
+	
 protected:
 
 	virtual void BeginPlay() override;
@@ -75,10 +77,6 @@ protected:
 	//命中音效
 	UPROPERTY(EditAnywhere, Category= "子弹属性")
 	USoundCue* ImpactSound;
-
-	//对命中目标造成伤害
-	UPROPERTY(EditAnywhere, Category= "子弹属性")
-	float Damage;
 
 	UPROPERTY(VisibleAnywhere, Category= "子弹属性")
 	UProjectileMovementComponent* ProjectileMovementComponent;
