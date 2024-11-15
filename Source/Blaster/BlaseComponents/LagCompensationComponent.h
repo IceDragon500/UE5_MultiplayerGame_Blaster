@@ -83,19 +83,8 @@ public:
 
 	//将存储的帧包显示在游戏中
 	void ShowFramePackage(const FFramePackage& framePackage, const FColor& Color);
-	FServerSideRewindResult ServerSideRewind(
-		ABlasterCharacter* HitCharacter,
-		const FVector_NetQuantize& TraceStart,
-		const FVector_NetQuantize& HitLocation,
-		float HitTime);
 
-	FShotgunServerSideRewindResult ShotgunServerSideRewind(
-		const TArray<ABlasterCharacter*> HitCharacters,
-		const FVector_NetQuantize& TraceStart,
-		const TArray<FVector_NetQuantize>& HitLocations,
-		float HitTime);
-
-	//对射线类武器在开启服务器倒带功能后，计算伤害的逻辑
+	//对射线类武器Hitscan在开启服务器倒带功能后，计算伤害的逻辑
 	UFUNCTION(Server, Reliable)
 	void ServerScoreRequest(
 		ABlasterCharacter* HitCharacter,
@@ -104,7 +93,13 @@ public:
 		float HitTime,
 		class AWeapon* DamageCauser);
 
-	//对霰弹类武器在开启服务器倒带功能后，计算伤害的逻辑
+	FServerSideRewindResult ServerSideRewind(
+	ABlasterCharacter* HitCharacter,
+	const FVector_NetQuantize& TraceStart,
+	const FVector_NetQuantize& HitLocation,
+	float HitTime);
+	
+	//对霰弹类武器Shotgun在开启服务器倒带功能后，计算伤害的逻辑
 	UFUNCTION(Server, Reliable)
 	void ShotgunServerScoreRequest(
 		const TArray<ABlasterCharacter*>& HitCharacters,
@@ -112,6 +107,21 @@ public:
 		const TArray<FVector_NetQuantize>& HitLocations,
 		float HitTime
 		);
+
+	FShotgunServerSideRewindResult ShotgunServerSideRewind(
+	const TArray<ABlasterCharacter*> HitCharacters,
+	const FVector_NetQuantize& TraceStart,
+	const TArray<FVector_NetQuantize>& HitLocations,
+	float HitTime);
+
+	//对于飞弹类Projectile武器在开启服务器倒带后，计算伤害的逻辑
+	FServerSideRewindResult ProjectileServerSideRewind(
+		ABlasterCharacter* HitCharacter,
+		const FVector_NetQuantize& TraceStart,
+		const FVector_NetQuantize100& InitialVelocity,
+		float HitTime
+		);
+
 	
 protected:
 
@@ -126,7 +136,15 @@ protected:
 		const FFramePackage& OlderFrame,
 		const FFramePackage& YoungerFrame,
 		float HitTime);
-
+	
+	void CacheBoxPositions(ABlasterCharacter* HitCharacter, FFramePackage& OutFramePackage);
+	void MoveBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& Package);
+	void ResetHitBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& Package);
+	void EnableCharacterMeshCollision(ABlasterCharacter* HitCharacter, ECollisionEnabled::Type CollisionEnabled);
+	
+	FFramePackage GetFrameToCheck(ABlasterCharacter* HitCharacter, float HitTime);
+	
+	//Hitscan
 	//这里我们需要通过计算得到的FFramePackage帧包，来和被命中的角色、射击起始位置、命中位置，来判断被命中的角色是否真的被命中了
 	//我们这里需要创建这个函数，并且返回一个bool的结构体FServerSideRewindResult，这个结构体要包括是否命中了、是否爆头
 	FServerSideRewindResult ConfirmHit(
@@ -134,15 +152,18 @@ protected:
 		ABlasterCharacter* HitCharacter,
 		const FVector_NetQuantize& TraceStart,
 		const FVector_NetQuantize& HitLocation);
-	
-	void CacheBoxPositions(ABlasterCharacter* HitCharacter, FFramePackage& OutFramePackage);
-	void MoveBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& Package);
-	void ResetHitBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& Package);
-	void EnableCharacterMeshCollision(ABlasterCharacter* HitCharacter, ECollisionEnabled::Type CollisionEnabled);
 
-	
-	FFramePackage GetFrameToCheck(ABlasterCharacter* HitCharacter, float HitTime);
-	
+	/**
+	 *Projectile
+	 */
+
+	FServerSideRewindResult ProjectileConfirmHit(
+		const FFramePackage& Package,
+		ABlasterCharacter* HitCharacter,
+		const FVector_NetQuantize& TraceStart,
+		const FVector_NetQuantize100& InitialVelocity,
+		float HitTime
+		);
 	
 	/**
 	 * Shotgun

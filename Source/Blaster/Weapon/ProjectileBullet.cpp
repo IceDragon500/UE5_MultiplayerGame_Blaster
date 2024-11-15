@@ -55,25 +55,25 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 void AProjectileBullet::BeginPlay()
 {
 	Super::BeginPlay();
-
+	/*
 	//这是输入参数结构体，用于设置预测抛射物路径的条件和参数
 	FPredictProjectilePathParams PathParams;
-	/**
-	bTraceComplex 如果设置为true，则使用复杂的碰撞检测。复杂碰撞检测会考虑模型的实际形状，而不是简单的碰撞体（如球体、盒体等），但这会增加性能开销。
-	LaunchVelocity (FVector)：抛射物的初始速度向量。
-	ObjectTypes 指定哪些类型的物体应该被包含在碰撞检测中。你可以选择特定的碰撞通道或对象类型。
-	ProjectileRadius (float)：抛射物的半径，用于碰撞检测。
-	SimFrequency (int32)：模拟频率，决定每秒计算多少次路径点。
-	StartLocation (FVector)：抛射物的起始位置。
-	TraceChannel 指定用于碰撞检测的碰撞通道。不同的通道可以用来区分不同类型的碰撞。
-	ActorsToIgnore 一个数组，包含了在碰撞检测时应该忽略的角色
-	bTraceWithChannel 如果设置为true，则使用TraceChannel来进行碰撞检测
-	bTraceWithCollision  如果设置为true，则进行碰撞检测。这与bTracePath类似，但bTraceWithCollision可能更通用。
-	DrawDebugTime
-	DrawDebugType
-	MaxSimTime 最大模拟的时间
-	OverrideGravityZ
-	*/
+	
+	// bTraceComplex 如果设置为true，则使用复杂的碰撞检测。复杂碰撞检测会考虑模型的实际形状，而不是简单的碰撞体（如球体、盒体等），但这会增加性能开销。
+	// LaunchVelocity (FVector)：抛射物的初始速度向量。
+	// ObjectTypes 指定哪些类型的物体应该被包含在碰撞检测中。你可以选择特定的碰撞通道或对象类型。
+	// ProjectileRadius (float)：抛射物的半径，用于碰撞检测。
+	// SimFrequency (int32)：模拟频率，决定每秒计算多少次路径点。
+	// StartLocation (FVector)：抛射物的起始位置。
+	// TraceChannel 指定用于碰撞检测的碰撞通道。不同的通道可以用来区分不同类型的碰撞。
+	// ActorsToIgnore 一个数组，包含了在碰撞检测时应该忽略的角色
+	// bTraceWithChannel 如果设置为true，则使用TraceChannel来进行碰撞检测
+	// bTraceWithCollision  如果设置为true，则进行碰撞检测。这与bTracePath类似，但bTraceWithCollision可能更通用。
+	// DrawDebugTime
+	// DrawDebugType
+	// MaxSimTime 最大模拟的时间
+	// OverrideGravityZ
+
 
 	PathParams.bTraceWithChannel = true;
 	PathParams.bTraceWithCollision = true;
@@ -90,17 +90,18 @@ void AProjectileBullet::BeginPlay()
 
 	//这是输出结果结构体，包含了路径预测的结果信息：
 	FPredictProjectilePathResult PathResult;
-	/*
-	PathData (TArray<FPredictProjectilePathPointData>)：一个数组，包含了沿路径的每个点的详细信息，包括位置、速度、时间等。
-	HitResult (FHitResult)：如果路径与物体发生碰撞，这里包含了碰撞的详细信息，如碰撞点、法线、碰撞的物体等。
-	LastTraceDestination (FVector)：如果没有发生碰撞，这是路径的终点位置。
-	FPredictProjectilePathPointData 则包含了每个路径点的具体信息：
 
-	Location (FVector)：路径点的空间位置。
-	Velocity (FVector)：路径点时的速度。
-	Time (float)：到达这个点所需的时间。
-	Distance (float)：从起点到这个点之间的距离。  */
+	// PathData (TArray<FPredictProjectilePathPointData>)：一个数组，包含了沿路径的每个点的详细信息，包括位置、速度、时间等。
+	// HitResult (FHitResult)：如果路径与物体发生碰撞，这里包含了碰撞的详细信息，如碰撞点、法线、碰撞的物体等。
+	// LastTraceDestination (FVector)：如果没有发生碰撞，这是路径的终点位置。
+	// FPredictProjectilePathPointData 则包含了每个路径点的具体信息：
+	//
+	// Location (FVector)：路径点的空间位置。
+	// Velocity (FVector)：路径点时的速度。
+	// Time (float)：到达这个点所需的时间。
+	// Distance (float)：从起点到这个点之间的距离。
 
 	//通过这种方式，你可以预测抛射物的路径，这在游戏中用于瞄准系统、射击游戏的弹道预览等场景中非常有用。记得在你的代码中处理可能的错误和边界情况
 	UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
+	*/
 }
