@@ -15,7 +15,6 @@ class BLASTER_API AProjectileWeapon : public AWeapon
 {
 	GENERATED_BODY()
 public:
-	AProjectileWeapon();
 
 	//覆写父类Weapon中的fire方法
 	virtual void Fire(const FVector& HitTarget) override;

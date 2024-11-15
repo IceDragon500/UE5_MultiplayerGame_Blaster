@@ -30,7 +30,7 @@ public:
 	 */
 
 	//是否启用服务器倒带技术
-	bool bUserServerSideRewind = false;
+	bool bUseServerSideRewind = false;
 	//起始的位置
 	FVector_NetQuantize TraceStart;
 	//初始的速度 

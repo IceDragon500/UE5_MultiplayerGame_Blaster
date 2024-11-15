@@ -121,6 +121,8 @@ protected:
 	virtual void BeginPlay() override;
 
 	void RotateInPlace(float DeltaTime);
+	void DropOrDestroyWeapon(AWeapon* Weapon);
+	void DropOrDestroyWeapons();
 /*
  * 增强输入
  */

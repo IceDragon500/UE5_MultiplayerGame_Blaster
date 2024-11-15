@@ -50,6 +50,9 @@ ABlasterCharacter::ABlasterCharacter()
 	BuffComponent = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComponent"));
 	BuffComponent->SetIsReplicated(true);
 
+	//我们计划是只在服务器上使用它，所以没有必要让他成为复制的组件
+	LagCompensation = CreateDefaultSubobject<ULagCompensationComponent>(TEXT("LagCompensation"));
+
 	//蹲下的设置，这里我们使用角色移动组件里面的蹲下功能
 	//设置可以蹲下
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
@@ -65,7 +68,8 @@ ABlasterCharacter::ABlasterCharacter()
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	//设置转身速率
-	GetCharacterMovement()->RotationRate = FRotator(0, 850, 0);
+	//GetCharacterMovement()->RotationRate = FRotator(0, 850, 0);
+	GetCharacterMovement()->RotationRate = FRotator(0, 0, 850);
 
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	NetUpdateFrequency = 66.f;
@@ -158,17 +162,186 @@ ABlasterCharacter::ABlasterCharacter()
 
 	for(auto Box : HitCollisionBoxes)
 	{
-		Box.Value->SetCollisionObjectType(ECC_HitBox);
-		Box.Value->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-		Box.Value->SetCollisionResponseToChannel(ECC_HitBox, ECollisionResponse::ECR_Block);
-		Box.Value->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		if(Box.Value)
+		{
+			Box.Value->SetCollisionObjectType(ECC_HitBox);
+			Box.Value->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+			Box.Value->SetCollisionResponseToChannel(ECC_HitBox, ECollisionResponse::ECR_Block);
+			Box.Value->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
 	}
-
-	//我们计划是只在服务器上使用它，所以没有必要让他成为复制的组件
-	LagCompensation = CreateDefaultSubobject<ULagCompensationComponent>(TEXT("LagCompensation"));
 }
 
-// Called when the game starts or when spawned
+void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	//注册需要复制的变量，这个将显示给所有客户端
+	//DOREPLIFETIME(ABlasterCharacter, OverlappingWeapon);
+
+	//注册需要复制的变量，使用COND_OwnerOnly，选择只会复制到所有者的客户端
+	DOREPLIFETIME_CONDITION(ThisClass, OverlappingWeapon, COND_OwnerOnly);
+
+	//注册血量
+	DOREPLIFETIME(ThisClass, Health);
+	//注册护盾值
+	DOREPLIFETIME(ThisClass, Shield);
+	DOREPLIFETIME(ThisClass, bDisableGameplay);
+}
+
+void ABlasterCharacter::OnRep_ReplicatedMovement()
+{
+	Super::OnRep_ReplicatedMovement();
+	SimProxiesTurn();
+	TimeSinceLastMovementReplication = 0.f;
+}
+
+void ABlasterCharacter::Elim()
+{
+	//DropOrDestroyWeapons(); 我这里没有使用与教程一致的方法
+	if(Combat)
+	{
+		if(Combat->EquippedWeapon)
+		{
+			Combat->EquippedWeapon->Dropped();
+		}
+		if(Combat->SecondaryWeapon)
+		{
+			Combat->SecondaryWeapon->Dropped();
+		}
+	}
+
+	MulticastElim();
+	GetWorldTimerManager().SetTimer(
+		ElimTimer,
+		this,
+		&ThisClass::ElimTimerFinished,
+		ElimDelay
+		);
+}
+
+void ABlasterCharacter::MulticastElim_Implementation()
+{
+	if(BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHUDWeaponAmmo(0);
+	}
+	bElimmed = true;
+	//实现玩家淘汰之后的逻辑
+	PlayElimMontage();
+
+	//Start dissolve effect
+	if(DissolveMaterialInstance)
+	{
+		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance, this);
+
+		GetMesh()->SetMaterial(0, DynamicDissolveMaterialInstance);
+		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), 0.55f);
+		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Glow"), 200.f);
+	}
+	StartDissolve();
+
+	//disable character movement
+	GetCharacterMovement()->StopMovementImmediately();//禁止通过鼠标旋转角色
+	
+	bDisableGameplay = true;//禁止角色输入
+	GetCharacterMovement()->DisableMovement();//禁止移动
+	if(Combat)  //这一段在教程里面启用了132课，但是我这边先不用
+	{
+		Combat->FireButtonPressed(false);
+	}
+	
+	//Disable Collision关闭碰撞
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	//Spawn elim bot
+	//生成被淘汰时的机器人特效和音效
+	if(ElimBotEffect)
+	{
+		FVector ElimBotSpawnPoint(GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z +200.f);
+		ElimBotComponent = UGameplayStatics::SpawnEmitterAtLocation(
+			GetWorld(),
+			ElimBotEffect,
+			ElimBotSpawnPoint,
+			GetActorRotation()
+			);
+	}
+	if(ElimBotSound)
+	{
+		UGameplayStatics::SpawnSoundAtLocation(
+			this,
+			ElimBotSound,
+			GetActorLocation()
+			);
+	}
+	//这里判断当玩家使用狙击枪正在瞄准时，被淘汰，需要关闭瞄准镜界面
+	bool bHideSniperScope = IsLocallyControlled() &&
+		Combat &&
+		Combat->bAiming &&
+		Combat->EquippedWeapon &&
+		Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle; 
+	if(bHideSniperScope)
+	{
+		ShowSniperScopeWidget(false);
+	}
+}
+
+void ABlasterCharacter::ElimTimerFinished()
+{
+	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	if(BlasterGameMode)
+	{
+		BlasterGameMode->RequestRespawn(this, Controller);
+	}	
+}
+
+void ABlasterCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
+{
+	if (Weapon == nullptr) return;
+	if (Weapon->bDestroyWeapon)
+	{
+		Weapon->Destroy();
+	}
+	else
+	{
+		Weapon->Dropped();
+	}
+}
+
+void ABlasterCharacter::DropOrDestroyWeapons()
+{
+	if (Combat)
+	{
+		if (Combat->EquippedWeapon)
+		{
+			DropOrDestroyWeapon(Combat->EquippedWeapon);
+		}
+		if (Combat->SecondaryWeapon)
+		{
+			DropOrDestroyWeapon(Combat->SecondaryWeapon);
+		}
+	}
+}
+
+void ABlasterCharacter::Destroyed()
+{
+	Super::Destroyed();
+	if(ElimBotComponent)
+	{
+		ElimBotComponent->DestroyComponent();
+	}
+
+	
+	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	bool bMatchNotInProgress = BlasterGameMode && BlasterGameMode->GetMatchState() != MatchState::InProgress;
+	if(Combat && Combat->EquippedWeapon && bMatchNotInProgress)
+	{
+		Combat->EquippedWeapon->Destroy();
+	}
+	
+}
+
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -208,7 +381,6 @@ void ABlasterCharacter::BeginPlay()
 	}
 }
 
-// Called every frame
 void ABlasterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -223,7 +395,35 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	PollInit();
 }
 
-// Called to bind functionality to input
+void ABlasterCharacter::RotateInPlace(float DeltaTime)
+{
+	/*这里在教程131课，我不想调整这个
+	if(bDisableGameplay)
+	{
+		bUseControllerRotationYaw = false;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
+	*/
+
+	//这里判断是否旋转根骨骼
+	//角色在本地/远程网络上下文中的网络角色
+	//如果当前是代理的状态，无论是
+	if(GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
+	{
+		AimOffset(DeltaTime);
+	}
+	else
+	{
+		TimeSinceLastMovementReplication += DeltaTime;
+		if(TimeSinceLastMovementReplication > 0.25)
+		{
+			OnRep_ReplicatedMovement();
+		}
+		CalculateAO_Pitch();
+	}
+}
+
 void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -255,23 +455,6 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(ThrowGrenadeKeyAction, ETriggerEvent::Triggered, this, &ThisClass::ThrowGrenadePressed);
 		
 	}
-}
-
-void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	//注册需要复制的变量，这个将显示给所有客户端
-	//DOREPLIFETIME(ABlasterCharacter, OverlappingWeapon);
-
-	//注册需要复制的变量，使用COND_OwnerOnly，选择只会复制到所有者的客户端
-	DOREPLIFETIME_CONDITION(ThisClass, OverlappingWeapon, COND_OwnerOnly);
-
-	//注册血量
-	DOREPLIFETIME(ThisClass, Health);
-	//注册护盾值
-	DOREPLIFETIME(ThisClass, Shield);
-	DOREPLIFETIME(ThisClass, bDisableGameplay);
 }
 
 void ABlasterCharacter::PostInitializeComponents()
@@ -380,53 +563,68 @@ void ABlasterCharacter::PlayThrowGrenadeMontage()
 	}
 }
 
-void ABlasterCharacter::OnRep_ReplicatedMovement()
+void ABlasterCharacter::PlayHitReactMontage()
 {
-	Super::OnRep_ReplicatedMovement();
-	SimProxiesTurn();
-	TimeSinceLastMovementReplication = 0;
+	if(Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && HitReactMontage)
+	{
+		AnimInstance->Montage_Play(HitReactMontage);
+		FName SectionName("FromFront");
+		
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
 }
 
-void ABlasterCharacter::RotateInPlace(float DeltaTime)
+void ABlasterCharacter::ThrowGrenadePressed(const FInputActionValue& Value)
 {
-	/*这里在教程131课，我不想调整这个
-	if(bDisableGameplay)
+	if(bDisableGameplay) return;
+	if(Combat)
 	{
-		bUseControllerRotationYaw = false;
-		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
-		return;
+		Combat->ThrowGrenade();
 	}
-	*/
+}
 
-	//这里判断是否旋转根骨骼
-	//角色在本地/远程网络上下文中的网络角色
-	//如果当前是代理的状态，无论是
-	if(GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
+void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
+	AController* InstigatroController, AActor* DamageCasuer)
+{
+	if(bElimmed) return; //防止在被击杀之后，播放死亡特效时被反复击杀
+
+	float DamageToHealth = Damage;//扣除血量的值
+	if(Shield > 0.f)
 	{
-		AimOffset(DeltaTime);
-	}
-	else
-	{
-		TimeSinceLastMovementReplication += DeltaTime;
-		if(TimeSinceLastMovementReplication > 0.25)
+		if(Shield >= Damage) //当盾比伤害多的时候，也就是伤害不足以减少health，这里就只需要扣除盾里面的值就可以了
 		{
-			OnRep_ReplicatedMovement();
+			Shield = FMath::Clamp(Shield - Damage, 0.f, MaxShield);
+			DamageToHealth = 0.f;
 		}
-		CalculateAO_Pitch();
+		else//否则就是伤害比护盾值多，所以要先把护盾置0，然后扣除护盾值，再看看有多少打在Health上了
+		{
+			Shield = 0.f;
+			DamageToHealth = FMath::Clamp(DamageToHealth - Shield, 0.f, Damage);
+		}
 	}
-}
+	
+	Health = FMath::Clamp(Health - DamageToHealth, 0.f, MaxHealth); //生命值计算
+	
+	UpdateHUDHealth();
+	UpdateHUDShield();
+	PlayHitReactMontage();
 
-
-
-void ABlasterCharacter::Jump()
-{
-	if(bIsCrouched)
+	//当血量为0的时候，处理淘汰的逻辑
+	//获得游戏模式，然后执行游戏模式中的淘汰相关的逻辑
+	if (Health == 0.f)
 	{
-		UnCrouch();
-	}
-	else
-	{
-		Super::Jump();
+		ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+		if(BlasterGameMode)
+		{
+			//获得受害者的控制器，就是当前这个类
+			BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) :BlasterPlayerController;
+			//获得攻击者的控制器，就是传入的InstigatroController，需要从AController转换到ABlasterPlayerController
+			ABlasterPlayerController* AttackerController = Cast<ABlasterPlayerController>(InstigatroController);
+			BlasterGameMode->PlayerEliminated(this, BlasterPlayerController, AttackerController);
+		}
 	}
 }
 
@@ -463,33 +661,6 @@ void ABlasterCharacter::Look(const FInputActionValue& Value)
 	AddControllerYawInput(LookAxisVector.X);//以z轴，向左右转动
 }
 
-void ABlasterCharacter::FireButtonPressed(const FInputActionValue& Value)
-{
-	if(bDisableGameplay) return;
-	if(Combat)
-	{
-		Combat->FireButtonPressed(true);
-	}
-}
-
-void ABlasterCharacter::FireButtonReleased(const FInputActionValue& Value)
-{
-	if(bDisableGameplay) return;
-	if(Combat)
-	{
-		Combat->FireButtonPressed(false);
-	}
-}
-
-void ABlasterCharacter::ReloadButtonPressed(const FInputActionValue& Value)
-{
-	if(bDisableGameplay) return;
-	if(Combat)
-	{
-		Combat->Reload();
-	}
-}
-
 void ABlasterCharacter::PickupKeyPressed(const FInputActionValue& Value)
 {
 	if(bDisableGameplay) return;
@@ -524,15 +695,6 @@ void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 	}
 }
 
-void ABlasterCharacter::ThrowGrenadePressed(const FInputActionValue& Value)
-{
-	if(bDisableGameplay) return;
-	if(Combat)
-	{
-		Combat->ThrowGrenade();
-	}
-}
-
 void ABlasterCharacter::CrouchKeyPressed(const FInputActionValue& Value)
 {
 	if(bDisableGameplay) return;
@@ -549,6 +711,17 @@ void ABlasterCharacter::CrouchKeyPressed(const FInputActionValue& Value)
 		Crouch();
 	}
 }
+
+void ABlasterCharacter::ReloadButtonPressed(const FInputActionValue& Value)
+{
+	if(bDisableGameplay) return;
+	if(Combat)
+	{
+		Combat->Reload();
+	}
+}
+
+
 
 void ABlasterCharacter::AimButtonPressed(const FInputActionValue& Value)
 {
@@ -618,15 +791,15 @@ void ABlasterCharacter::CalculateAO_Pitch()
 		// map pitch form [270, 360) to [-90, 0)
 		//因为存在数据压缩，会导致负数变为整数，结果就是从-90 到 0度，会变成 270到360度
 		//所以我们需要使用FMath::GetMappedRangeValueClamped  将一个值到赢外一个值进行映射和钳制
-		FVector2d InRange(270.f, 360.f);
-		FVector2d OutRange(-90.f, 0.f);
+		FVector2D InRange(270.f, 360.f);
+		FVector2D OutRange(-90.f, 0.f);
 		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
 	}
 }
 
 void ABlasterCharacter::SimProxiesTurn()
 {
-	if(Combat == nullptr && Combat->EquippedWeapon == nullptr) return;
+	if(Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
 	bRotateRootBone = false;
 	float Speed = CalculateSpeed();
 	if(Speed > 0.f)
@@ -646,7 +819,7 @@ void ABlasterCharacter::SimProxiesTurn()
 		{
 			TurningInPlace = ETurningInPlace::ETIP_Right;
 		}
-		else if(ProxyYaw > -TurnThreshold)
+		else if(ProxyYaw < -TurnThreshold)
 		{
 			TurningInPlace = ETurningInPlace::ETIP_Left;
 		}
@@ -657,6 +830,36 @@ void ABlasterCharacter::SimProxiesTurn()
 		return;
 	}
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+}
+
+void ABlasterCharacter::Jump()
+{
+	if(bIsCrouched)
+	{
+		UnCrouch();
+	}
+	else
+	{
+		Super::Jump();
+	}
+}
+
+void ABlasterCharacter::FireButtonPressed(const FInputActionValue& Value)
+{
+	if(bDisableGameplay) return;
+	if(Combat)
+	{
+		Combat->FireButtonPressed(true);
+	}
+}
+
+void ABlasterCharacter::FireButtonReleased(const FInputActionValue& Value)
+{
+	if(bDisableGameplay) return;
+	if(Combat)
+	{
+		Combat->FireButtonPressed(false);
+	}
 }
 
 void ABlasterCharacter::TurnInPlace(float DeltaTime)
@@ -715,10 +918,13 @@ void ABlasterCharacter::OnRep_Health(float LastHealth)
 	}
 }
 
-bool ABlasterCharacter::IsLocallyReloading()
+void ABlasterCharacter::OnRep_Shield(float LastShield)
 {
-	if(Combat == nullptr) return false;
-	return Combat->bLocallyReloading;
+	UpdateHUDShield();
+	if(Shield < LastShield)
+	{
+		PlayHitReactMontage();
+	}
 }
 
 void ABlasterCharacter::UpdateHUDHealth()
@@ -729,17 +935,6 @@ void ABlasterCharacter::UpdateHUDHealth()
 		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
 	}
 	
-}
-
-
-
-void ABlasterCharacter::OnRep_Shield(float LastShield)
-{
-	UpdateHUDShield();
-	if(Shield < LastShield)
-	{
-		PlayHitReactMontage();
-	}
 }
 
 void ABlasterCharacter::UpdateHUDShield()
@@ -757,7 +952,7 @@ void ABlasterCharacter::UpdateHUDAmmo()
 	if(BlasterPlayerController && Combat && Combat->EquippedWeapon)
 	{
 		BlasterPlayerController->SetHUDCarriedAmmo(Combat->CarriedAmmo);
-		BlasterPlayerController->SetHUDAmmo(Combat->EquippedWeapon->GetAmmo());
+		BlasterPlayerController->SetHUDWeaponAmmo(Combat->EquippedWeapon->GetAmmo());
 	}
 }
 
@@ -770,10 +965,11 @@ void ABlasterCharacter::SpawnDefaultWeapon()
 	UWorld* World = GetWorld();
 	if(BlasterGameMode && World && !bElimmed && DefaultWeaponClass)
 	{
-		AWeapon* StatringWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
+		AWeapon* StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
+		StartingWeapon->bDestroyWeapon = true;
 		if(Combat)
 		{
-			Combat->EquipWeapon(StatringWeapon);
+			Combat->EquipWeapon(StartingWeapon);
 		}
 	}
 }
@@ -788,6 +984,24 @@ void ABlasterCharacter::PollInit()
 			BlasterPlayerState->AddToScore(0.f);
 			BlasterPlayerState->AddToDefeats(0);
 		}
+	}
+}
+
+void ABlasterCharacter::UpdateDissolveMaterial(float DissolveValue)
+{
+	if(DynamicDissolveMaterialInstance)
+	{
+		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), DissolveValue);
+	}
+}
+
+void ABlasterCharacter::StartDissolve()
+{
+	DissolveTrack.BindDynamic(this, &ThisClass::UpdateDissolveMaterial);
+	if(DissolveCurve && DissolveTimeline)
+	{
+		DissolveTimeline->AddInterpFloat(DissolveCurve, DissolveTrack);
+		DissolveTimeline->Play();
 	}
 }
 
@@ -807,6 +1021,18 @@ void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 		{
 			OverlappingWeapon->ShowPickupWidget(true);
 		}
+	}
+}
+
+void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
+{
+	if(OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(true);
+	}
+	if(LastWeapon)
+	{
+		LastWeapon->ShowPickupWidget(false);
 	}
 }
 
@@ -838,194 +1064,8 @@ ECombatState ABlasterCharacter::GetCombatState() const
 	return Combat->CombatState;
 }
 
-void ABlasterCharacter::Elim()
+bool ABlasterCharacter::IsLocallyReloading()
 {
-	//DropOrDestroyWeapons(); 我这里没有使用与教程一致的方法
-	if(Combat)
-	{
-		if(Combat->EquippedWeapon)
-		{
-			Combat->EquippedWeapon->Dropped();
-		}
-		if(Combat->SecondaryWeapon)
-		{
-			Combat->SecondaryWeapon->Dropped();
-		}
-	}
-
-	MulticastElim();
-	GetWorldTimerManager().SetTimer(ElimTimer, this, &ThisClass::ElimTimerFinished, ElimDelay);
+	if(Combat == nullptr) return false;
+	return Combat->bLocallyReloading;
 }
-
-
-void ABlasterCharacter::MulticastElim_Implementation()
-{
-	if(BlasterPlayerController)
-	{
-		BlasterPlayerController->SetHUDAmmo(0);
-	}
-	bElimmed = true;
-	//实现玩家淘汰之后的逻辑
-	PlayElimMontage();
-
-	//Start dissolve effect
-	if(DissolveMaterialInstance)
-	{
-		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance, this);
-
-		GetMesh()->SetMaterial(0, DynamicDissolveMaterialInstance);
-		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), 0.55f);
-		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Glow"), 200.f);
-	}
-	StartDissolve();
-
-	//disable character movement
-	GetCharacterMovement()->DisableMovement();//禁止移动
-	GetCharacterMovement()->StopMovementImmediately();//禁止通过鼠标旋转角色
-	bDisableGameplay = true;//禁止角色输入
-	
-	/*if(Combat)  //这一段在教程里面启用了132课，但是我这边先不用
-	{
-		Combat->FireButtonPressed(false);
-	}
-	*/
-	
-	//Disable Collision关闭碰撞
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-	//Spawn elim bot
-	//生成被淘汰时的机器人特效和音效
-	if(ElimBotEffect)
-	{
-		FVector ElimBotSpawnPoint(GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z +200.f);
-		ElimBotComponent = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ElimBotEffect, ElimBotSpawnPoint,GetActorRotation());
-	}
-	if(ElimBotSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ElimBotSound, GetActorLocation());
-	}
-	//这里判断当玩家使用狙击枪正在瞄准时，被淘汰，需要关闭瞄准镜界面
-	bool bHideSniperScope = IsLocallyControlled() && Combat && Combat->bAiming && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle; 
-	if(bHideSniperScope)
-	{
-		ShowSniperScopeWidget(false);
-	}
-}
-
-void ABlasterCharacter::Destroyed()
-{
-	Super::Destroyed();
-	if(ElimBotComponent)
-	{
-		ElimBotComponent->DestroyComponent();
-	}
-
-	/*
-	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
-	bool bMatchNotInProgress = BlasterGameMode && BlasterGameMode->GetMatchState() != MatchState::InProgress;
-
-	
-	if(Combat && Combat->EquippedWeapon && bMatchNotInProgress)
-	{
-		Combat->EquippedWeapon->Destroy();
-	}
-	*/
-}
-
-void ABlasterCharacter::ElimTimerFinished()
-{
-	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
-	if(BlasterGameMode)
-	{
-		BlasterGameMode->RequestRespawn(this, Controller);
-	}	
-}
-
-void ABlasterCharacter::UpdateDissolveMaterial(float DissolveValue)
-{
-	if(DynamicDissolveMaterialInstance)
-	{
-		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), DissolveValue);
-	}
-}
-
-void ABlasterCharacter::StartDissolve()
-{
-	DissolveTrack.BindDynamic(this, &ThisClass::UpdateDissolveMaterial);
-	if(DissolveCurve && DissolveTimeline)
-	{
-		DissolveTimeline->AddInterpFloat(DissolveCurve, DissolveTrack);
-		DissolveTimeline->Play();
-	}
-}
-
-
-void ABlasterCharacter::PlayHitReactMontage()
-{
-	if(Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
-
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if(AnimInstance && HitReactMontage)
-	{
-		AnimInstance->Montage_Play(HitReactMontage);
-		FName SectionName("FromFront");
-		
-		AnimInstance->Montage_JumpToSection(SectionName);
-	}
-}
-
-void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
-	AController* InstigatroController, AActor* DamageCasuer)
-{
-	if(bElimmed) return; //防止在被击杀之后，播放死亡特效时被反复击杀
-
-	float DamageToHealth = Damage;//扣除血量的值
-	if(Shield > 0.f)
-	{
-		if(Shield >= Damage) //当盾比伤害多的时候，也就是伤害不足以减少health，这里就只需要扣除盾里面的值就可以了
-		{
-			Shield = FMath::Clamp(Shield - Damage, 0.f, MaxShield);
-			DamageToHealth = 0.f;
-		}
-		else//否则就是伤害比护盾值多，所以要先把护盾置0，然后扣除护盾值，再看看有多少打在Health上了
-		{
-			Shield = 0.f;
-			DamageToHealth = FMath::Clamp(DamageToHealth - Shield, 0.f, Damage);
-		}
-	}
-	
-	Health = FMath::Clamp(Health - DamageToHealth, 0.f, MaxHealth); //生命值计算
-	
-	UpdateHUDHealth();
-	UpdateHUDShield();
-	PlayHitReactMontage();
-
-	//当血量为0的时候，处理淘汰的逻辑
-	//获得游戏模式，然后执行游戏模式中的淘汰相关的逻辑
-	if (Health == 0.f)
-	{
-		ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
-		if(BlasterGameMode)
-		{
-			//获得受害者的控制器，就是当前这个类
-			BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) :BlasterPlayerController;
-			//获得攻击者的控制器，就是传入的InstigatroController，需要从AController转换到ABlasterPlayerController
-			ABlasterPlayerController* AttackController = Cast<ABlasterPlayerController>(InstigatroController);
-			BlasterGameMode->PlayerEliminated(this, BlasterPlayerController, AttackController);
-		}
-	}
-}
-
-void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
-{
-	if(OverlappingWeapon)
-	{
-		OverlappingWeapon->ShowPickupWidget(true);
-	}
-	if(LastWeapon)
-	{
-		LastWeapon->ShowPickupWidget(false);
-	}
-}
-

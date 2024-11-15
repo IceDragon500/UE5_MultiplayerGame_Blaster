@@ -26,10 +26,10 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		WeaponTraceHit(Start, HitTarget, FireHit);
 
 		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
-		if(BlasterCharacter && InstigatorController)
+		if(BlasterCharacter && InstigatorController && OwnerPawn->IsLocallyControlled())
 		{
-			bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
-			if(HasAuthority() && bCauseAuthDamage)//主机上的伤害检测，不需要做服务器倒带
+			//bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+			if(HasAuthority() )//主机上的伤害检测，不需要做服务器倒带
 			{
 				UGameplayStatics::ApplyDamage(
 					BlasterCharacter,
@@ -43,7 +43,8 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 			{
 				BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(OwnerPawn) : BlasterOwnerCharacter;
 				BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(InstigatorController) : BlasterOwnerController;
-				if(BlasterOwnerCharacter && BlasterOwnerController && BlasterOwnerCharacter->GetLagCompensation())
+				if(BlasterOwnerController && BlasterOwnerCharacter && BlasterOwnerCharacter->GetLagCompensation() && BlasterOwnerCharacter->IsLocallyControlled())
+					
 				{
 					BlasterOwnerCharacter->GetLagCompensation()->ServerScoreRequest(
 						BlasterCharacter,
@@ -87,8 +88,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 			UGameplayStatics::PlaySoundAtLocation(
 				this,
 				FireSound,
-				GetActorLocation(),
-				GetActorRotation()
+				GetActorLocation()
 				);
 		}
 		

@@ -17,13 +17,12 @@ class BLASTER_API ABlasterPlayerController : public APlayerController
 	GENERATED_BODY()
 
 public:
-	ABlasterPlayerController();
 
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDShield(float Shield, float MaxShield);
 	void SetHUDScore(float Score);
 	void SetHUDDefeats(int32 Defeats);
-	void SetHUDAmmo(int32 Ammo);
+	void SetHUDWeaponAmmo(int32 Ammo);
 	void SetHUDCarriedAmmo(int32 Ammo);
 	void SetHUDMatchCountdown(float CountdownTime);
 	void SetHUDAnnouncementCountdown(float CountdownTime);
@@ -89,7 +88,7 @@ protected:
 	//然后调用ClientJoinMidgame，将值传给客户端
 	//最后在BlasterPlayerController开始的时候调用这个方法，并且显示初始的热身倒计时界面
 	UFUNCTION(Server, Reliable)
-	void ServerChenckMatchState();
+	void ServerCheckMatchState();
 
 	//作为客户端
 	//接受ServerChenckMatchState传来的比赛相关的时间和比赛状态的值
@@ -97,8 +96,8 @@ protected:
 	UFUNCTION(Client, Reliable)
 	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float StatingTime, float Cooldown);
 
-	void HighPingWaring();//播放ping的动画
-	void StopHighPingWaring();//停止播放ping的动画
+	void HighPingWarning();//播放ping的动画
+	void StopHighPingWarning();//停止播放ping的动画
 	void CheckPing(float DeltaTime);//检查ping值，在设定的时候显示和关闭ping的动画
 
 private:
@@ -146,12 +145,12 @@ private:
 	bool bInitializeCarriedAmmo = false;
 
 	float HUDWeaponAmmo;
-	bool bHUDWeaponAmmo = false;
+	bool bInitializeWeaponAmmo = false;
 
 	float HighPingRunningTime = 0.f;
 	
 	UPROPERTY(EditAnywhere)
-	float HighPingDration = 5.f;//显示ping图标的时间 默认5秒
+	float HighPingDuration = 5.f;//显示ping图标的时间 默认5秒
 
 	float PingAnimationRunningTime = 0.f;
 	

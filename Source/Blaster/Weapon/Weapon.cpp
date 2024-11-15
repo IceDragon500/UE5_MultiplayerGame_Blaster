@@ -22,10 +22,10 @@ AWeapon::AWeapon()
 	SetReplicateMovement(true);
 	
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
-	WeaponMesh->SetupAttachment(RootComponent);
+	//WeaponMesh->SetupAttachment(RootComponent);
 	SetRootComponent(WeaponMesh);
 	
-	WeaponMesh->SetCollisionResponseToChannels(ECollisionResponse::ECR_Block);//先设置对所有检测通道阻挡
+	WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);//先设置对所有检测通道阻挡
 	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);//然后设置对Pawn（角色）忽略阻挡
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);//设置没有碰撞
 
@@ -35,58 +35,13 @@ AWeapon::AWeapon()
 
 	AreaSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AreaShpere"));
 	AreaSphere->SetupAttachment(RootComponent);
-	AreaSphere->SetCollisionResponseToChannels(ECollisionResponse::ECR_Ignore);
+	AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);//我们先把碰撞盒子关掉
-	AreaSphere->SetSphereRadius(80.f);
+	//AreaSphere->SetSphereRadius(80.f);
 
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(RootComponent);
 
-}
-
-void AWeapon::Fire(const FVector& HitTarget)
-{
-	//播放动画
-	//播放开火特效 和 音效，开火特效和音效集合在了开火动画中，通过通知来进行播放
-	if(FireAnimation)
-	{
-		WeaponMesh->PlayAnimation(FireAnimation, false);
-	}
-
-	//TODO 抛壳
-	if(CasingClass)
-	{
-		const USkeletalMeshSocket* AmmoEjectSocket = WeaponMesh->GetSocketByName(FName("AmmoEject"));
-		if(AmmoEjectSocket)
-		{
-			FTransform SocketTransform = AmmoEjectSocket->GetSocketTransform(GetWeaponMesh()); //获得抛弹口的变换
-			
-			UWorld* World = GetWorld();
-			if(World)
-			{
-				World->SpawnActor<ACasing>(
-					CasingClass,//传入需要生成的类
-					SocketTransform.GetLocation(), //传入生成类的坐标
-					SocketTransform.GetRotation().Rotator()//传入生成类的旋转
-					);
-			}
-			
-		}
-	}
-
-	//TODO 进行一轮的射击逻辑（比如扣除子弹数量）
-	SpendRound();
-
-}
-
-bool AWeapon::IsEmpty()
-{
-	return Ammo <=0 ? true : false ;
-}
-
-bool AWeapon::IsFull()
-{
-	return Ammo == MagCapacity;
 }
 
 void AWeapon::EnableCustomDepth(bool bEnable)
@@ -97,7 +52,6 @@ void AWeapon::EnableCustomDepth(bool bEnable)
 	}
 }
 
-// Called when the game starts or when spawned
 void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
@@ -107,13 +61,13 @@ void AWeapon::BeginPlay()
 	// HasAuthority()和上面那个判断是一致的
 	//if(HasAuthority())  这里注释掉 是为了让客户端可以直接显示拾取的界面，但是是否可以拾取可以还是在服务器端进行判断 这样避免延迟导致玩家接触到可拾取武器时，因为延迟无法显示拾取的提示
 	//{
-		//如果有，我们则将武器的碰撞盒子设置为查询和物理
-		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		//并且，将盒子碰撞与Pawn设置为重叠
-		AreaSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
-		//将碰撞方法与碰撞球体进行绑定
-		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnSphereOverlap);
-		AreaSphere->OnComponentEndOverlap.AddDynamic(this,&ThisClass::OnSphereEndOverlap);
+	//如果有，我们则将武器的碰撞盒子设置为查询和物理
+	AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	//并且，将盒子碰撞与Pawn设置为重叠
+	AreaSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	//将碰撞方法与碰撞球体进行绑定
+	AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnSphereOverlap);
+	AreaSphere->OnComponentEndOverlap.AddDynamic(this,&ThisClass::OnSphereEndOverlap);
 	//}
 
 	if(PickupWidget)
@@ -122,7 +76,6 @@ void AWeapon::BeginPlay()
 	}
 }
 
-// Called every frame
 void AWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -138,24 +91,84 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	
 }
 
-void AWeapon::ShowPickupWidget(bool bShowWidget)
+void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if(PickupWidget)
+	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
+	if(BlasterCharacter)
 	{
-		PickupWidget->SetVisibility(bShowWidget);
+		BlasterCharacter->SetOverlappingWeapon(this);
 	}
 }
 
-void AWeapon::Dropped()
+void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	SetWeaponState(EWeaponState::EWS_Dropped);
-	FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);
-	WeaponMesh->DetachFromComponent(DetachRules);
-	//扔掉武器后，要将武器的Owner和几个变量置为nullptr
-	//防止其他玩家拾起之后，Character和Controller出错
-	SetOwner(nullptr);
-	BlasterOwnerCharacter = nullptr;
-	BlasterOwnerController = nullptr;
+	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
+	if(BlasterCharacter)
+	{
+		BlasterCharacter->SetOverlappingWeapon(nullptr);
+	}
+}
+
+void AWeapon::SetHUDAmmo()
+{
+	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
+	if(BlasterOwnerCharacter)
+	{
+		BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
+		if(BlasterOwnerController)
+		{
+			BlasterOwnerController->SetHUDWeaponAmmo(Ammo);//在Actor中，使用调用PlayerController类中的设置HUD数值的方式，来设置CharacterOverlay 
+		}
+	}
+}
+
+void AWeapon::SpendRound()
+{
+	Ammo = FMath::Clamp(Ammo -1, 0, MagCapacity);
+	SetHUDAmmo();
+	if(HasAuthority())
+	{
+		ClientUpdateAmmo(Ammo);
+	}
+	else
+	{
+		++AmmoSequence;
+	}
+}
+
+
+void AWeapon::ClientUpdateAmmo_Implementation(int32 ServerAmmo)
+{
+	//我们可以只存储一个我们可以检查的序列号，这个数字将代表有多少未处理的服务器请求
+	//服务器对账的做法是
+	//首先设置我们的弹药到服务器的权威值
+	//然后我们知道我们刚刚收到了一个处理过的，我们对Sequence进行递减
+	if(HasAuthority()) return;
+	Ammo = ServerAmmo;
+	--AmmoSequence;
+	Ammo -= AmmoSequence;
+	SetHUDAmmo();
+}
+
+void AWeapon::AddAmmo(int32 AmmoToAdd)
+{
+	//这里使用了Clamp 处理当前弹药扣除变动量后的结果 避免小于0和大于最大弹夹数量的情况
+	//如果它小于0，则将其设置为0；如果它大于MagCapacity，则将其设置为MagCapacity。
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
+	SetHUDAmmo();
+	ClientAddAmmo(AmmoToAdd);
+}
+
+void AWeapon::ClientAddAmmo_Implementation(int32 AmmoToAdd)
+{
+	if(HasAuthority()) return;
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
+	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
+	if(BlasterOwnerCharacter && BlasterOwnerCharacter->GetCombat() && IsFull())
+	{
+		BlasterOwnerCharacter->GetCombat()->JumpToShotgunEnd();
+	}
+	SetHUDAmmo();
 }
 
 void AWeapon::OnRep_Owner()
@@ -174,43 +187,6 @@ void AWeapon::OnRep_Owner()
 			SetHUDAmmo();
 		}
 		//这样添加判断，可以确保更新的是当前手上的武器的HUD，背上的武器不用去更新他的HUD
-	}
-}
-
-void AWeapon::SetHUDAmmo()
-{
-	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
-	if(BlasterOwnerCharacter)
-	{
-		BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->GetController()) : BlasterOwnerController;
-		if(BlasterOwnerController)
-		{
-			BlasterOwnerController->SetHUDAmmo(Ammo);//在Actor中，使用调用PlayerController类中的设置HUD数值的方式，来设置CharacterOverlay 
-		}
-	}
-}
-
-void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if(OtherActor)
-	{
-		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
-		if(BlasterCharacter)
-		{
-			BlasterCharacter->SetOverlappingWeapon(this);
-		}
-	}
-}
-
-void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	if(OtherActor)
-	{
-		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
-		if(BlasterCharacter)
-		{
-			BlasterCharacter->SetOverlappingWeapon(nullptr);
-		}
 	}
 }
 
@@ -268,7 +244,7 @@ void AWeapon::OnEquipped()
 	{
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		WeaponMesh->SetEnableGravity(true);
-		WeaponMesh->SetCollisionResponseToChannels(ECollisionResponse::ECR_Ignore);
+		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	}
 	EnableCustomDepth(false);
 }
@@ -286,7 +262,7 @@ void AWeapon::OnDropped()
 	WeaponMesh->SetSimulatePhysics(true);
 	WeaponMesh->SetEnableGravity(true);
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	WeaponMesh->SetCollisionResponseToChannels(ECollisionResponse::ECR_Block);
+	WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 
@@ -307,7 +283,7 @@ void AWeapon::OnEquippedSecondary()
 	{
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		WeaponMesh->SetEnableGravity(true);
-		WeaponMesh->SetCollisionResponseToChannels(ECollisionResponse::ECR_Ignore);
+		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	}
 	EnableCustomDepth(true);
 	if(WeaponMesh)
@@ -317,10 +293,75 @@ void AWeapon::OnEquippedSecondary()
 	}
 }
 
+void AWeapon::ShowPickupWidget(bool bShowWidget)
+{
+	if(PickupWidget)
+	{
+		PickupWidget->SetVisibility(bShowWidget);
+	}
+}
+
+void AWeapon::Fire(const FVector& HitTarget)
+{
+	//播放动画
+	//播放开火特效 和 音效，开火特效和音效集合在了开火动画中，通过通知来进行播放
+	if(FireAnimation)
+	{
+		WeaponMesh->PlayAnimation(FireAnimation, false);
+	}
+
+	//TODO 抛壳
+	if(CasingClass)
+	{
+		const USkeletalMeshSocket* AmmoEjectSocket = WeaponMesh->GetSocketByName(FName("AmmoEject"));
+		if(AmmoEjectSocket)
+		{
+			FTransform SocketTransform = AmmoEjectSocket->GetSocketTransform(WeaponMesh); //获得抛弹口的变换
+			
+			UWorld* World = GetWorld();
+			if(World)
+			{
+				World->SpawnActor<ACasing>(
+					CasingClass,//传入需要生成的类
+					SocketTransform.GetLocation(), //传入生成类的坐标
+					SocketTransform.GetRotation().Rotator()//传入生成类的旋转
+					);
+			}
+			
+		}
+	}
+
+	//TODO 进行一轮的射击逻辑（比如扣除子弹数量）
+	SpendRound();
+}
+
+void AWeapon::Dropped()
+{
+	SetWeaponState(EWeaponState::EWS_Dropped);
+	FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);
+	WeaponMesh->DetachFromComponent(DetachRules);
+	//扔掉武器后，要将武器的Owner和几个变量置为nullptr
+	//防止其他玩家拾起之后，Character和Controller出错
+	SetOwner(nullptr);
+	BlasterOwnerCharacter = nullptr;
+	BlasterOwnerController = nullptr;
+}
+
+bool AWeapon::IsEmpty()
+{
+	//return Ammo <=0 ? true : false ;
+	return Ammo <= 0;
+}
+
+bool AWeapon::IsFull()
+{
+	return Ammo == MagCapacity;
+}
+
 FVector AWeapon::TraceEndWithScatter(const FVector& HitTarget)
 {
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
-	if(MuzzleFlashSocket == nullptr) return FVector::ZeroVector;
+	if(MuzzleFlashSocket == nullptr) return FVector();
 
 	const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
 	const FVector TraceStart = SocketTransform.GetLocation();
@@ -350,54 +391,3 @@ FVector AWeapon::TraceEndWithScatter(const FVector& HitTarget)
 //	}
 //	SetHUDAmmo();
 //}
-
-void AWeapon::SpendRound()
-{
-	Ammo = FMath::Clamp(Ammo -1, 0, MagCapacity);
-	SetHUDAmmo();
-	if(HasAuthority())
-	{
-		ClientUpdateAmmo(Ammo);
-	}
-	else
-	{
-		++AmmoSequence;
-	}
-}
-
-void AWeapon::ClientUpdateAmmo_Implementation(int32 ServerAmmo)
-{
-	//我们可以只存储一个我们可以检查的序列号，这个数字将代表有多少未处理的服务器请求
-	//服务器对账的做法是
-	//首先设置我们的弹药到服务器的权威值
-	//然后我们知道我们刚刚收到了一个处理过的，我们对Sequence进行递减
-	if(HasAuthority()) return;
-	Ammo = ServerAmmo;
-	--AmmoSequence;
-	Ammo -= AmmoSequence;
-	SetHUDAmmo();
-	
-}
-
-void AWeapon::AddAmmo(int32 AmmoToAdd)
-{
-	//这里使用了Clamp 处理当前弹药扣除变动量后的结果 避免小于0和大于最大弹夹数量的情况
-	//如果它小于0，则将其设置为0；如果它大于MagCapacity，则将其设置为MagCapacity。
-	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
-	SetHUDAmmo();
-	ClientAddAmmo(AmmoToAdd);
-}
-
-void AWeapon::ClientAddAmmo_Implementation(int32 AmmoToAdd)
-{
-	if(HasAuthority()) return;
-	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
-	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
-	if(BlasterOwnerCharacter && BlasterOwnerCharacter->GetCombat() && IsFull())
-	{
-		BlasterOwnerCharacter->GetCombat()->JumpToShotgunEnd();
-	}
-	SetHUDAmmo();
-
-	
-}

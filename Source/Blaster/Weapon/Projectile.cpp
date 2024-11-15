@@ -20,7 +20,7 @@ AProjectile::AProjectile()
 	SetRootComponent(CollisionBox);
 	CollisionBox->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
 	CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	CollisionBox->SetCollisionResponseToChannels(ECollisionResponse::ECR_Ignore);
+	CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECollisionResponse::ECR_Block);
@@ -38,7 +38,14 @@ void AProjectile::BeginPlay()
 	if(Tracer)
 	{
 		//绑定特效到碰撞盒子上，这样子弹在飞行的时候就能看到特效
-		TracerComponent = UGameplayStatics::SpawnEmitterAttached(Tracer, CollisionBox, FName(), GetActorLocation(), GetActorRotation(), EAttachLocation::KeepWorldPosition);
+		TracerComponent = UGameplayStatics::SpawnEmitterAttached(
+			Tracer,
+			CollisionBox,
+			FName(),
+			GetActorLocation(),
+			GetActorRotation(),
+			EAttachLocation::KeepWorldPosition
+			);
 
 		//用这个 特效不会动
 		//TracerComponent = UGameplayStatics::SpawnEmitterAtLocation(this, Tracer, GetActorLocation(),GetActorRotation());
@@ -52,8 +59,7 @@ void AProjectile::BeginPlay()
 	//CollisionBox->IgnoreActorWhenMoving()
 }
 
-void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	FVector NormalImpulse, const FHitResult& Hit)
+void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	Destroy();
 }
@@ -72,23 +78,6 @@ void AProjectile::SpawnTrailSystem()
 		false  //是否自动销毁，这里选false，我们想手动控制其销毁
 			);
 	}
-}
-
-// Called every frame
-void AProjectile::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-void AProjectile::StartDestroyTimer()
-{
-	GetWorldTimerManager().SetTimer(DestroyTimer, this, &ThisClass::DestroyTimerFinished, DestroyTime);
-}
-
-void AProjectile::DestroyTimerFinished()
-{
-	Destroy();
 }
 
 void AProjectile::ExplodeDamage()
@@ -115,6 +104,27 @@ void AProjectile::ExplodeDamage()
 				);
 		}
 	}
+}
+
+void AProjectile::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
+
+void AProjectile::StartDestroyTimer()
+{
+	GetWorldTimerManager().SetTimer(
+		DestroyTimer,
+		this,
+		&ThisClass::DestroyTimerFinished,
+		DestroyTime
+		);
+}
+
+void AProjectile::DestroyTimerFinished()
+{
+	Destroy();
 }
 
 void AProjectile::Destroyed()
