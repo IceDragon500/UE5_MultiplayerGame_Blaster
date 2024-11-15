@@ -93,12 +93,15 @@ public:
 		float HitTime,
 		class AWeapon* DamageCauser);
 
-	FServerSideRewindResult ServerSideRewind(
+	//对飞弹类武器Projectile在开启服务器倒带功能后，计算伤害的逻辑
+	UFUNCTION(Server, Reliable)
+	void ProjectileServerScoreRequest(
 	ABlasterCharacter* HitCharacter,
 	const FVector_NetQuantize& TraceStart,
-	const FVector_NetQuantize& HitLocation,
-	float HitTime);
-	
+	const FVector_NetQuantize100& InitialVelocity,
+	float HitTime
+		);
+
 	//对霰弹类武器Shotgun在开启服务器倒带功能后，计算伤害的逻辑
 	UFUNCTION(Server, Reliable)
 	void ShotgunServerScoreRequest(
@@ -108,20 +111,28 @@ public:
 		float HitTime
 		);
 
+
+	//计算射线类武器Hitscan在开启服务器倒带功能后，命中结果如何
+	FServerSideRewindResult ServerSideRewind(
+	ABlasterCharacter* HitCharacter,
+	const FVector_NetQuantize& TraceStart,
+	const FVector_NetQuantize& HitLocation,
+	float HitTime
+	);
+
+	//计算飞弹类武器Projectile在开启服务器倒带功能后，命中结果如何
+	FServerSideRewindResult ProjectileServerSideRewind(
+	ABlasterCharacter* HitCharacter,
+	const FVector_NetQuantize& TraceStart,
+	const FVector_NetQuantize100& InitialVelocity,
+	float HitTime
+	);
+	//计算霰弹类武器Shotgun在开启服务器倒带功能后，命中结果如何
 	FShotgunServerSideRewindResult ShotgunServerSideRewind(
 	const TArray<ABlasterCharacter*> HitCharacters,
 	const FVector_NetQuantize& TraceStart,
 	const TArray<FVector_NetQuantize>& HitLocations,
 	float HitTime);
-
-	//对于飞弹类Projectile武器在开启服务器倒带后，计算伤害的逻辑
-	FServerSideRewindResult ProjectileServerSideRewind(
-		ABlasterCharacter* HitCharacter,
-		const FVector_NetQuantize& TraceStart,
-		const FVector_NetQuantize100& InitialVelocity,
-		float HitTime
-		);
-
 	
 protected:
 

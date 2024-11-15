@@ -28,7 +28,8 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
 		if(BlasterCharacter && InstigatorController)
 		{
-			if(HasAuthority() && !bUseServerSideRewind)//主机上的伤害检测，不需要做服务器倒带
+			bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+			if(HasAuthority() && bCauseAuthDamage)//主机上的伤害检测，不需要做服务器倒带
 			{
 				UGameplayStatics::ApplyDamage(
 					BlasterCharacter,

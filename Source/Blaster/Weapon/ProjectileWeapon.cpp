@@ -43,7 +43,7 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 				else // server, not locally controlled - spawn non-replicated projectile, no SSR服务器，非本地控制 - 产生非复制弹丸，无 SSR
 				{
 					SpawnedProjectile = World->SpawnActor<AProjectile>(ServerSideRewindProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
-					SpawnedProjectile->bUserServerSideRewind = false;
+					SpawnedProjectile->bUserServerSideRewind = true;
 				}
 			}
 			else // client, using SSR
