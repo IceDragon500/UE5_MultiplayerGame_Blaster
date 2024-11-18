@@ -49,6 +49,9 @@ public:
 
 	UPROPERTY(meta=(BindWidget))
 	class UImage* HighPingImage;
+	
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* PingDate;
 
 	UPROPERTY(meta=(BindWidgetAnim), Transient)//Transient仅表示此属性不会序列化到磁盘
 	UWidgetAnimation* HighPingAnimation;

@@ -8,6 +8,9 @@
 #include "Blaster/HUD/BlasterHUD.h"
 #include "BlasterPlayerController.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHigh);
+
+
 /**
  * PlayerController类，这里主要是在控制HUD界面的内容显示
  */
@@ -49,6 +52,8 @@ public:
 	void HandleCooldown();
 
 	float SingleTripTime = 0.f;
+
+	FHighPingDelegate HighPingDelegate;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -96,9 +101,11 @@ protected:
 	UFUNCTION(Client, Reliable)
 	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float StatingTime, float Cooldown);
 
+	void CheckPing(float DeltaTime);//检查ping值，在设定的时候显示和关闭ping的动画
+	void ShowPingDate(float Ping);//显示ping值
 	void HighPingWarning();//播放ping的动画
 	void StopHighPingWarning();//停止播放ping的动画
-	void CheckPing(float DeltaTime);//检查ping值，在设定的时候显示和关闭ping的动画
+	
 
 private:
 	UPROPERTY()
@@ -148,16 +155,23 @@ private:
 	bool bInitializeWeaponAmmo = false;
 
 	float HighPingRunningTime = 0.f;
-	
+
+	//显示ping图标的时间 默认5秒
 	UPROPERTY(EditAnywhere)
-	float HighPingDuration = 5.f;//显示ping图标的时间 默认5秒
+	float HighPingDuration = 5.f;
 
 	float PingAnimationRunningTime = 0.f;
-	
-	UPROPERTY(EditAnywhere)
-	float CheckPingFrequency = 20.f;//间隔检查ping的的时间，默认20秒检查一次
 
+	//间隔检查ping的的时间，默认20秒检查一次
 	UPROPERTY(EditAnywhere)
-	float HighPingThreshold = 50.f;//超过设定值，就显示延迟图标
+	float CheckPingFrequency = 20.f;
+
+	//当ping太高了，才开启Server倒带功能
+	UFUNCTION(Server, Reliable)
+	void ServerReportPingStatus(bool bHightPing);
+
+	//超过设定值，就显示延迟图标
+	UPROPERTY(EditAnywhere)
+	float HighPingThreshold = 50.f;
 	
 };

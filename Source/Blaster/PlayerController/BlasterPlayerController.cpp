@@ -40,9 +40,10 @@ void ABlasterPlayerController::CheckPing(float DeltaTime)
 	//如果累加时间超过20秒CheckPingFrequency，则检测一下ping，如果ping达标 就播放wifi图标的动画，需要先将PingAnimationRunningTime置为0，方便进行累加
 	//
 	HighPingRunningTime += DeltaTime;
+	PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
 	if(HighPingRunningTime > CheckPingFrequency)
 	{
-		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
+		
 		if(PlayerState)
 		{
 			//if(PlayerState->GetPing() * 4 > HighPingThreshold) //ping是被压缩的，被除以了4，所以这里要乘4 。另外这里使用了GetPing()会提示警告，因为新版本不推荐使用这个函数了
@@ -52,10 +53,17 @@ void ABlasterPlayerController::CheckPing(float DeltaTime)
 			{
 				HighPingWarning();
 				PingAnimationRunningTime = 0.f;
+				ServerReportPingStatus(true);
+			}
+			else
+			{
+				ServerReportPingStatus(false);
 			}
 		}
 		HighPingRunningTime = 0;
 	}
+	if(PlayerState) ShowPingDate(PlayerState->GetPingInMilliseconds());
+	
 	bool bHighPingAnimationPlaying =
 		BlasterHUD && BlasterHUD->CharacterOverlay && BlasterHUD->CharacterOverlay->HighPingAnimation && BlasterHUD->CharacterOverlay->IsAnimationPlaying(BlasterHUD->CharacterOverlay->HighPingAnimation);
 	//如果正在播放动画 IsAnimationPlaying = true 则开始累加PingAnimationRunningTime，如果超过设定的5秒HighPingDration
@@ -67,6 +75,27 @@ void ABlasterPlayerController::CheckPing(float DeltaTime)
 		{
 			StopHighPingWarning();
 		}
+	}
+}
+
+void ABlasterPlayerController::ServerReportPingStatus_Implementation(bool bHightPing)
+{
+	HighPingDelegate.Broadcast(bHightPing);
+}
+
+void ABlasterPlayerController::ShowPingDate(float Ping)
+{
+	//先判断BlasterHUD是否为空，如果为空则创建，如果不为空，则不改变
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	//因为这里需要直接使用到CharacterOverlay中的具体指针变量，所以都需要检查一下是否为空
+	bool bHUDValid = BlasterHUD && BlasterHUD->CharacterOverlay && BlasterHUD->CharacterOverlay->PingDate;
+	if(bHUDValid)
+	{
+
+		FString PingText = FString::Printf(TEXT("%d"), FMath::CeilToInt(Ping));
+		//设置文字，这里是FText类型，需要FString转换为FText
+		BlasterHUD->CharacterOverlay->PingDate->SetText(FText::FromString(PingText));
 	}
 }
 

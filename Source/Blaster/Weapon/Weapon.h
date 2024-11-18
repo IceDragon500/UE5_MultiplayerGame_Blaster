@@ -137,14 +137,17 @@ protected:
 	float Damage = 20.f;
 
 	//作为一个开关，用来选择是否使用服务器倒带的计算方式来计算伤害
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(Replicated, EditAnywhere)
 	bool bUseServerSideRewind = false;
 
 	UPROPERTY()
 	class ABlasterCharacter* BlasterOwnerCharacter = nullptr;
 	UPROPERTY()
 	class ABlasterPlayerController* BlasterOwnerController = nullptr;
-	
+
+	//如果ping太高了 需要设置bUseServerSideRewind 为关闭，表示这个武器不使用服务器倒带技术
+	UFUNCTION()
+	void OnPingTooHigh(bool bPingTooHigh);
 private:
 	
 	UPROPERTY(VisibleAnywhere, Category= "武器属性")
