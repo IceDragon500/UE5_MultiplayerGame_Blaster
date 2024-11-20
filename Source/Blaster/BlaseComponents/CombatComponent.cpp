@@ -236,20 +236,19 @@ bool UCombatComponent::ShouldSwapWeapons()
 
 void UCombatComponent::SwapWeapons()
 {
-	if(CombatState != ECombatState::ECS_Unoccupied) return;
+	if(CombatState != ECombatState::ECS_Unoccupied || Character == nullptr) return;
+
+	//首先播放换武器的动画 并修改当前CombatState的状态
+	Character->PlaySwapMontage();
+	CombatState = ECombatState::ECS_SwappingWeapon;
+	Character->bFinishedSwapping = false;
+
+	//通过TempWeapon，将当前武器和第二个武器进行交换
 	AWeapon* TempWeapon = EquippedWeapon;
 	EquippedWeapon = SecondaryWeapon;
 	SecondaryWeapon = TempWeapon;
-	
-	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-	AttachActorToRightHand(EquippedWeapon);
-	EquippedWeapon->SetHUDAmmo();
-	UpdateCarriedAmmo();
-	PlayEquipWeaponSound(EquippedWeapon);
 
-	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
-	AttachActorToBackpack(SecondaryWeapon);
-	
+	if(SecondaryWeapon) SecondaryWeapon->EnableCustomDepth(false);
 }
 
 /*
@@ -748,8 +747,6 @@ bool UCombatComponent::CanFire()
 {
 	//当没有装备武器的时候，不能发射，返回false
 	if(EquippedWeapon == nullptr) return false;
-
-	if(bLocallyReloading) return false; //如果在换弹，也返回false
 	
 	//这个判断是为了散弹枪装弹时可以进行射击的特殊判断
 	//当装备的是散弹枪并且当前处在reload状态，并且bCanFire为true（说明这个时候散弹枪至少有一颗子弹），则返回ture
@@ -757,6 +754,8 @@ bool UCombatComponent::CanFire()
 		&& bCanFire
 		&& CombatState == ECombatState::ECS_Reloading
 		&& EquippedWeapon->GetWeaponType() == EWeaponType::EWT_ShotGun) return true;
+
+	if(bLocallyReloading) return false; //如果在换弹，也返回false
 
 	//只要当前装备了武器并且bCanFire为true，且为ECS_Unoccupied状态，就可以进行开火
 	return !EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied;
@@ -782,6 +781,34 @@ void UCombatComponent::InitializeCarriedAmmo()
 	CarriedAmmoMap.Add(EWeaponType::EWT_ShotGun, StartingShotGunAmmo);
 	CarriedAmmoMap.Add(EWeaponType::EWT_SniperRifle, StartingSniperAmmo);
 	CarriedAmmoMap.Add(EWeaponType::EWT_GrenadeLauncher, StartingGrenadeAmmo);
+}
+
+void UCombatComponent::FinishSwap()
+{
+	if(Character && Character->HasAuthority())
+	{
+		CombatState = ECombatState::ECS_Unoccupied;
+	}
+	if(Character) Character->bFinishedSwapping = true;
+	if(SecondaryWeapon) SecondaryWeapon->EnableCustomDepth(true);
+}
+
+void UCombatComponent::FinishSwapAttachWeapons()
+{
+	//修改当前武器的武器状态
+	//将其附加在右手上
+	//更新界面上的数值
+	//播放换武器的音效
+	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	AttachActorToRightHand(EquippedWeapon);
+	EquippedWeapon->SetHUDAmmo();
+	UpdateCarriedAmmo();
+	PlayEquipWeaponSound(EquippedWeapon);
+
+	//修改第二武器的状态
+	//将其附加在背上
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
+	AttachActorToBackpack(SecondaryWeapon);
 }
 
 void UCombatComponent::UpdateAmmoValues()
@@ -893,7 +920,11 @@ void UCombatComponent::OnRep_CombatState()
 			ShowAttachGrenade(true);
 		}
 		break;
-	case ECombatState::ECS_Other:
+	case ECombatState::ECS_SwappingWeapon:
+		if(Character && !Character->IsLocallyControlled())
+		{
+			Character->PlaySwapMontage();
+		}
 		break;
 	case ECombatState::ECS_Max:
 		break;

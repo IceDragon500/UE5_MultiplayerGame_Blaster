@@ -50,6 +50,8 @@ public:
 	void PlayThrowGrenadeMontage();
 	//用来播放受击动画
 	void PlayHitReactMontage();
+	//用来播放切换武器的动画
+	void PlaySwapMontage();
 
 	
 	virtual void OnRep_ReplicatedMovement() override;
@@ -116,6 +118,8 @@ public:
 
 	UPROPERTY()
 	TMap<FName, UBoxComponent*> HitCollisionBoxes;//用来储存用于服务器回退的帧包相关的boxComponent信息
+
+	bool bFinishedSwapping = false;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -151,7 +155,7 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
 	UInputAction* PickupKeyAction;//增强输入-E键功能
-	void PickupKeyPressed(const FInputActionValue& Value);
+	void EquipButtonPressed(const FInputActionValue& Value);
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
 	
@@ -318,6 +322,10 @@ private:
 	//投掷手雷动画
 	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|战斗")
 	UAnimMontage* ThrowGrenadeMontage;
+	
+	//切换武器动画
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|战斗")
+	UAnimMontage* SwapMontage;
 
 	//是否旋转根骨骼
 	bool bRotateRootBone;

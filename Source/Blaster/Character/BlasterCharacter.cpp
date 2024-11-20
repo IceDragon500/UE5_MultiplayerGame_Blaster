@@ -443,7 +443,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ThisClass::FireButtonPressed);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &ThisClass::FireButtonReleased);
 		
-		EnhancedInputComponent->BindAction(PickupKeyAction, ETriggerEvent::Triggered, this, &ThisClass::PickupKeyPressed);
+		EnhancedInputComponent->BindAction(PickupKeyAction, ETriggerEvent::Triggered, this, &ThisClass::EquipButtonPressed);
 
 		EnhancedInputComponent->BindAction(ReloadKeyAction, ETriggerEvent::Triggered, this, &ThisClass::ReloadButtonPressed);
 		
@@ -563,6 +563,15 @@ void ABlasterCharacter::PlayThrowGrenadeMontage()
 	}
 }
 
+void ABlasterCharacter::PlaySwapMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && SwapMontage)
+	{
+		AnimInstance->Montage_Play(SwapMontage);
+	}
+}
+
 void ABlasterCharacter::PlayHitReactMontage()
 {
 	if(Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
@@ -661,22 +670,22 @@ void ABlasterCharacter::Look(const FInputActionValue& Value)
 	AddControllerYawInput(LookAxisVector.X);//以z轴，向左右转动
 }
 
-void ABlasterCharacter::PickupKeyPressed(const FInputActionValue& Value)
+void ABlasterCharacter::EquipButtonPressed(const FInputActionValue& Value)
 {
 	if(bDisableGameplay) return;
 	if(Combat)
 	{
-		/*
-		if(HasAuthority())//如果是拥有权限的服务器端，则执行下面进行武器装备
+		if(Combat->CombatState == ECombatState::ECS_Unoccupied) ServerEquipButtonPressed();
+		bool bSwap =Combat->ShouldSwapWeapons() &&
+			!HasAuthority() &&
+			Combat->CombatState == ECombatState::ECS_Unoccupied &&
+			OverlappingWeapon == nullptr;
+		if(bSwap)
 		{
-			Combat->EquipWeapon(OverlappingWeapon);
+			PlaySwapMontage();
+			Combat->CombatState = ECombatState::ECS_SwappingWeapon;
+			bFinishedSwapping = false;
 		}
-		else//如果不是，则调用函数来执行
-		{
-			ServerEquipButtonPressed();
-		}
-		*/
-		ServerEquipButtonPressed();
 	}
 }
 

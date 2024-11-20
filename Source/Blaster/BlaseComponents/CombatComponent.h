@@ -78,6 +78,12 @@ protected:
 	//用在AM_Reload中的动画通知
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishSwap();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishSwapAttachWeapons();
 	
 	//散弹枪结束换弹动画后，触发子弹数量更新的逻辑
 	//用在AM_Reload中的动画通知
