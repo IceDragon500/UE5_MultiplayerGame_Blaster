@@ -118,7 +118,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ThrowGrenadeFinished();
 
-	void ShowAttachGrenade(bool bShowGrenade);
+	void ShowAttachedGrenade(bool bShowGrenade);
 
 	UFUNCTION(BlueprintCallable)
 	void LaunchGrenade();
@@ -173,7 +173,7 @@ protected:
 	void FireButtonPressed(bool bPressed);
 	
 	//用于检测命中目标
-	void TraceUnderCrosehairs(FHitResult& TraceHitResult);
+	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
 	//设置准星
 	void SetHUDCrosshair(float DeltaTime);

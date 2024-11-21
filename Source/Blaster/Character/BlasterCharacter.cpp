@@ -527,7 +527,7 @@ void ABlasterCharacter::PlayReloadMontage()
 		case EWeaponType::EWT_SubmachineGun://冲锋枪
 			SectionName = FName("Pistol") ;//继续使用手枪的换弹动画，没有问题！
 			break;
-		case EWeaponType::EWT_ShotGun://来复枪
+		case EWeaponType::EWT_Shotgun://来复枪
 			SectionName = FName("ShotGun") ;
 			break;
 		case EWeaponType::EWT_SniperRifle://狙击枪

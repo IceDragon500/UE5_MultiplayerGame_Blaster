@@ -26,10 +26,10 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		WeaponTraceHit(Start, HitTarget, FireHit);
 
 		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
-		if(BlasterCharacter && InstigatorController && OwnerPawn->IsLocallyControlled())
+		if(BlasterCharacter && InstigatorController)
 		{
-			//bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
-			if(HasAuthority() )//主机上的伤害检测，不需要做服务器倒带
+			bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+			if(HasAuthority() && bCauseAuthDamage)//主机上的伤害检测，不需要做服务器倒带
 			{
 				UGameplayStatics::ApplyDamage(
 					BlasterCharacter,
@@ -38,21 +38,18 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 					this,
 					UDamageType::StaticClass()
 				);
-				UE_LOG(LogTemp, Warning, TEXT("主机上伤害检测"));
 			}
 			if(!HasAuthority() && bUseServerSideRewind)//如果使用了服务器倒带，并且不是主机
 			{
 				BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(OwnerPawn) : BlasterOwnerCharacter;
 				BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(InstigatorController) : BlasterOwnerController;
-				UE_LOG(LogTemp, Warning, TEXT("使用了服务器倒带，并且不是主机"));
 				if(BlasterOwnerController && BlasterOwnerCharacter && BlasterOwnerCharacter->GetLagCompensation() && BlasterOwnerCharacter->IsLocallyControlled())
 				{
 					BlasterOwnerCharacter->GetLagCompensation()->ServerScoreRequest(
 						BlasterCharacter,
 						Start,
 						HitTarget,
-						BlasterOwnerController->GetServerTime() - BlasterOwnerController->SingleTripTime,
-						this
+						BlasterOwnerController->GetServerTime() - BlasterOwnerController->SingleTripTime
 						);
 				}
 			}
@@ -117,6 +114,10 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 		if(OutHit.bBlockingHit)
 		{
 			BeamEnd = OutHit.ImpactPoint;
+		}
+		else
+		{
+			OutHit.ImpactPoint = End;
 		}
 
 		//DrawDebugSphere(GetWorld(), BeamEnd,16.f, 12, FColor::Orange, true);

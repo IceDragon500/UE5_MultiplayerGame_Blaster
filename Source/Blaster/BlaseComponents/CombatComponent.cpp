@@ -24,24 +24,6 @@ UCombatComponent::UCombatComponent()
 	// ...
 }
 
-void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	
-	if(Character && Character->IsLocallyControlled())
-	{
-		FHitResult HitResult;
-		TraceUnderCrosehairs(HitResult);
-		HitTarget = HitResult.ImpactPoint;
-
-		//每一帧都设置准星
-		SetHUDCrosshair(DeltaTime);
-
-		//设置视野缩放
-		InterpFOV(DeltaTime);
-	}
-}
-
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -53,6 +35,28 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
 	DOREPLIFETIME(UCombatComponent, CombatState);
 	DOREPLIFETIME(UCombatComponent, Grenades);
+}
+
+void UCombatComponent::ShotgunShellReload()
+{
+	if(Character && Character->HasAuthority())
+	{
+		UpdateShotgunAmmoValues();
+	}
+}
+
+void UCombatComponent::PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount)
+{
+	if(CarriedAmmoMap.Contains(WeaponType))
+	{
+		CarriedAmmoMap[WeaponType] = FMath::Clamp(CarriedAmmoMap[WeaponType] + AmmoAmount, 0 , MaxCarriedAmmo);//把拾取后的弹药数量，限制在最大范围内
+
+		UpdateCarriedAmmo();
+	}
+	if(EquippedWeapon && EquippedWeapon->IsEmpty() && EquippedWeapon->GetWeaponType() == WeaponType)
+	{
+		Reload();
+	}
 }
 
 void UCombatComponent::BeginPlay()
@@ -71,395 +75,22 @@ void UCombatComponent::BeginPlay()
 		}
 	}
 }
-void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
-{
-	//判断是否有效
-	if(Character == nullptr || WeaponToEquip == nullptr) return;
-	if(CombatState != ECombatState::ECS_Unoccupied ) return;
 
-	if(EquippedWeapon != nullptr && SecondaryWeapon == nullptr)
-	{
-		EquipSecondaryWeapon(WeaponToEquip);
-	}
-	else
-	{
-		EquipPrimaryWeapon(WeaponToEquip);
-	}
+void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	
-	
-	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
-	Character->bUseControllerRotationYaw = true;
-}
-
-void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
-{
-	if(WeaponToEquip == nullptr) return;
-	
-	//如果当前手上有武器（就是不是空指针），则执行武器的DropEquippedWeapon方法
-	DropEquippedWeapon();
-
-	//将装备的武器设置为传入的WeaponToEquip
-	EquippedWeapon = WeaponToEquip;
-	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-
-	//将武器EquippedWeapon附加在右手上
-	AttachActorToRightHand(WeaponToEquip);
-
-	EquippedWeapon->SetOwner(Character);//设置武器的拥有者 为当前玩家
-	EquippedWeapon->SetHUDAmmo();//显示武器当前的弹药至界面上
-
-	//更新一下弹药
-	UpdateCarriedAmmo();
-
-	//播放装备武器的音效
-	PlayEquipWeaponSound(WeaponToEquip);
-
-	//如果装备的武器是空子弹，则还需要重新换弹
-	ReloadEmptyWeapon();
-}
-
-void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
-{
-	if(WeaponToEquip == nullptr) return;
-	SecondaryWeapon = WeaponToEquip;
-	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
-	AttachActorToBackpack(WeaponToEquip);
-	PlayEquipWeaponSound(WeaponToEquip);//播放装备武器的音效
-
-	SecondaryWeapon->SetOwner(Character);//设置武器的拥有者 为当前玩家	
-}
-
-void UCombatComponent::OnRep_EquippedWeapon()
-{
-	if(EquippedWeapon && Character)
-	{
-		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-		AttachActorToRightHand(EquippedWeapon);
-		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
-		Character->bUseControllerRotationYaw = true;
-		PlayEquipWeaponSound(EquippedWeapon);//播放装备武器的声音
-		EquippedWeapon->EnableCustomDepth(false);
-		//EquippedWeapon->SetHUDAmmo();
-	}
-}
-
-void UCombatComponent::OnRep_SecondaryWeapon()
-{
-	if(SecondaryWeapon && Character)
-	{
-		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
-		AttachActorToBackpack(SecondaryWeapon);
-		PlayEquipWeaponSound(SecondaryWeapon);//播放装备武器的声音
-	}
-}
-
-void UCombatComponent::DropEquippedWeapon()
-{
-	if(EquippedWeapon)
-	{
-		EquippedWeapon->Dropped();
-	}
-}
-void UCombatComponent::AttachActorToRightHand(AActor* ActorToAttach)
-{
-	if(Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr ) return;
-	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
-	if(HandSocket)
-	{
-		HandSocket->AttachActor(ActorToAttach, Character->GetMesh());
-	}
-}
-void UCombatComponent::AttachActorToLeftHand(AActor* ActorToAttach)
-{
-	if(Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr ) return;
-	bool bUsePistolSocket = EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Pistol || EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SubmachineGun;
-	FName SocketName = bUsePistolSocket ? FName("PistolSocket") : FName("LeftHandSocket");
-	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(SocketName);
-	if(HandSocket)
-	{
-		HandSocket->AttachActor(ActorToAttach, Character->GetMesh());
-	}
-}
-
-void UCombatComponent::AttachActorToBackpack(AActor* ActorToAttach)
-{
-	if(Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr ) return;
-
-	const USkeletalMeshSocket* BackpackSocket = Character->GetMesh()->GetSocketByName(FName("BackpackSocket"));
-	if(BackpackSocket)
-	{
-		BackpackSocket->AttachActor(ActorToAttach, Character->GetMesh());
-	}
-}
-
-void UCombatComponent::UpdateCarriedAmmo()
-{
-	if( EquippedWeapon == nullptr ) return;
-	//如果CarriedAmmoMap中可以找到装备武器的类型，那我们就可以从map中找到武器类型对应的CarriedAmmo的数量
-	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
-	{
-		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
-	}
-
-	//将当前CarriedAmmo设置显示至界面
-	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->GetController()) : Controller;
-	if(Controller)
-	{
-		Controller->SetHUDCarriedAmmo(CarriedAmmo);
-	}
-}
-void UCombatComponent::PlayEquipWeaponSound(AWeapon* WeaponToEquip)
-{
-	//播放装备武器的声音
-	if(Character && WeaponToEquip && WeaponToEquip->EquipSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(
-			this,
-			WeaponToEquip->EquipSound,
-			Character->GetActorLocation());
-	}
-}
-
-void UCombatComponent::ReloadEmptyWeapon()
-{
-	//如果拾取的武器是空子弹的，但是身上有携带有子弹，则执行换弹
-	if(EquippedWeapon && EquippedWeapon->IsEmpty())
-	{
-		Reload();
-	}
-}
-
-bool UCombatComponent::ShouldSwapWeapons()
-{
-	return (EquippedWeapon != nullptr && SecondaryWeapon != nullptr);
-}
-
-void UCombatComponent::SwapWeapons()
-{
-	if(CombatState != ECombatState::ECS_Unoccupied || Character == nullptr) return;
-
-	//首先播放换武器的动画 并修改当前CombatState的状态
-	Character->PlaySwapMontage();
-	CombatState = ECombatState::ECS_SwappingWeapon;
-	Character->bFinishedSwapping = false;
-
-	//通过TempWeapon，将当前武器和第二个武器进行交换
-	AWeapon* TempWeapon = EquippedWeapon;
-	EquippedWeapon = SecondaryWeapon;
-	SecondaryWeapon = TempWeapon;
-
-	if(SecondaryWeapon) SecondaryWeapon->EnableCustomDepth(false);
-}
-
-/*
-* 武器换弹相关的逻辑
-*/
-void UCombatComponent::Reload()
-{
-	if(CarriedAmmo > 0
-		&& CombatState == ECombatState::ECS_Unoccupied
-		&& EquippedWeapon
-		&& !EquippedWeapon->IsFull()  //如果当前子弹是满的，则直接返回，避免触发一个空的换弹动作
-		&& !bLocallyReloading)
-	{
-		ServerReload();
-		HandleReload();//这里的调整在185课中实现
-		bLocallyReloading = true;
-	}
-}
-
-void UCombatComponent::ServerReload_Implementation()
-{
-	if(Character == nullptr || EquippedWeapon == nullptr ) return;
-	//将状态更改为换弹
-	CombatState = ECombatState::ECS_Reloading;
-	if(!Character->IsLocallyControlled()) HandleReload();
-	
-}
-
-void UCombatComponent::FinishReloading()
-{
-	if(Character == nullptr) return;
-	bLocallyReloading = false;
-	
-	if(Character->HasAuthority())
-	{
-		CombatState = ECombatState::ECS_Unoccupied;
-		//子弹计算逻辑
-		UpdateAmmoValues();
-	}
-	if(bFireButtonPressed)
-	{
-		Fire();
-	}
-}
-
-void UCombatComponent::ShotgunShellReload()
-{
-	if(Character && Character->HasAuthority())
-	{
-		UpdateShotgunAmmoValues();
-	}
-}
-
-void UCombatComponent::JumpToShotgunEnd()
-{
-	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
-	if(AnimInstance && Character->GetReloadMotage())
-	{
-		AnimInstance->Montage_JumpToSection(FName("ShotGunEnd"));
-	}
-}
-
-void UCombatComponent::HandleReload()
-{
-	if(Character)
-	{
-		Character->PlayReloadMontage();
-	}
-}
-
-int32 UCombatComponent::AmountToReload()
-{
-	if(EquippedWeapon == nullptr) return 0;
-	//取得应该填充多少子弹
-	int32 RoomInMag = EquippedWeapon->GetMagCapacity() - EquippedWeapon->GetAmmo();
-
-	//
-	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
-	{
-		int32 AmountCarried = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
-		int32 Least = FMath::Min(RoomInMag, AmountCarried);
-		return FMath::Clamp(RoomInMag, 0, Least);
-	}
-	return 0;
-}
-/*
-* 投掷手雷相关的逻辑
-*/
-void UCombatComponent::ThrowGrenade()
-{
-	if(Grenades == 0) return;
-	if(CombatState != ECombatState::ECS_Unoccupied || EquippedWeapon == nullptr) return;
-	CombatState = ECombatState::ECS_ThrowingGrenade;
-	if(Character)
-	{
-		Character->PlayThrowGrenadeMontage();
-		AttachActorToLeftHand(EquippedWeapon);
-		ShowAttachGrenade(true);
-	}
-	if(Character && !Character->HasAuthority())
-	{
-		ServerThrowGrenade();
-	}
-	if(Character && Character->HasAuthority())
-	{
-		Grenades = FMath::Clamp(Grenades - 1, 0, MaxGrenades);
-		UpdateHUDGrenades();
-	}
-}
-
-void UCombatComponent::ServerThrowGrenade_Implementation()
-{
-	if(Grenades == 0) return;
-	CombatState = ECombatState::ECS_ThrowingGrenade;
-	if(Character)
-	{
-		Character->PlayThrowGrenadeMontage();
-		AttachActorToLeftHand(EquippedWeapon);
-		ShowAttachGrenade(true);
-	}
-	Grenades = FMath::Clamp(Grenades - 1, 0, MaxGrenades);
-	UpdateHUDGrenades();
-}
-
-void UCombatComponent::ThrowGrenadeFinished()
-{
-	CombatState = ECombatState::ECS_Unoccupied;
-	AttachActorToRightHand(EquippedWeapon);
-	//ShowAttachGrenade(false);
-}
-
-void UCombatComponent::ShowAttachGrenade(bool bShowGrenade)
-{
-	if(Character && Character->GetAttachGrenade())
-	{
-		Character->GetAttachGrenade()->SetVisibility(bShowGrenade);
-	}
-}
-
-void UCombatComponent::LaunchGrenade()
-{
-	ShowAttachGrenade(false);
 	if(Character && Character->IsLocallyControlled())
 	{
-		ServerLaunchGrenade(HitTarget);
-	}
-	
-}
+		FHitResult HitResult;
+		TraceUnderCrosshairs(HitResult);
+		HitTarget = HitResult.ImpactPoint;
 
-void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuantize& Target)
-{
-	if(Character && Character->HasAuthority() && GrenadeClass)
-	{
-		const FVector StartingLocation = Character->GetAttachGrenade()->GetComponentLocation();
-		FVector ToTarget = Target - StartingLocation;
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = Character;
-		SpawnParams.Instigator = Character;
-		UWorld* World = GetWorld();
-		if (World)
-		{
-			World->SpawnActor<AProjectile>(
-				GrenadeClass,
-				StartingLocation,
-				ToTarget.Rotation(),
-				SpawnParams
-				);
-		}
-	}
-}
+		//每一帧都设置准星
+		SetHUDCrosshair(DeltaTime);
 
-void UCombatComponent::PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount)
-{
-	if(CarriedAmmoMap.Contains(WeaponType))
-	{
-		CarriedAmmoMap[WeaponType] = FMath::Clamp(CarriedAmmoMap[WeaponType] + AmmoAmount, 0 , MaxCarriedAmmo);//把拾取后的弹药数量，限制在最大范围内
-
-		UpdateCarriedAmmo();
-	}
-	if(EquippedWeapon && EquippedWeapon->IsEmpty() && EquippedWeapon->GetWeaponType() == WeaponType)
-	{
-		Reload();
-	}
-}
-
-/*
- * 瞄准的全部逻辑
- */
-void UCombatComponent::SetAiming(bool bIsAiming)
-{
-	if(Character == nullptr || EquippedWeapon == nullptr) return;
-	bAiming = bIsAiming;
-	ServerSetAiming(bIsAiming);
-	if(Character)
-	{
-		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed ;
-	}
-	if(Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
-	{
-		Character->ShowSniperScopeWidget(bIsAiming);
-	}
-	//如果角色是本地控制的，则需要改变设置本地的bAimButtonPressed与服务器同步的bIsAiming一致
-	if(Character->IsLocallyControlled()) bAimButtonPressed = bIsAiming;
-}
-
-void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
-{
-	bAiming = bIsAiming;
-	if(Character)
-	{
-		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed ;
+		//设置视野缩放
+		InterpFOV(DeltaTime);
 	}
 }
 
@@ -542,31 +173,28 @@ void UCombatComponent::FireShotgun()
 		}
 		ServerShotgunFire(HitTargets);
 	}
-	
-	
 }
 
-void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
+void UCombatComponent::StartFireTimer()
 {
-	if(EquippedWeapon == nullptr) return;
-	if(Character && CombatState == ECombatState::ECS_Unoccupied)
-	{
-		Character->PlayFireMontage(bAiming);  //执行角色身上的开火逻辑：播放开火动画
-		EquippedWeapon->Fire(TraceHitTarget); //执行武器上的开火逻辑：播放武器开火动画和特效音效
-	}
-}
-
-void UCombatComponent::ShotgunLocalFire(const TArray<FVector_NetQuantize>& TraceHitTargets)
-{
-	AShotgun* Shotgun = Cast<AShotgun>(EquippedWeapon);
-	
 	if(EquippedWeapon == nullptr || Character == nullptr) return;
-	if(CombatState == ECombatState::ECS_Reloading || CombatState == ECombatState::ECS_Unoccupied)
+	//传入计时器、当前这个类、到时间之后调用的函数，时间间隔
+	Character->GetWorldTimerManager().SetTimer(
+		FireTimer,
+		this,
+		&ThisClass::FireTimerFinished,
+		EquippedWeapon->FireDelay
+		);
+}
+
+void UCombatComponent::FireTimerFinished()
+{
+	bCanFire = true;
+	if(bFireButtonPressed && EquippedWeapon->bAutomatic)
 	{
-		Character->PlayFireMontage(bAiming);
-		CombatState = ECombatState::ECS_Unoccupied;
-		Shotgun->FireShotgun(TraceHitTargets);
+		Fire();
 	}
+	ReloadEmptyWeapon();//如果开火后发现子弹打空了，则自动触发换弹
 }
 
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
@@ -593,16 +221,528 @@ void UCombatComponent::MulticastShotgunFire_Implementation(const TArray<FVector_
 	ShotgunLocalFire(TraceHitTargets);
 }
 
-void UCombatComponent::TraceUnderCrosehairs(FHitResult& TraceHitResult)
+void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
 {
-	FVector2d ViewportSize;
+	if(EquippedWeapon == nullptr) return;
+	if(Character && CombatState == ECombatState::ECS_Unoccupied)
+	{
+		Character->PlayFireMontage(bAiming);  //执行角色身上的开火逻辑：播放开火动画
+		EquippedWeapon->Fire(TraceHitTarget); //执行武器上的开火逻辑：播放武器开火动画和特效音效
+	}
+}
+
+void UCombatComponent::ShotgunLocalFire(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	AShotgun* Shotgun = Cast<AShotgun>(EquippedWeapon);
+	
+	if(Shotgun == nullptr || Character == nullptr) return;
+	if(CombatState == ECombatState::ECS_Reloading || CombatState == ECombatState::ECS_Unoccupied)
+	{
+		bLocallyReloading = false;
+		Character->PlayFireMontage(bAiming);
+		Shotgun->FireShotgun(TraceHitTargets);
+		CombatState = ECombatState::ECS_Unoccupied;
+	}
+}
+
+void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
+{
+	//判断是否有效
+	if(Character == nullptr || WeaponToEquip == nullptr) return;
+	if(CombatState != ECombatState::ECS_Unoccupied ) return;
+
+	if(EquippedWeapon != nullptr && SecondaryWeapon == nullptr)
+	{
+		EquipSecondaryWeapon(WeaponToEquip);
+	}
+	else
+	{
+		EquipPrimaryWeapon(WeaponToEquip);
+	}
+	
+	
+	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+	Character->bUseControllerRotationYaw = true;
+}
+
+void UCombatComponent::SwapWeapons()
+{
+	if(CombatState != ECombatState::ECS_Unoccupied || Character == nullptr) return;
+
+	//首先播放换武器的动画 并修改当前CombatState的状态
+	Character->PlaySwapMontage();
+	CombatState = ECombatState::ECS_SwappingWeapon;
+	Character->bFinishedSwapping = false;
+
+	/*//通过TempWeapon，将当前武器和第二个武器进行交换
+	AWeapon* TempWeapon = EquippedWeapon;
+	EquippedWeapon = SecondaryWeapon;
+	SecondaryWeapon = TempWeapon;*/
+
+	if(SecondaryWeapon) SecondaryWeapon->EnableCustomDepth(false);
+}
+
+void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
+{
+	if(WeaponToEquip == nullptr) return;
+	
+	//如果当前手上有武器（就是不是空指针），则执行武器的DropEquippedWeapon方法
+	DropEquippedWeapon();
+
+	//将装备的武器设置为传入的WeaponToEquip
+	EquippedWeapon = WeaponToEquip;
+	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+
+	//将武器EquippedWeapon附加在右手上
+	AttachActorToRightHand(EquippedWeapon);
+
+	EquippedWeapon->SetOwner(Character);//设置武器的拥有者 为当前玩家
+	EquippedWeapon->SetHUDAmmo();//显示武器当前的弹药至界面上
+
+	//更新一下弹药
+	UpdateCarriedAmmo();
+
+	//播放装备武器的音效
+	PlayEquipWeaponSound(WeaponToEquip);
+
+	//如果装备的武器是空子弹，则还需要重新换弹
+	ReloadEmptyWeapon();
+}
+
+void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
+{
+	if(WeaponToEquip == nullptr) return;
+	SecondaryWeapon = WeaponToEquip;
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
+	AttachActorToBackpack(WeaponToEquip);
+	PlayEquipWeaponSound(WeaponToEquip);//播放装备武器的音效
+
+	SecondaryWeapon->SetOwner(Character);//设置武器的拥有者 为当前玩家	
+}
+
+void UCombatComponent::OnRep_Aiming()
+{
+	if(Character && Character->IsLocallyControlled())
+	{
+		bAiming = bAimButtonPressed;
+	}
+}
+
+void UCombatComponent::DropEquippedWeapon()
+{
+	if(EquippedWeapon)
+	{
+		EquippedWeapon->Dropped();
+	}
+}
+
+void UCombatComponent::AttachActorToRightHand(AActor* ActorToAttach)
+{
+	if(Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr ) return;
+	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
+	if(HandSocket)
+	{
+		HandSocket->AttachActor(ActorToAttach, Character->GetMesh());
+	}
+}
+void UCombatComponent::AttachActorToLeftHand(AActor* ActorToAttach)
+{
+	if(Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr || EquippedWeapon == nullptr) return;
+	bool bUsePistolSocket =
+		EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Pistol ||
+		EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SubmachineGun;
+	FName SocketName = bUsePistolSocket ? FName("PistolSocket") : FName("LeftHandSocket");
+	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(SocketName);
+	if(HandSocket)
+	{
+		HandSocket->AttachActor(ActorToAttach, Character->GetMesh());
+	}
+}
+
+void UCombatComponent::AttachActorToBackpack(AActor* ActorToAttach)
+{
+	if(Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr ) return;
+
+	const USkeletalMeshSocket* BackpackSocket = Character->GetMesh()->GetSocketByName(FName("BackpackSocket"));
+	if(BackpackSocket)
+	{
+		BackpackSocket->AttachActor(ActorToAttach, Character->GetMesh());
+	}
+}
+
+void UCombatComponent::UpdateCarriedAmmo()
+{
+	if( EquippedWeapon == nullptr ) return;
+	//如果CarriedAmmoMap中可以找到装备武器的类型，那我们就可以从map中找到武器类型对应的CarriedAmmo的数量
+	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+	}
+
+	//将当前CarriedAmmo设置显示至界面
+	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
+	if(Controller)
+	{
+		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+	}
+}
+void UCombatComponent::PlayEquipWeaponSound(AWeapon* WeaponToEquip)
+{
+	//播放装备武器的声音
+	if(Character && WeaponToEquip && WeaponToEquip->EquipSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			WeaponToEquip->EquipSound,
+			Character->GetActorLocation()
+			);
+	}
+}
+
+void UCombatComponent::ReloadEmptyWeapon()
+{
+	//如果拾取的武器是空子弹的，但是身上有携带有子弹，则执行换弹
+	if(EquippedWeapon && EquippedWeapon->IsEmpty())
+	{
+		Reload();
+	}
+}
+
+/*
+* 武器换弹相关的逻辑
+*/
+void UCombatComponent::Reload()
+{
+	//如果当前子弹是满的，则直接返回，避免触发一个空的换弹动作
+	if(CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon && !EquippedWeapon->IsFull() && !bLocallyReloading)
+	{
+		ServerReload();
+		HandleReload();//这里的调整在185课中实现
+		bLocallyReloading = true;
+	}
+}
+
+void UCombatComponent::ServerReload_Implementation()
+{
+	if(Character == nullptr || EquippedWeapon == nullptr ) return;
+	//将状态更改为换弹
+	CombatState = ECombatState::ECS_Reloading;
+	if(!Character->IsLocallyControlled()) HandleReload();
+	
+}
+
+void UCombatComponent::FinishReloading()
+{
+	if(Character == nullptr) return;
+	bLocallyReloading = false;
+	
+	if(Character->HasAuthority())
+	{
+		CombatState = ECombatState::ECS_Unoccupied;
+		//子弹计算逻辑
+		UpdateAmmoValues();
+	}
+	if(bFireButtonPressed)
+	{
+		Fire();
+	}
+}
+
+void UCombatComponent::FinishSwap()
+{
+	if(Character && Character->HasAuthority())
+	{
+		CombatState = ECombatState::ECS_Unoccupied;
+	}
+	if(Character) Character->bFinishedSwapping = true;
+	if(SecondaryWeapon) SecondaryWeapon->EnableCustomDepth(true);
+}
+
+void UCombatComponent::FinishSwapAttachWeapons()
+{
+	//修改当前武器的武器状态
+	//将其附加在右手上
+	//更新界面上的数值
+	//播放换武器的音效
+
+	PlayEquipWeaponSound(SecondaryWeapon);
+	if(Character == nullptr || !Character->HasAuthority()) return;
+	AWeapon* TempWeapon = EquippedWeapon;
+	EquippedWeapon = SecondaryWeapon;
+	SecondaryWeapon = TempWeapon;
+	
+	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	AttachActorToRightHand(EquippedWeapon);
+	EquippedWeapon->SetHUDAmmo();
+	UpdateCarriedAmmo();
+	
+
+	//修改第二武器的状态
+	//将其附加在背上
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
+	AttachActorToBackpack(SecondaryWeapon);
+}
+
+void UCombatComponent::UpdateAmmoValues()
+{
+	//首先判断角色和武器是否为空
+	if(Character == nullptr || EquippedWeapon == nullptr) return;
+	//通过AmountToReload方法获取，需要填充多少子弹
+	int32 ReloadAmount = AmountToReload();
+	//通过武器类型查询当前武器 角色身上携带的数量，然后从中扣除需要填充子弹的数量ReloadAmount
+	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= ReloadAmount;
+		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+	}
+	//更新HUD界面上的显示数字
+	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
+	if(Controller)
+	{
+		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+	}
+	//给武器添加子弹
+	EquippedWeapon->AddAmmo(ReloadAmount);
+}
+
+void UCombatComponent::UpdateShotgunAmmoValues()
+{
+	//专门用来处理散弹枪换弹的逻辑
+	//散弹枪是一发一发进行上单，所以我们需要每次换弹都是加1，然后更新HUD，再判断是否满，如果没有满，继续处理
+	if(Character == nullptr || EquippedWeapon == nullptr) return;
+
+	//把角色身上携带的子弹数量减1
+	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= 1;
+		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+	}
+
+	//更新HUD
+	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
+	if(Controller)
+	{
+		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+	}
+
+	//将散弹枪的子弹加1
+	EquippedWeapon->AddAmmo(1);
+	bCanFire = true; //当我们填充了1个子弹后，我们就希望可以开火，或者说我们希望在填充子弹的时候打断reload进行fire动作
+	if(EquippedWeapon->IsFull() || CarriedAmmo == 0)
+	{
+		JumpToShotgunEnd();
+	}
+}
+
+void UCombatComponent::OnRep_Grenades()
+{
+	UpdateHUDGrenades();
+}
+
+void UCombatComponent::JumpToShotgunEnd()
+{
+	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
+	if(AnimInstance && Character->GetReloadMontage())
+	{
+		AnimInstance->Montage_JumpToSection(FName("ShotGunEnd"));
+	}
+}
+
+void UCombatComponent::ThrowGrenadeFinished()
+{
+	CombatState = ECombatState::ECS_Unoccupied;
+	AttachActorToRightHand(EquippedWeapon);
+	//ShowAttachGrenade(false);
+}
+
+void UCombatComponent::LaunchGrenade()
+{
+	ShowAttachedGrenade(false);
+	if(Character && Character->IsLocallyControlled())
+	{
+		ServerLaunchGrenade(HitTarget);
+	}
+}
+
+void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuantize& Target)
+{
+	if(Character && GrenadeClass && Character->GetAttachedGrenade())
+	{
+		const FVector StartingLocation = Character->GetAttachedGrenade()->GetComponentLocation();
+		FVector ToTarget = Target - StartingLocation;
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = Character;
+		SpawnParams.Instigator = Character;
+		UWorld* World = GetWorld();
+		if (World)
+		{
+			World->SpawnActor<AProjectile>(
+				GrenadeClass,
+				StartingLocation,
+				ToTarget.Rotation(),
+				SpawnParams
+				);
+		}
+	}
+}
+
+/*
+* 战斗状态更新相关逻辑
+*/
+void UCombatComponent::OnRep_CombatState()
+{
+	switch (CombatState) {
+	case ECombatState::ECS_Unoccupied:
+		if(bFireButtonPressed)
+		{
+			Fire();
+		}
+		break;
+	case ECombatState::ECS_Reloading:
+		if(Character && !Character->IsLocallyControlled()) HandleReload();
+		break; 
+	case ECombatState::ECS_ThrowingGrenade:
+		if(Character && !Character->IsLocallyControlled())
+		{
+			Character->PlayThrowGrenadeMontage();
+			AttachActorToLeftHand(EquippedWeapon);
+			ShowAttachedGrenade(true);
+		}
+		break;
+	case ECombatState::ECS_SwappingWeapon:
+		if(Character && !Character->IsLocallyControlled())
+		{
+			Character->PlaySwapMontage();
+		}
+		break;
+	case ECombatState::ECS_Max:
+		break;
+	default: ;
+	}
+}
+
+void UCombatComponent::HandleReload()
+{
+	if(Character)
+	{
+		Character->PlayReloadMontage();
+	}
+}
+
+int32 UCombatComponent::AmountToReload()
+{
+	if(EquippedWeapon == nullptr) return 0;
+	//取得应该填充多少子弹
+	int32 RoomInMag = EquippedWeapon->GetMagCapacity() - EquippedWeapon->GetAmmo();
+
+	//
+	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		int32 AmountCarried = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+		int32 Least = FMath::Min(RoomInMag, AmountCarried);
+		return FMath::Clamp(RoomInMag, 0, Least);
+	}
+	return 0;
+}
+/*
+* 投掷手雷相关的逻辑
+*/
+void UCombatComponent::ThrowGrenade()
+{
+	if(Grenades == 0) return;
+	if(CombatState != ECombatState::ECS_Unoccupied || EquippedWeapon == nullptr) return;
+	CombatState = ECombatState::ECS_ThrowingGrenade;
+	if(Character)
+	{
+		Character->PlayThrowGrenadeMontage();
+		AttachActorToLeftHand(EquippedWeapon);
+		ShowAttachedGrenade(true);
+	}
+	if(Character && !Character->HasAuthority())
+	{
+		ServerThrowGrenade();
+	}
+	if(Character && Character->HasAuthority())
+	{
+		Grenades = FMath::Clamp(Grenades - 1, 0, MaxGrenades);
+		UpdateHUDGrenades();
+	}
+}
+
+void UCombatComponent::ServerThrowGrenade_Implementation()
+{
+	if(Grenades == 0) return;
+	CombatState = ECombatState::ECS_ThrowingGrenade;
+	if(Character)
+	{
+		Character->PlayThrowGrenadeMontage();
+		AttachActorToLeftHand(EquippedWeapon);
+		ShowAttachedGrenade(true);
+	}
+	Grenades = FMath::Clamp(Grenades - 1, 0, MaxGrenades);
+	UpdateHUDGrenades();
+}
+
+void UCombatComponent::UpdateHUDGrenades()
+{
+	if(Character == nullptr || Character->Controller == nullptr )  return;
+
+	//如果控制器是空，则通过Character获得控制器，创建ABlasterPlayerController
+	//否则那就不是空
+	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
+	if(Controller)
+	{
+		Controller->SetHUDGrenades(Grenades);
+	}
+}
+
+bool UCombatComponent::ShouldSwapWeapons()
+{
+	return (EquippedWeapon != nullptr && SecondaryWeapon != nullptr);
+}
+
+void UCombatComponent::ShowAttachedGrenade(bool bShowGrenade)
+{
+	if(Character && Character->GetAttachedGrenade())
+	{
+		Character->GetAttachedGrenade()->SetVisibility(bShowGrenade);
+	}
+}
+
+void UCombatComponent::OnRep_EquippedWeapon()
+{
+	if(EquippedWeapon && Character)
+	{
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		AttachActorToRightHand(EquippedWeapon);
+		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+		Character->bUseControllerRotationYaw = true;
+		PlayEquipWeaponSound(EquippedWeapon);//播放装备武器的声音
+		EquippedWeapon->EnableCustomDepth(false);
+		EquippedWeapon->SetHUDAmmo();
+	}
+}
+
+void UCombatComponent::OnRep_SecondaryWeapon()
+{
+	if(SecondaryWeapon && Character)
+	{
+		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
+		AttachActorToBackpack(SecondaryWeapon);
+		PlayEquipWeaponSound(EquippedWeapon);//播放装备武器的声音
+	}
+}
+
+void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
+{
+	FVector2D ViewportSize;
 	if(GEngine && GEngine->GameViewport)
 	{
 		GEngine->GameViewport->GetViewportSize(ViewportSize);
 	}
 
 	//获得屏幕中心点的坐标
-	FVector2d CrosshairLocation(ViewportSize.X/ 2.f , ViewportSize.Y / 2.0f);
+	FVector2D CrosshairLocation(ViewportSize.X/ 2.f , ViewportSize.Y / 2.0f);
 
 	FVector CrosshairWorldPosition;//准星的世界坐标位置
 	FVector CrosshairWorldDirection;//准星位置的方向
@@ -637,11 +777,11 @@ void UCombatComponent::TraceUnderCrosehairs(FHitResult& TraceHitResult)
 		End,
 		ECollisionChannel::ECC_Visibility
 		);
-		
+		/*
 		if(!TraceHitResult.bBlockingHit)//如果射线检测没有碰撞到任何东西
 		{
 			TraceHitResult.ImpactPoint = End;//那我们就设置碰撞到的那个点为射线的终点
-		}
+		}*/
 
 		//实现当检测目标是角色时，改变准星的颜色
 		//判断角色， 并且判断获取到的角色是否有对应的接口
@@ -689,14 +829,14 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 			//计算运动速度与扩展的关系
 			//我们将速度0~600 映射到 0~1
 			//先获得角色的速度，存在一个FVector2D变量中
-			FVector2d WalkSpeedRange(0.f, Character->GetCharacterMovement()->MaxWalkSpeed);
+			FVector2D WalkSpeedRange(0.f, Character->GetCharacterMovement()->MaxWalkSpeed);
 			//再设置速度变量
-			FVector2d VeloctiyMultiplierRange(0.f, 1.f);
+			FVector2D VelocityMultiplierRange(0.f, 1.f);
 			//获得当前的速度
 			//我们用当前的速度，对比0~600之间，映射到0~1是多少
 			FVector Velocity = Character->GetVelocity();
 			//获得最终映射到0~1的值
-			CrosshairVelocityFactor = FMath::GetMappedRangeValueClamped(WalkSpeedRange, VeloctiyMultiplierRange, Velocity.Size());
+			CrosshairVelocityFactor = FMath::GetMappedRangeValueClamped(WalkSpeedRange, VelocityMultiplierRange, Velocity.Size());
 
 			if(Character->GetCharacterMovement()->IsFalling())
 			{
@@ -726,212 +866,6 @@ void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 	}
 }
 
-void UCombatComponent::StartFireTimer()
-{
-	if(EquippedWeapon == nullptr || Character == nullptr) return;
-	//传入计时器、当前这个类、到时间之后调用的函数，时间间隔
-	Character->GetWorldTimerManager().SetTimer(FireTimer, this, &ThisClass::FireTimerFinished, EquippedWeapon->FireDelay);
-}
-
-void UCombatComponent::FireTimerFinished()
-{
-	bCanFire = true;
-	if(bFireButtonPressed && EquippedWeapon->bAutomatic)
-	{
-		Fire();
-	}
-	ReloadEmptyWeapon();//如果开火后发现子弹打空了，则自动触发换弹
-}
-
-bool UCombatComponent::CanFire()
-{
-	//当没有装备武器的时候，不能发射，返回false
-	if(EquippedWeapon == nullptr) return false;
-	
-	//这个判断是为了散弹枪装弹时可以进行射击的特殊判断
-	//当装备的是散弹枪并且当前处在reload状态，并且bCanFire为true（说明这个时候散弹枪至少有一颗子弹），则返回ture
-	if(!EquippedWeapon->IsEmpty()
-		&& bCanFire
-		&& CombatState == ECombatState::ECS_Reloading
-		&& EquippedWeapon->GetWeaponType() == EWeaponType::EWT_ShotGun) return true;
-
-	if(bLocallyReloading) return false; //如果在换弹，也返回false
-
-	//只要当前装备了武器并且bCanFire为true，且为ECS_Unoccupied状态，就可以进行开火
-	return !EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied;
-}
-
-void UCombatComponent::OnRep_Aiming()
-{
-	if(Character && Character->IsLocallyControlled())
-	{
-		bAiming = bAimButtonPressed;
-	}
-}
-
-/*
-* 弹药更新相关逻辑
-*/
-void UCombatComponent::InitializeCarriedAmmo()
-{
-	CarriedAmmoMap.Add(EWeaponType::EWT_AssaultRifle, StartingARAmmo);
-	CarriedAmmoMap.Add(EWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
-	CarriedAmmoMap.Add(EWeaponType::EWT_Pistol, PistolAmmo);
-	CarriedAmmoMap.Add(EWeaponType::EWT_SubmachineGun, StartingSMGAmmo);
-	CarriedAmmoMap.Add(EWeaponType::EWT_ShotGun, StartingShotGunAmmo);
-	CarriedAmmoMap.Add(EWeaponType::EWT_SniperRifle, StartingSniperAmmo);
-	CarriedAmmoMap.Add(EWeaponType::EWT_GrenadeLauncher, StartingGrenadeAmmo);
-}
-
-void UCombatComponent::FinishSwap()
-{
-	if(Character && Character->HasAuthority())
-	{
-		CombatState = ECombatState::ECS_Unoccupied;
-	}
-	if(Character) Character->bFinishedSwapping = true;
-	if(SecondaryWeapon) SecondaryWeapon->EnableCustomDepth(true);
-}
-
-void UCombatComponent::FinishSwapAttachWeapons()
-{
-	//修改当前武器的武器状态
-	//将其附加在右手上
-	//更新界面上的数值
-	//播放换武器的音效
-	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-	AttachActorToRightHand(EquippedWeapon);
-	EquippedWeapon->SetHUDAmmo();
-	UpdateCarriedAmmo();
-	PlayEquipWeaponSound(EquippedWeapon);
-
-	//修改第二武器的状态
-	//将其附加在背上
-	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
-	AttachActorToBackpack(SecondaryWeapon);
-}
-
-void UCombatComponent::UpdateAmmoValues()
-{
-	//首先判断角色和武器是否为空
-	if(Character == nullptr || EquippedWeapon == nullptr) return;
-	//通过AmountToReload方法获取，需要填充多少子弹
-	int32 ReloadAmount = AmountToReload();
-	//通过武器类型查询当前武器 角色身上携带的数量，然后从中扣除需要填充子弹的数量ReloadAmount
-	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
-	{
-		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= ReloadAmount;
-		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
-	}
-	//更新HUD界面上的显示数字
-	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->GetController()) : Controller;
-	if(Controller)
-	{
-		Controller->SetHUDCarriedAmmo(CarriedAmmo);
-	}
-	//给武器添加子弹
-	EquippedWeapon->AddAmmo(ReloadAmount);
-}
-
-void UCombatComponent::UpdateShotgunAmmoValues()
-{
-	//专门用来处理散弹枪换弹的逻辑
-	//散弹枪是一发一发进行上单，所以我们需要每次换弹都是加1，然后更新HUD，再判断是否满，如果没有满，继续处理
-	if(Character == nullptr || EquippedWeapon == nullptr) return;
-
-	//把角色身上携带的子弹数量减1
-	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
-	{
-		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= 1;
-		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
-	}
-
-	//更新HUD
-	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->GetController()) : Controller;
-	if(Controller)
-	{
-		Controller->SetHUDCarriedAmmo(CarriedAmmo);
-	}
-
-	//将散弹枪的子弹加1
-	EquippedWeapon->AddAmmo(1);
-	bCanFire = true; //当我们填充了1个子弹后，我们就希望可以开火，或者说我们希望在填充子弹的时候打断reload进行fire动作
-	if(EquippedWeapon->IsFull() || CarriedAmmo == 0)
-	{
-		JumpToShotgunEnd();
-	}
-}
-
-void UCombatComponent::OnRep_CarriedAmmo()
-{
-	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->GetController()) : Controller;
-	if(Controller)
-	{
-		Controller->SetHUDCarriedAmmo(CarriedAmmo);
-	}
-	bool bJumpToShotgunEnd = CombatState == ECombatState::ECS_Reloading &&
-		EquippedWeapon != nullptr &&
-			EquippedWeapon->GetWeaponType() == EWeaponType::EWT_ShotGun &&
-				CarriedAmmo == 0;
-	if(bJumpToShotgunEnd)
-	{
-		JumpToShotgunEnd();
-	}
-}
-
-void UCombatComponent::OnRep_Grenades()
-{
-	UpdateHUDGrenades();
-}
-
-void UCombatComponent::UpdateHUDGrenades()
-{
-	if(Character == nullptr || Character->Controller == nullptr )  return;
-
-	//如果控制器是空，则通过Character获得控制器，创建ABlasterPlayerController
-	//否则那就不是空
-	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
-	if(Controller)
-	{
-		Controller->SetHUDGrenades(Grenades);
-	}
-}
-
-/*
-* 战斗状态更新相关逻辑
-*/
-void UCombatComponent::OnRep_CombatState()
-{
-	switch (CombatState) {
-	case ECombatState::ECS_Unoccupied:
-		if(bFireButtonPressed)
-		{
-			Fire();
-		}
-		break;
-	case ECombatState::ECS_Reloading:
-		if(Character && !Character->IsLocallyControlled()) HandleReload();
-		break; 
-	case ECombatState::ECS_ThrowingGrenade:
-		if(Character && !Character->IsLocallyControlled())
-		{
-			Character->PlayThrowGrenadeMontage();
-			AttachActorToLeftHand(EquippedWeapon);
-			ShowAttachGrenade(true);
-		}
-		break;
-	case ECombatState::ECS_SwappingWeapon:
-		if(Character && !Character->IsLocallyControlled())
-		{
-			Character->PlaySwapMontage();
-		}
-		break;
-	case ECombatState::ECS_Max:
-		break;
-	default: ;
-	}
-}
-
 void UCombatComponent::InterpFOV(float DeltaTime)
 {
 	if(EquippedWeapon == nullptr ) return;
@@ -949,4 +883,80 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 		Character->GetFollowCamera()->SetFieldOfView(CurrentFOV);
 	}
 	
+}
+
+/*
+ * 瞄准的全部逻辑
+ */
+void UCombatComponent::SetAiming(bool bIsAiming)
+{
+	if(Character == nullptr || EquippedWeapon == nullptr) return;
+	bAiming = bIsAiming;
+	ServerSetAiming(bIsAiming);
+	if(Character)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed ;
+	}
+	if(Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
+	{
+		Character->ShowSniperScopeWidget(bIsAiming);
+	}
+	//如果角色是本地控制的，则需要改变设置本地的bAimButtonPressed与服务器同步的bIsAiming一致
+	if(Character->IsLocallyControlled()) bAimButtonPressed = bIsAiming;
+}
+
+void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
+{
+	bAiming = bIsAiming;
+	if(Character)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed ;
+	}
+}
+
+bool UCombatComponent::CanFire()
+{
+	//当没有装备武器的时候，不能发射，返回false
+	if(EquippedWeapon == nullptr) return false;
+	
+	//这个判断是为了散弹枪装弹时可以进行射击的特殊判断
+	//当装备的是散弹枪并且当前处在reload状态，并且bCanFire为true（说明这个时候散弹枪至少有一颗子弹），则返回ture
+	if(!EquippedWeapon->IsEmpty()&& bCanFire && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun) return true;
+
+	if(bLocallyReloading) return false; //如果在换弹，也返回false
+
+	//只要当前装备了武器并且bCanFire为true，且为ECS_Unoccupied状态，就可以进行开火
+	return !EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied;
+}
+
+void UCombatComponent::OnRep_CarriedAmmo()
+{
+	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
+	if(Controller)
+	{
+		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+	}
+	bool bJumpToShotgunEnd =
+		CombatState == ECombatState::ECS_Reloading &&
+		EquippedWeapon != nullptr &&
+		EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun &&
+		CarriedAmmo == 0;
+	if(bJumpToShotgunEnd)
+	{
+		JumpToShotgunEnd();
+	}
+}
+
+/*
+* 弹药更新相关逻辑
+*/
+void UCombatComponent::InitializeCarriedAmmo()
+{
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingARAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Pistol, PistolAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_SubmachineGun, StartingSMGAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Shotgun, StartingShotGunAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_SniperRifle, StartingSniperAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_GrenadeLauncher, StartingGrenadeAmmo);
 }

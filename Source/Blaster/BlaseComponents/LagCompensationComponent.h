@@ -113,8 +113,7 @@ public:
 		ABlasterCharacter* HitCharacter,
 		const FVector_NetQuantize& TraceStart,
 		const FVector_NetQuantize& HitLocation,
-		float HitTime,
-		class AWeapon* DamageCauser);
+		float HitTime);
 
 	//对飞弹类武器Projectile在开启服务器倒带功能后，计算伤害的逻辑
 	UFUNCTION(Server, Reliable)
@@ -199,5 +198,5 @@ private:
 
 	//保存帧包的最大时间 
 	UPROPERTY(EditAnywhere)
-	float MaxRecordTime = 2.f;
+	float MaxRecordTime = 4.f;
 };

@@ -60,7 +60,7 @@ public:
 	FORCEINLINE int32 GetAmmo() const { return Ammo; } //获取当前子弹数量(斜杠前面的数值)
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; } //获取最大子弹数量(弹夹容量 斜杠前面的数值)
 	FORCEINLINE float GetDamage() const { return Damage; } //获取当前武器的伤害值
-	
+	FORCEINLINE float GetHeadShotDamage() const { return HeadShotDamage; }
 
 	//开火相关的逻辑
 	virtual void Fire(const FVector& HitTarget);
@@ -135,6 +135,9 @@ protected:
 	//射线武器的伤害值
 	UPROPERTY(EditAnywhere)
 	float Damage = 20.f;
+	
+	UPROPERTY(EditAnywhere)
+	float HeadShotDamage = 40.f;
 
 	//作为一个开关，用来选择是否使用服务器倒带的计算方式来计算伤害
 	UPROPERTY(Replicated, EditAnywhere)

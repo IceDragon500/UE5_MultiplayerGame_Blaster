@@ -19,7 +19,7 @@ enum class EWeaponType : uint8
 	EWT_Rifle UMETA(DisplayName = "半自动步枪"),//半自动步枪
 	EWT_Pistol UMETA(DisplayName = "手枪"),//手枪
 	EWT_SubmachineGun UMETA(DisplayName = "冲锋枪"),//冲锋枪
-	EWT_ShotGun UMETA(DisplayName = "来复枪"),//来复枪
+	EWT_Shotgun UMETA(DisplayName = "来复枪"),//来复枪
 	EWT_SniperRifle UMETA(DisplayName = "狙击枪"),//狙击枪
 	EWT_GrenadeLauncher UMETA(DisplayName = "榴弹发射器"),//榴弹发射器
 

@@ -95,8 +95,8 @@ public:
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
-	FORCEINLINE UAnimMontage* GetReloadMotage() const { return ReloadMontage; }
-	FORCEINLINE UStaticMeshComponent* GetAttachGrenade() const { return AttachedGrenade; }
+	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
+	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
 
 	FORCEINLINE UBuffComponent* GetBuff() const { return BuffComponent; }
 
