@@ -75,16 +75,16 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 			);
 		if(ConfirmHitResult.bBlockingHit) // we hit the head, return early 首先检查是否爆头
 		{
-
-			if(ConfirmHitResult.Component.IsValid())
+			//如果检测到爆头了，就重置HitBox，然后打开角色模型的碰撞
+			//返回检测结果
+			if (ConfirmHitResult.Component.IsValid())
 			{
 				UBoxComponent* Box = Cast<UBoxComponent>(ConfirmHitResult.Component);
-				if(Box)
+				if (Box)
 				{
 					DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.f);
 				}
 			}
-			
 			ResetHitBoxes(HitCharacter, CurrentFrame);
 			EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 			return FServerSideRewindResult{ true, true };
@@ -94,11 +94,11 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 			// didn't hit head , check the rest of the boxes 如果没有爆头我们就检查其他的
 			for(auto& HitBoxPair : HitCharacter->HitCollisionBoxes)
 			{
+				//这里打开身体除了头部其他所有HitBox的碰撞
 				if(HitBoxPair.Value != nullptr)
 				{
 					HitBoxPair.Value->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 					HitBoxPair.Value->SetCollisionResponseToChannel(ECC_HitBox, ECollisionResponse::ECR_Block);
-					
 				}
 			}
 			World->LineTraceSingleByChannel(
@@ -107,17 +107,17 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 			TraceEnd,
 			ECC_HitBox
 			);
+			DrawDebugLine(World, TraceStart, TraceEnd, FColor::Red, false, 8.f);
 			if(ConfirmHitResult.bBlockingHit)
 			{
-				if(ConfirmHitResult.Component.IsValid())
+				if (ConfirmHitResult.Component.IsValid())
 				{
 					UBoxComponent* Box = Cast<UBoxComponent>(ConfirmHitResult.Component);
-					if(Box)
+					if (Box)
 					{
-						DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Blue, false, 8.f);
+						DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.f);
 					}
 				}
-				
 				ResetHitBoxes(HitCharacter, CurrentFrame);
 				EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 				return FServerSideRewindResult{ true, false };
@@ -381,10 +381,12 @@ void ULagCompensationComponent::ResetHitBoxes(ABlasterCharacter* HitCharacter, c
 	{
 		if(HitBoxPair.Value != nullptr)
 		{
+			DrawDebugBox(GetWorld(), HitBoxPair.Value->GetComponentLocation(), HitBoxPair.Value->GetScaledBoxExtent(), FQuat(HitBoxPair.Value->GetComponentRotation()), FColor::Blue, false, 8.f);
 			HitBoxPair.Value->SetWorldLocation(Package.HitBoxInfo[HitBoxPair.Key].Location);
 			HitBoxPair.Value->SetWorldRotation(Package.HitBoxInfo[HitBoxPair.Key].Rotation);
 			HitBoxPair.Value->SetBoxExtent(Package.HitBoxInfo[HitBoxPair.Key].BoxExtent);
 			HitBoxPair.Value->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			
 		}
 	}
 }
@@ -432,7 +434,7 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileServerSideRewind(AB
 }
 
 FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunServerSideRewind(
-	const TArray<ABlasterCharacter*> HitCharacters, const FVector_NetQuantize& TraceStart,
+	const TArray<ABlasterCharacter*>& HitCharacters, const FVector_NetQuantize& TraceStart,
 	const TArray<FVector_NetQuantize>& HitLocations, float HitTime)
 {
 	TArray<FFramePackage> FramesToCheck;
@@ -628,6 +630,7 @@ void ULagCompensationComponent::SaveFramePackage(FFramePackage& Package)
 			BoxInformation.Rotation = BoxPair.Value->GetComponentRotation();
 			BoxInformation.BoxExtent = BoxPair.Value->GetScaledBoxExtent();
 			Package.HitBoxInfo.Add(BoxPair.Key, BoxInformation);
+			DrawDebugBox(GetWorld(), BoxInformation.Location, BoxInformation.BoxExtent, FQuat(BoxInformation.Rotation), FColor::Red, false, 8.f);
 		}
 	}
 }

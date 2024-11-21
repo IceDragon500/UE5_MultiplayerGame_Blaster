@@ -8,7 +8,7 @@
 #include "Components/ActorComponent.h"
 #include "LagCompensationComponent.generated.h"
 
-//我们需要为每个帧分别存储位置，旋转、框的范围（大小）
+//我们需要为每个帧分别存储HitBox的位置，旋转、大小
 USTRUCT(BlueprintType)
 struct FBoxInformation
 {
@@ -63,10 +63,10 @@ struct FShotgunServerSideRewindResult
 	GENERATED_BODY()
 
 	UPROPERTY()
-	TMap<ABlasterCharacter*, int32> HeadShots;
+	TMap<ABlasterCharacter*, uint32> HeadShots;
 
 	UPROPERTY()
-	TMap<ABlasterCharacter*, int32> BodyShots;
+	TMap<ABlasterCharacter*, uint32> BodyShots;
 
 };
 
@@ -78,12 +78,35 @@ class BLASTER_API ULagCompensationComponent : public UActorComponent
 public:	
 
 	ULagCompensationComponent();
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	friend class ABlasterCharacter;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	//将存储的帧包显示在游戏中
 	void ShowFramePackage(const FFramePackage& framePackage, const FColor& Color);
 
+	//计算射线类武器Hitscan在开启服务器倒带功能后，命中结果如何
+	FServerSideRewindResult ServerSideRewind(
+	ABlasterCharacter* HitCharacter,
+	const FVector_NetQuantize& TraceStart,
+	const FVector_NetQuantize& HitLocation,
+	float HitTime
+	);
+
+	//计算飞弹类武器Projectile在开启服务器倒带功能后，命中结果如何
+	FServerSideRewindResult ProjectileServerSideRewind(
+	ABlasterCharacter* HitCharacter,
+	const FVector_NetQuantize& TraceStart,
+	const FVector_NetQuantize100& InitialVelocity,
+	float HitTime
+	);
+
+	//计算霰弹类武器Shotgun在开启服务器倒带功能后，命中结果如何
+	FShotgunServerSideRewindResult ShotgunServerSideRewind(
+	const TArray<ABlasterCharacter*>& HitCharacters,
+	const FVector_NetQuantize& TraceStart,
+	const TArray<FVector_NetQuantize>& HitLocations,
+	float HitTime);
+	
 	//对射线类武器Hitscan在开启服务器倒带功能后，计算伤害的逻辑
 	UFUNCTION(Server, Reliable)
 	void ServerScoreRequest(
@@ -111,48 +134,26 @@ public:
 		float HitTime
 		);
 
-
-	//计算射线类武器Hitscan在开启服务器倒带功能后，命中结果如何
-	FServerSideRewindResult ServerSideRewind(
-	ABlasterCharacter* HitCharacter,
-	const FVector_NetQuantize& TraceStart,
-	const FVector_NetQuantize& HitLocation,
-	float HitTime
-	);
-
-	//计算飞弹类武器Projectile在开启服务器倒带功能后，命中结果如何
-	FServerSideRewindResult ProjectileServerSideRewind(
-	ABlasterCharacter* HitCharacter,
-	const FVector_NetQuantize& TraceStart,
-	const FVector_NetQuantize100& InitialVelocity,
-	float HitTime
-	);
-	//计算霰弹类武器Shotgun在开启服务器倒带功能后，命中结果如何
-	FShotgunServerSideRewindResult ShotgunServerSideRewind(
-	const TArray<ABlasterCharacter*> HitCharacters,
-	const FVector_NetQuantize& TraceStart,
-	const TArray<FVector_NetQuantize>& HitLocations,
-	float HitTime);
-	
 protected:
 
 	virtual void BeginPlay() override;
 
-	void SaveFramePackage();
 	//传入一个Package，对每一帧保存时间和Box的信息至Package中
 	void SaveFramePackage(FFramePackage& Package);
 	
 	//传入Older和Younger两个帧包，计算出中间值，并将其返回
-	FFramePackage InterpBetweenFrames(
-		const FFramePackage& OlderFrame,
-		const FFramePackage& YoungerFrame,
-		float HitTime);
-	
+	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HitTime);
+
 	void CacheBoxPositions(ABlasterCharacter* HitCharacter, FFramePackage& OutFramePackage);
 	void MoveBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& Package);
-	void ResetHitBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& Package);
-	void EnableCharacterMeshCollision(ABlasterCharacter* HitCharacter, ECollisionEnabled::Type CollisionEnabled);
 	
+	//还原HitBox的位置，并且将碰撞重置为无
+	void ResetHitBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& Package);
+	
+	void EnableCharacterMeshCollision(ABlasterCharacter* HitCharacter, ECollisionEnabled::Type CollisionEnabled);
+
+	void SaveFramePackage();
+
 	FFramePackage GetFrameToCheck(ABlasterCharacter* HitCharacter, float HitTime);
 	
 	//Hitscan

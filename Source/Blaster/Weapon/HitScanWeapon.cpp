@@ -38,13 +38,14 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 					this,
 					UDamageType::StaticClass()
 				);
+				UE_LOG(LogTemp, Warning, TEXT("主机上伤害检测"));
 			}
 			if(!HasAuthority() && bUseServerSideRewind)//如果使用了服务器倒带，并且不是主机
 			{
 				BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(OwnerPawn) : BlasterOwnerCharacter;
 				BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(InstigatorController) : BlasterOwnerController;
+				UE_LOG(LogTemp, Warning, TEXT("使用了服务器倒带，并且不是主机"));
 				if(BlasterOwnerController && BlasterOwnerCharacter && BlasterOwnerCharacter->GetLagCompensation() && BlasterOwnerCharacter->IsLocallyControlled())
-					
 				{
 					BlasterOwnerCharacter->GetLagCompensation()->ServerScoreRequest(
 						BlasterCharacter,
@@ -55,7 +56,6 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 						);
 				}
 			}
-			
 		}
 		if(ImpactParticles)
 		{
