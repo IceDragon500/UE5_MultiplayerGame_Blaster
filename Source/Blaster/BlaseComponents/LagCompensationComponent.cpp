@@ -59,6 +59,7 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 	//首先我们先检查一下是否命中的头部head
 	//我们先把head的box碰撞打开 检测完毕之后在关闭
 	UBoxComponent* HeadBox = HitCharacter->HitCollisionBoxes[FName("head")];
+
 	HeadBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	HeadBox->SetCollisionResponseToChannel(ECC_HitBox, ECollisionResponse::ECR_Block);
 
@@ -107,7 +108,6 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 			TraceEnd,
 			ECC_HitBox
 			);
-			DrawDebugLine(World, TraceStart, TraceEnd, FColor::Red, false, 8.f);
 			if(ConfirmHitResult.bBlockingHit)
 			{
 				if (ConfirmHitResult.Component.IsValid())
@@ -126,7 +126,7 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 		
 	}
 
-	//ResetHitBoxes(HitCharacter, CurrentFrame);
+	ResetHitBoxes(HitCharacter, CurrentFrame);
 	EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 	return FServerSideRewindResult{ false, false };
 }
@@ -163,14 +163,14 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 
 	if(PathResult.HitResult.bBlockingHit)// we hit the head, return early 首先检查是否爆头
 	{
-		if(PathResult.HitResult.Component.IsValid())
+		/*if(PathResult.HitResult.Component.IsValid())
 		{
 			UBoxComponent* Box = Cast<UBoxComponent>(PathResult.HitResult.Component);
 			if(Box)
 			{
 				DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.f);
 			}
-		}
+		}*/
 			
 		ResetHitBoxes(HitCharacter, CurrentFrame);
 		EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
@@ -260,14 +260,14 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(ConfirmHitResult.GetActor());
 			if(BlasterCharacter)
 			{
-				if(ConfirmHitResult.Component.IsValid())
+				/*if(ConfirmHitResult.Component.IsValid())
 				{
 					UBoxComponent* Box = Cast<UBoxComponent>(ConfirmHitResult.Component);
 					if(Box)
 					{
 						DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.f);
 					}
-				}
+				}*/
 				if(ShotgunResult.HeadShots.Contains(BlasterCharacter))//Contains 检查是否包含指定的键
 				{
 					ShotgunResult.HeadShots[BlasterCharacter]++;
@@ -312,14 +312,14 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(ConfirmHitResult.GetActor());
 			if(BlasterCharacter)
 			{
-				if(ConfirmHitResult.Component.IsValid())
+				/*if(ConfirmHitResult.Component.IsValid())
 				{
 					UBoxComponent* Box = Cast<UBoxComponent>(ConfirmHitResult.Component);
 					if(Box)
 					{
 						DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.f);
 					}
-				}
+				}*/
 				
 				if(ShotgunResult.BodyShots.Contains(BlasterCharacter))//Contains 检查是否包含指定的键
 				{
@@ -361,6 +361,7 @@ void ULagCompensationComponent::CacheBoxPositions(ABlasterCharacter* HitCharacte
 void ULagCompensationComponent::MoveBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& Package)
 {
 	if(HitCharacter == nullptr) return;
+	PrintBoxExtent(HitCharacter->HitCollisionBoxes["Head"]->GetScaledBoxExtent(), FColor::Green, 5);
 	for(auto& HitBoxPair : HitCharacter->HitCollisionBoxes)
 	{
 		if(HitBoxPair.Value != nullptr)
@@ -368,7 +369,14 @@ void ULagCompensationComponent::MoveBoxes(ABlasterCharacter* HitCharacter, const
 			HitBoxPair.Value->SetWorldLocation(Package.HitBoxInfo[HitBoxPair.Key].Location);
 			HitBoxPair.Value->SetWorldRotation(Package.HitBoxInfo[HitBoxPair.Key].Rotation);
 			HitBoxPair.Value->SetBoxExtent(Package.HitBoxInfo[HitBoxPair.Key].BoxExtent);
+			DrawDebugBox(GetWorld(),
+				Package.HitBoxInfo[HitBoxPair.Key].Location,
+				Package.HitBoxInfo[HitBoxPair.Key].BoxExtent,
+				FQuat(Package.HitBoxInfo[HitBoxPair.Key].Rotation),
+				FColor::Blue, false, 8.f
+				);
 		}
+		
 	}
 }
 
@@ -383,7 +391,12 @@ void ULagCompensationComponent::ResetHitBoxes(ABlasterCharacter* HitCharacter, c
 			HitBoxPair.Value->SetWorldRotation(Package.HitBoxInfo[HitBoxPair.Key].Rotation);
 			HitBoxPair.Value->SetBoxExtent(Package.HitBoxInfo[HitBoxPair.Key].BoxExtent);
 			HitBoxPair.Value->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			
+			DrawDebugBox(GetWorld(),
+				Package.HitBoxInfo[HitBoxPair.Key].Location * 1.025,
+				Package.HitBoxInfo[HitBoxPair.Key].BoxExtent,
+				FQuat(Package.HitBoxInfo[HitBoxPair.Key].Rotation),
+				FColor::Cyan, false, 8.f
+				);
 		}
 	}
 }
@@ -407,7 +420,7 @@ void ULagCompensationComponent::ShowFramePackage(const FFramePackage& framePacka
 		FQuat(BoxInfo.Value.Rotation),
 		Color, 
 		false,
-		MaxRecordTime //这里我换成MaxRecordTime 相当于也是可以调节的，免得显示的时候显得很卡
+		2.f
 		);
 	}
 }
@@ -450,24 +463,30 @@ FFramePackage ULagCompensationComponent::GetFrameToCheck(ABlasterCharacter* HitC
 
 	//Frame package that we check to verify a hit
 	//我们检查以验证命中的帧包
+	//创建一个帧，用来保存被击中时 HitBox的信息
 	FFramePackage FrameToCheck;
+	//是否应该进行插帧
 	bool bShouldInterpolate = true;
 	
 	//Frame histroy of the HitCharacter
 	//被击中角色的帧历史记录
+	//首先取得被击中角色的FrameHistory 他自己保存的帧包
+	//然后获得这个包头和尾的时间
 	const TDoubleLinkedList<FFramePackage>& History = HitCharacter->GetLagCompensation()->FrameHistory;
-	const float OldestHistoryTime = History.GetTail()->GetValue().Time;
-	const float NewestHistoryTime = History.GetHead()->GetValue().Time;
+	const float OldestHistoryTime = History.GetTail()->GetValue().Time;//尾
+	const float NewestHistoryTime = History.GetHead()->GetValue().Time;//头
+
 	if(OldestHistoryTime > HitTime)
 	{
 		// too far back - too laggy to do ServerSideRewind
 		//太远 - 太滞后，无法进行服务器端倒带
 		return FFramePackage();
 	}
-	if(OldestHistoryTime == HitTime)
+	if(OldestHistoryTime == HitTime) //如果时间刚好相等，则对应时间的FFramePackage就是我们需要的帧包
 	{
 		FrameToCheck = History.GetTail()->GetValue();
-		bShouldInterpolate = false;
+		//bShouldInterpolate = false;
+		return FrameToCheck;
 	}
 	if(NewestHistoryTime <= HitTime)
 	{
@@ -573,7 +592,7 @@ void ULagCompensationComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 
 void ULagCompensationComponent::SaveFramePackage()
 {
-	if(Character == nullptr || !Character->HasAuthority()) return;
+	if(Character == nullptr || !Character->HasAuthority()) return;//这里使用!Character->HasAuthority() 是因为服务器端的玩家不需要这个，我们需要判断是否为客户端的玩家
 	if(FrameHistory.Num() <= 1)
 	{
 		FFramePackage ThisFrame;
@@ -600,7 +619,7 @@ void ULagCompensationComponent::SaveFramePackage()
 		SaveFramePackage(ThisFrame);
 		FrameHistory.AddHead(ThisFrame);
 
-		ShowFramePackage(ThisFrame, FColor::Red);
+		//ShowFramePackage(ThisFrame, FColor::Red);
 	}
 }
 
@@ -619,5 +638,15 @@ void ULagCompensationComponent::SaveFramePackage(FFramePackage& Package)
 			BoxInformation.BoxExtent = BoxPair.Value->GetScaledBoxExtent();
 			Package.HitBoxInfo.Add(BoxPair.Key, BoxInformation);
 		}
+	}
+}
+
+void ULagCompensationComponent::PrintBoxExtent(FVector Box, const FColor& Color, int32 key)
+{
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(key, 1, Color, FString::Printf(TEXT("BoxExtent_X:%f"), Box.X));
+		GEngine->AddOnScreenDebugMessage(key+1, 1, Color, FString::Printf(TEXT("BoxExtent_Y:%f"), Box.Y));
+		GEngine->AddOnScreenDebugMessage(key+2, 1, Color, FString::Printf(TEXT("BoxExtent_Z:%f"), Box.Z));
 	}
 }

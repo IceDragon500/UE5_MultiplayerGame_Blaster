@@ -85,6 +85,7 @@ public:
 	void ShowFramePackage(const FFramePackage& framePackage, const FColor& Color);
 
 	//计算射线类武器Hitscan在开启服务器倒带功能后，命中结果如何
+	//传入被击中的角色，起点，终点，命中时间	
 	FServerSideRewindResult ServerSideRewind(
 	ABlasterCharacter* HitCharacter,
 	const FVector_NetQuantize& TraceStart,
@@ -153,6 +154,7 @@ protected:
 
 	void SaveFramePackage();
 
+	//传入被击中的角色和时间，返回这个角色在那个时间的HitBox信息
 	FFramePackage GetFrameToCheck(ABlasterCharacter* HitCharacter, float HitTime);
 	
 	//Hitscan
@@ -185,6 +187,7 @@ protected:
 		const FVector_NetQuantize& TraceStart,
 		const TArray<FVector_NetQuantize>& HitLocations);
 
+	void PrintBoxExtent(FVector Box, const FColor& Color, int32 key);
 	
 private:
 	UPROPERTY()
@@ -194,6 +197,7 @@ private:
 	ABlasterPlayerController* Controller;
 
 	//用来保存帧包
+	//数据从上至下进来，上面是头，始终是新的，下面是尾，始终是旧的
 	TDoubleLinkedList<FFramePackage> FrameHistory;
 
 	//保存帧包的最大时间 

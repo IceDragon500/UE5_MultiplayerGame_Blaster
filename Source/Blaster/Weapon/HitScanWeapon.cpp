@@ -25,6 +25,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		FHitResult FireHit;
 		WeaponTraceHit(Start, HitTarget, FireHit);
 
+		//从命中结果中，将命中的Actor转为BlasterCharacter
 		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
 		if(BlasterCharacter && InstigatorController)
 		{
