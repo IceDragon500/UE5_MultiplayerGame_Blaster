@@ -2,6 +2,8 @@
 
 
 #include "BlasterPlayerController.h"
+
+#include "EnhancedInputComponent.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
 #include "Blaster/GameState/BlasterGameState.h"
@@ -177,6 +179,19 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 		//SetHUDShield(BlasterCharacter->GetShield(), BlasterCharacter->GetMaxShield());
 		//BlasterCharacter->UpdateHUDAmmo();
 	}
+}
+
+void ABlasterPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+	if(InputComponent == nullptr) return;
+	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent);
+
+	if(EnhancedInputComponent)
+	{
+		EnhancedInputComponent->BindAction(ReturnMenu, ETriggerEvent::Triggered, this, &ABlasterPlayerController::ReturnKeyPressed);
+	}
+	
 }
 
 void ABlasterPlayerController::SetHUDHealth(float Health, float MaxHealth)
@@ -547,4 +562,32 @@ void ABlasterPlayerController::HandleCooldown()
 		//BlasterCharacter->GetCombat->FireButtonPressed(false);
 		//然后他还禁用了角色的瞄准偏移  还是觉得没有必要
 	}
+}
+
+void ABlasterPlayerController::ReturnKeyPressed(const FInputActionValue& Value)
+{
+	if(ReturnToMainMenuWidget == nullptr) return;
+	if(ReturnToMainMenu == nullptr)
+	{
+		ReturnToMainMenu = CreateWidget<UReturnToMainMenu>(this, ReturnToMainMenuWidget);
+	}
+	if(ReturnToMainMenu)
+	{
+		bReturnToMainMenuOpen = !bReturnToMainMenuOpen;
+		if(bReturnToMainMenuOpen)
+		{
+			ReturnToMainMenu->MenuSetup();
+		}
+		else
+		{
+			ReturnToMainMenu->MenuTearDown();
+		}
+	}
+	
+	UE_LOG(LogTemp, Warning, TEXT("按下了按钮"));
+	//show the return to main menu widget
+	//显示返回到主菜单小部件
+
+	
+	
 }

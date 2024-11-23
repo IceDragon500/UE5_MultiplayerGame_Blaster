@@ -6,8 +6,11 @@
 //#include "Blaster/GameMode/BlasterGameMode.h"
 #include "GameFramework/PlayerController.h"
 #include "Blaster/HUD/BlasterHUD.h"
+#include "Blaster/HUD/ReturnToMainMenu.h"
 #include "BlasterPlayerController.generated.h"
 
+struct FInputActionValue;
+class UInputAction;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHigh);
 
 
@@ -20,7 +23,6 @@ class BLASTER_API ABlasterPlayerController : public APlayerController
 	GENERATED_BODY()
 
 public:
-
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDShield(float Shield, float MaxShield);
 	void SetHUDScore(float Score);
@@ -56,6 +58,17 @@ public:
 	FHighPingDelegate HighPingDelegate;
 	
 protected:
+
+	virtual void SetupInputComponent() override;
+
+	//增强输入-返回菜单菜单按钮
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|增强输入")
+	UInputAction* ReturnMenu;
+	
+	//教程里面是ShowReturnToMainMenu()
+	void ReturnKeyPressed(const FInputActionValue& Value);
+
+	
 	virtual void BeginPlay() override;
 	void SetHUDTime();
 
@@ -112,6 +125,17 @@ private:
 	ABlasterHUD* BlasterHUD;
 	UPROPERTY()
 	class ABlasterGameMode* BlasterGameMode;
+
+	/**
+	 * return to main menu
+	 */
+	UPROPERTY(EditAnywhere, Category = HUD)
+	TSubclassOf<class UUserWidget> ReturnToMainMenuWidget;
+
+	UPROPERTY()
+	UReturnToMainMenu* ReturnToMainMenu;
+
+	bool bReturnToMainMenuOpen = false;
 
 	//比赛时长（秒）,从GameMode中赋值
 	float MatchTime = 0.f;
