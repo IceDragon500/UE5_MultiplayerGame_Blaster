@@ -196,9 +196,10 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.f;
 }
 
-void ABlasterCharacter::Elim()
+void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 {
-	//DropOrDestroyWeapons(); 我这里没有使用与教程一致的方法
+	
+	//DropOrDestroyWeapons(); 我这里没有使用与教程一致的方法 直接将身上所有武器丢在地上
 	if(Combat)
 	{
 		if(Combat->EquippedWeapon)
@@ -211,17 +212,12 @@ void ABlasterCharacter::Elim()
 		}
 	}
 
-	MulticastElim();
-	GetWorldTimerManager().SetTimer(
-		ElimTimer,
-		this,
-		&ThisClass::ElimTimerFinished,
-		ElimDelay
-		);
+	MulticastElim(bPlayerLeftGame);
 }
 
-void ABlasterCharacter::MulticastElim_Implementation()
+void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 {
+	bLeftGame = bPlayerLeftGame;
 	if(BlasterPlayerController)
 	{
 		BlasterPlayerController->SetHUDWeaponAmmo(0);
@@ -231,6 +227,7 @@ void ABlasterCharacter::MulticastElim_Implementation()
 	PlayElimMontage();
 
 	//Start dissolve effect
+	//播放淘汰的特效和动画
 	if(DissolveMaterialInstance)
 	{
 		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance, this);
@@ -242,6 +239,7 @@ void ABlasterCharacter::MulticastElim_Implementation()
 	StartDissolve();
 
 	//disable character movement
+	//禁用移动
 	GetCharacterMovement()->StopMovementImmediately();//禁止通过鼠标旋转角色
 	
 	bDisableGameplay = true;//禁止角色输入
@@ -251,7 +249,8 @@ void ABlasterCharacter::MulticastElim_Implementation()
 		Combat->FireButtonPressed(false);
 	}
 	
-	//Disable Collision关闭碰撞
+	//Disable Collision
+	//关闭碰撞
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
@@ -285,15 +284,39 @@ void ABlasterCharacter::MulticastElim_Implementation()
 	{
 		ShowSniperScopeWidget(false);
 	}
+
+	GetWorldTimerManager().SetTimer(
+	ElimTimer,
+	this,
+	&ThisClass::ElimTimerFinished,
+	ElimDelay
+	);
 }
 
 void ABlasterCharacter::ElimTimerFinished()
 {
 	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
-	if(BlasterGameMode)
+	//这里用bLeftGame区分玩家是被淘汰，还是玩家退出了游戏
+	if(BlasterGameMode && !bLeftGame)
 	{
+		//如果玩家是被淘汰了，最后需要复活玩家重新进入游戏
 		BlasterGameMode->RequestRespawn(this, Controller);
-	}	
+	}
+	if(bLeftGame && IsLocalizedResource())
+	{
+		//如果这里是玩家退出了游戏，则需要检查积分这些东西
+		OnLeftGame.Broadcast();
+	}
+}
+
+void ABlasterCharacter::ServerLeaveGame_Implementation()
+{
+	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	BlasterPlayerState = BlasterPlayerState==nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
+	if(BlasterGameMode && BlasterPlayerState)
+	{
+		BlasterGameMode->PlayerLeftGame(BlasterPlayerState);
+	}
 }
 
 void ABlasterCharacter::DropOrDestroyWeapon(AWeapon* Weapon)

@@ -36,7 +36,11 @@ public:
 	//ABlasterPlayerController* AttackerController 攻击者的控制器
 	virtual void PlayerEliminated(ABlasterCharacter* ElimmedCharacter, ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController);
 
+	//玩家重生，在游戏时间未到时，复活玩家
 	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
+
+	//玩家离开游戏
+	void PlayerLeftGame(ABlasterPlayerState* PlayerLeaving);
 
 	FORCEINLINE float GetCountdownTime() const { return CountdownTime; }
 	

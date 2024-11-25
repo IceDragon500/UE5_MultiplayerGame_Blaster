@@ -25,6 +25,8 @@ class UInputAction;
 class AWeapon;
 class UWidgetComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
+
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
 {
@@ -56,10 +58,12 @@ public:
 	
 	virtual void OnRep_ReplicatedMovement() override;
 	
-	void Elim();//被淘汰之后的逻辑
+	//被淘汰之后的逻辑
+	void Elim(bool bPlayerLeftGame);
 	
-	UFUNCTION(NetMulticast, Reliable)//被淘汰之后的逻辑
-	void MulticastElim();
+	//如果玩家被淘汰了，需要做哪些事情
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastElim(bool bPlayerLeftGame);
 	
 	virtual void Destroyed() override;
 	
@@ -120,6 +124,12 @@ public:
 	TMap<FName, UBoxComponent*> HitCollisionBoxes;//用来储存用于服务器回退的帧包相关的boxComponent信息
 
 	bool bFinishedSwapping = false;
+
+	//执行玩家离开游戏的逻辑
+	UFUNCTION(Server, Reliable)
+	void ServerLeaveGame();
+
+	FOnLeftGame OnLeftGame;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -368,7 +378,13 @@ private:
 	float ElimDelay = 3.f;
 
 	//定时器到时间之后调用的方法
+	//执行玩家被淘汰之后，复活玩家的逻辑
 	void ElimTimerFinished();
+
+	/**
+	 * 离开游戏
+	 */
+	bool bLeftGame = false;
 
 	/*
 	 *使用时间轴控制角色溶解特效
