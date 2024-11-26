@@ -130,6 +130,15 @@ public:
 	void ServerLeaveGame();
 
 	FOnLeftGame OnLeftGame;
+
+	//广播 获得第一名名次 用来实现额外的特效
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastGainedTheLead();
+
+	//广播 失去第一名名次
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastLostTheLead();
+	
 	
 protected:
 	virtual void BeginPlay() override;
@@ -423,6 +432,13 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category="BlasterPlayer|角色淘汰")
 	USoundCue* ElimBotSound;
+
+
+	UPROPERTY(EditAnywhere)
+	UNiagaraSystem* CrownSystem;
+
+	UPROPERTY()
+	UNiagaraComponent* CrownComponent;
 
 /**
  * Grenade手雷

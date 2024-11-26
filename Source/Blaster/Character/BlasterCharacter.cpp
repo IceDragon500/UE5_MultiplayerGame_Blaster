@@ -9,6 +9,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Blaster/Blaster.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
+#include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Components/CapsuleComponent.h"
@@ -285,6 +286,11 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 		ShowSniperScopeWidget(false);
 	}
 
+	if(CrownComponent)
+	{
+		CrownComponent->DestroyComponent();
+	}
+
 	GetWorldTimerManager().SetTimer(
 	ElimTimer,
 	this,
@@ -302,7 +308,7 @@ void ABlasterCharacter::ElimTimerFinished()
 		//如果玩家是被淘汰了，最后需要复活玩家重新进入游戏
 		BlasterGameMode->RequestRespawn(this, Controller);
 	}
-	if(bLeftGame && IsLocalizedResource())
+	if(bLeftGame && IsLocallyControlled())
 	{
 		//如果这里是玩家退出了游戏，则需要检查积分这些东西
 		OnLeftGame.Broadcast();
@@ -363,6 +369,35 @@ void ABlasterCharacter::Destroyed()
 		Combat->EquippedWeapon->Destroy();
 	}
 	
+}
+
+void ABlasterCharacter::MulticastGainedTheLead_Implementation()
+{
+	if(CrownSystem == nullptr) return;
+	if(CrownSystem)
+	{
+		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			CrownSystem,
+			GetCapsuleComponent(),
+			FName(),
+			GetActorLocation() + FVector(0.f, 0.f, 110.f),
+			GetActorRotation(),
+			EAttachLocation::KeepWorldPosition,
+			false
+			);
+	}
+	if(CrownComponent)
+	{
+		CrownComponent->Activate();
+	}
+}
+
+void ABlasterCharacter::MulticastLostTheLead_Implementation()
+{
+	if(CrownComponent)
+	{
+		CrownComponent->DestroyComponent();
+	}
 }
 
 void ABlasterCharacter::BeginPlay()
@@ -1015,6 +1050,12 @@ void ABlasterCharacter::PollInit()
 		{
 			BlasterPlayerState->AddToScore(0.f);
 			BlasterPlayerState->AddToDefeats(0);
+			
+			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
+			if(BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(BlasterPlayerState))
+			{
+				MulticastGainedTheLead();
+			}
 		}
 	}
 }
