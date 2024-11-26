@@ -14,6 +14,44 @@
 #include "Net/UnrealNetwork.h"
 
 
+void ABlasterPlayerController::BroadcastElie(APlayerState* Attacker, APlayerState* Victim)
+{
+	ClientElimAnnouncement(Attacker, Victim);
+}
+
+void ABlasterPlayerController::ClientElimAnnouncement_Implementation(APlayerState* Attacker, APlayerState* Victim)
+{
+	APlayerState* Self = GetPlayerState<APlayerState>();
+	if(Attacker && Victim && Self)
+	{
+		BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+		if(BlasterHUD)
+		{
+			if(Attacker == Self && Victim != Self)//自己击杀了他人
+			{
+				BlasterHUD->AddElimAnnouncement("You", Victim->GetPlayerName());
+				return;
+			}
+			if(Victim == Self && Attacker != Self)//自己被击杀了
+			{
+				BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "You");
+				return;
+			}
+			if(Attacker == Victim && Attacker == Self)//自己自杀
+			{
+				BlasterHUD->AddElimAnnouncement("You", "Youself");
+				return;
+			}
+			if(Attacker == Victim && Attacker != Self)//别个自杀
+			{
+				BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "themselves");
+				return;
+			}
+			BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), Victim->GetPlayerName());//第三者看A杀了B
+		}
+	}
+}
+
 void ABlasterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -180,6 +218,7 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 		//BlasterCharacter->UpdateHUDAmmo();
 	}
 }
+
 
 void ABlasterPlayerController::SetupInputComponent()
 {

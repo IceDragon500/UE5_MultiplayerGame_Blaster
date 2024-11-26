@@ -37,27 +37,37 @@ public:
 
 	FORCEINLINE void SetHUDPackage(const FHUDPackage& Package) { HUDPackage = Package; }
 
-	//创建CharacterOverlay角色主界面
+/*
+ * 创建CharacterOverlay角色主界面
+ */
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UCharacterOverlay> CharacterOverlayClass;
 	UPROPERTY()
 	UCharacterOverlay* CharacterOverlay;
+	//将游戏中主界面添加到窗口
 	void AddCharacterOverlay();
 
-	//创建Announcement公告界面
+/*
+ * 创建Announcement公告界面
+*/
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UAnnouncement> AnnouncementClass;
 	UPROPERTY()
 	UAnnouncement* Announcement;
+	//将开始游戏的公告界面，添加至窗口
 	void AddAnnouncement();
 
-	
+	//将Elim消息 添加至窗口
+	void AddElimAnnouncement(FString Attacker, FString Victim);
 
 protected:
 	virtual  void BeginPlay() override;
 
 	
 private:
+	
+	UPROPERTY()
+	class APlayerController* OwningPlayer;
 
 	void DrawCrosshair(UTexture2D* Texture, FVector2d ViewportSize, FVector2d Spread, FLinearColor CrosshairColor);
 	FHUDPackage HUDPackage;
@@ -66,5 +76,9 @@ private:
 	//这里设置了最大值，控制的变量是0~1，用变量乘以这个最大值
 	UPROPERTY(EditAnywhere)
 	float CrosshairSpreaMax = 16.f;
+
+	
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UElimAnnouncement> ElimAnnouncementClass;
 	
 };

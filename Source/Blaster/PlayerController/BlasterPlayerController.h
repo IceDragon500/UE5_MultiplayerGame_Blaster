@@ -56,6 +56,8 @@ public:
 	float SingleTripTime = 0.f;
 
 	FHighPingDelegate HighPingDelegate;
+
+	void BroadcastElie(APlayerState* Attacker, APlayerState* Victim);
 	
 protected:
 
@@ -118,6 +120,9 @@ protected:
 	void ShowPingDate(float Ping);//显示ping值
 	void HighPingWarning();//播放ping的动画
 	void StopHighPingWarning();//停止播放ping的动画
+
+	UFUNCTION(Client, Reliable)
+	void ClientElimAnnouncement(APlayerState* Attacker, APlayerState* Victim);
 	
 
 private:

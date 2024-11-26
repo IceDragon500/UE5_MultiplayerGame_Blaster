@@ -2,8 +2,7 @@
 
 
 #include "BlasterHUD.h"
-
-#include "Widgets/Text/ISlateEditableTextWidget.h"
+#include "ElimAnnouncement.h"
 
 void ABlasterHUD::BeginPlay()
 {
@@ -18,6 +17,20 @@ void ABlasterHUD::BeginPlay()
 		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
 	}
 	*/
+}
+
+void ABlasterHUD::AddElimAnnouncement(FString Attacker, FString Victim)
+{
+	OwningPlayer = OwningPlayer == nullptr ? GetOwningPlayerController() : OwningPlayer;
+	if(OwningPlayer && ElimAnnouncementClass)
+	{
+		UElimAnnouncement* ElimAnnouncementWidget = CreateWidget<UElimAnnouncement>(OwningPlayer, ElimAnnouncementClass);
+		if(ElimAnnouncementWidget)
+		{
+			ElimAnnouncementWidget->SetAnnouncementText(Attacker, Victim);
+			ElimAnnouncementWidget->AddToViewport();
+		}
+	}
 }
 
 void ABlasterHUD::AddCharacterOverlay()
