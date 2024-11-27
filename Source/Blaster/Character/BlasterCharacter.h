@@ -294,6 +294,9 @@ private:
 	UPROPERTY()
 	class ABlasterPlayerState* BlasterPlayerState;
 	
+	UPROPERTY()
+	ABlasterGameMode* BlasterGameMode;
+	
 	UPROPERTY(VisibleAnywhere, Category = "BlasterPlayer|摄像机")
 	USpringArmComponent* CameraBoom;
 

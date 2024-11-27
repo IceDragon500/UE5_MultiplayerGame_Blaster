@@ -260,7 +260,7 @@ void AWeapon::OnEquipped()
 		BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
 		if(BlasterOwnerController && HasAuthority() && !BlasterOwnerController->HighPingDelegate.IsBound())
 		{
-			 BlasterOwnerController->HighPingDelegate.AddDynamic(this, &AWeapon::AWeapon::OnPingTooHigh);
+			 BlasterOwnerController->HighPingDelegate.AddDynamic(this, &AWeapon::OnPingTooHigh);
 		}
 	}
 }
@@ -292,7 +292,7 @@ void AWeapon::OnDropped()
 		BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
 		if(BlasterOwnerController && HasAuthority() && BlasterOwnerController->HighPingDelegate.IsBound())
 		{
-			BlasterOwnerController->HighPingDelegate.RemoveDynamic(this, &AWeapon::AWeapon::OnPingTooHigh);
+			BlasterOwnerController->HighPingDelegate.RemoveDynamic(this, &AWeapon::OnPingTooHigh);
 		}
 	}
 }
@@ -323,7 +323,7 @@ void AWeapon::OnEquippedSecondary()
 		BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
 		if(BlasterOwnerController && HasAuthority() && BlasterOwnerController->HighPingDelegate.IsBound())
 		{
-			BlasterOwnerController->HighPingDelegate.RemoveDynamic(this, &AWeapon::AWeapon::OnPingTooHigh);
+			BlasterOwnerController->HighPingDelegate.RemoveDynamic(this, &AWeapon::OnPingTooHigh);
 		}
 	}
 	

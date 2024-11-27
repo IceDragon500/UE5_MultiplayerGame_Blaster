@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 //#include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
+#include "Blaster/Weapon/Weapon.h"
 #include "Components/ActorComponent.h"
 #include "LagCompensationComponent.generated.h"
 

@@ -301,7 +301,7 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 
 void ABlasterCharacter::ElimTimerFinished()
 {
-	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 	//这里用bLeftGame区分玩家是被淘汰，还是玩家退出了游戏
 	if(BlasterGameMode && !bLeftGame)
 	{
@@ -317,7 +317,7 @@ void ABlasterCharacter::ElimTimerFinished()
 
 void ABlasterCharacter::ServerLeaveGame_Implementation()
 {
-	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 	BlasterPlayerState = BlasterPlayerState==nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
 	if(BlasterGameMode && BlasterPlayerState)
 	{
@@ -362,7 +362,7 @@ void ABlasterCharacter::Destroyed()
 	}
 
 	
-	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 	bool bMatchNotInProgress = BlasterGameMode && BlasterGameMode->GetMatchState() != MatchState::InProgress;
 	if(Combat && Combat->EquippedWeapon && bMatchNotInProgress)
 	{
@@ -463,6 +463,15 @@ void ABlasterCharacter::RotateInPlace(float DeltaTime)
 		return;
 	}
 	*/
+	if (Combat && Combat->EquippedWeapon) GetCharacterMovement()->bOrientRotationToMovement = false;
+	if (Combat && Combat->EquippedWeapon) bUseControllerRotationYaw = true;
+
+	if (bDisableGameplay)
+	{
+		bUseControllerRotationYaw = false;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
 
 	//这里判断是否旋转根骨骼
 	//角色在本地/远程网络上下文中的网络角色
@@ -668,8 +677,8 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 		}
 		else//否则就是伤害比护盾值多，所以要先把护盾置0，然后扣除护盾值，再看看有多少打在Health上了
 		{
-			Shield = 0.f;
 			DamageToHealth = FMath::Clamp(DamageToHealth - Shield, 0.f, Damage);
+			Shield = 0.f;
 		}
 	}
 	
@@ -683,7 +692,7 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	//获得游戏模式，然后执行游戏模式中的淘汰相关的逻辑
 	if (Health == 0.f)
 	{
-		ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+		BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 		if(BlasterGameMode)
 		{
 			//获得受害者的控制器，就是当前这个类
@@ -886,7 +895,7 @@ void ABlasterCharacter::SimProxiesTurn()
 		{
 			TurningInPlace = ETurningInPlace::ETIP_Right;
 		}
-		else if(ProxyYaw < -TurnThreshold)
+		else if(ProxyYaw > -TurnThreshold)
 		{
 			TurningInPlace = ETurningInPlace::ETIP_Left;
 		}
@@ -1028,7 +1037,7 @@ void ABlasterCharacter::SpawnDefaultWeapon()
 	//在Blaster的地图中的时候 我们才持有默认武器
 	//在大厅的时候 不需要默认武器
 	//所以我们需要获取一下GameMode
-	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 	UWorld* World = GetWorld();
 	if(BlasterGameMode && World && !bElimmed && DefaultWeaponClass)
 	{
