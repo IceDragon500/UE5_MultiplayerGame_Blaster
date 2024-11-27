@@ -36,10 +36,16 @@ public:
 	//初始的速度 
 	FVector_NetQuantize100 InitialVelocity;//因为速度包含了方向，因此使用了精度更高的FVector_NetQuantize100
 	//初始速度
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "子弹属性")
 	float InitialSpeed = 15000;
-	
+
+	//普通伤害
+	UPROPERTY(EditAnywhere, Category= "子弹属性")
 	float Damage = 20.f;
+
+	//爆头伤害, 手雷和火箭弹不需要设置这个
+	UPROPERTY(EditAnywhere, Category= "子弹属性")
+	float HeadShotDamage = 40.f;
 	
 protected:
 
@@ -67,7 +73,7 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* ProjectileMesh;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "子弹属性")
 	UBoxComponent* CollisionBox;
 	
 	//命中特效
