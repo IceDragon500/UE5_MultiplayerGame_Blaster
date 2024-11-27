@@ -76,9 +76,16 @@ private:
 	//这里设置了最大值，控制的变量是0~1，用变量乘以这个最大值
 	UPROPERTY(EditAnywhere)
 	float CrosshairSpreaMax = 16.f;
-
 	
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UElimAnnouncement> ElimAnnouncementClass;
+
+	UPROPERTY(EditAnywhere)
+	float ElimAnnouncementTime = 5.5f;
+
+	UFUNCTION()
+	void ElimAnnouncementTimerFinished(UElimAnnouncement* MsgToRemove);
+
+	TArray<UElimAnnouncement*> ElimMessages;
 	
 };
