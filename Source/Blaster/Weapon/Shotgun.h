@@ -21,6 +21,6 @@ protected:
 private:
 
 	//散弹枪子弹数量
-	UPROPERTY(EditAnywhere , Category= "Weapon Scatter")
+	UPROPERTY(EditAnywhere , Category= "武器属性|Weapon Scatter")
 	uint32 NumberOfPellets = 10;
 };

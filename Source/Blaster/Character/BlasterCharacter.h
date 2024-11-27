@@ -215,58 +215,58 @@ protected:
 	 * 这里通过给模型上添加box，记录用来给服务器回退机制使用
 	 */
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|HitBox")
 	UBoxComponent* headbox; //头部
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|HitBox")
 	UBoxComponent* pelvis;//盆骨
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|HitBox")
 	UBoxComponent* spine_02;//脊柱2
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|HitBox")
 	UBoxComponent* spine_03;//脊柱3
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|HitBox")
 	UBoxComponent* upperarm_l;//左上臂
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|HitBox")
 	UBoxComponent* upperarm_r;//右上臂
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|HitBox")
 	UBoxComponent* lowerarm_l;//左下肢
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|HitBox")
 	UBoxComponent* lowerarm_r;//右下肢
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|HitBox")
 	UBoxComponent* hand_l;//左手
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|HitBox")
 	UBoxComponent* hand_r;//右手
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|HitBox")
 	UBoxComponent* backpack;//背包
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|HitBox")
 	UBoxComponent* blanket;//背上的那个毯子
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|HitBox")
 	UBoxComponent* thigh_l;//左大腿
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|HitBox")
 	UBoxComponent* thigh_r;//右大腿
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|HitBox")
 	UBoxComponent* calf_l;//左小腿
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|HitBox")
 	UBoxComponent* calf_r;//右小腿
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|HitBox")
 	UBoxComponent* foot_l;//左脚
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "BlasterPlayer|HitBox")
 	UBoxComponent* foot_r;//右脚
 
 
@@ -284,7 +284,7 @@ private:
 	void HideCameraIfCharacterClose();
 	
 	//摄像机靠墙阈值
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "BlasterPlayer|摄像机")
 	float CameraThreshold = 200.f;
 
 	
@@ -309,11 +309,11 @@ private:
 	AWeapon* OverlappingWeapon;
 
 	//创建战斗组件CombatComponent
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BlasterPlayer", meta=(AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BlasterPlayer|功能组件", meta=(AllowPrivateAccess = "true"))
 	UCombatComponent* Combat;
 
 	//创建Buff组件
-	UPROPERTY(VisibleAnywhere, Category = "BlasterPlayer", meta=(AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, Category = "BlasterPlayer|功能组件", meta=(AllowPrivateAccess = "true"))
 	UBuffComponent* BuffComponent;
 	
 	float AO_Yaw;//瞄准偏移Yaw
@@ -427,30 +427,30 @@ private:
 	UParticleSystem* ElimBotEffect;
 
 	//特效组件
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category="BlasterPlayer|角色淘汰")
 	UParticleSystemComponent* ElimBotComponent;
 	
 	UPROPERTY(EditAnywhere, Category="BlasterPlayer|角色淘汰")
 	USoundCue* ElimBotSound;
 
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="BlasterPlayer|角色淘汰")
 	UNiagaraSystem* CrownSystem;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, Category="BlasterPlayer|角色淘汰")
 	UNiagaraComponent* CrownComponent;
 
 /**
  * Grenade手雷
  */
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category="BlasterPlayer|默认武器")
 	UStaticMeshComponent* AttachedGrenade;
 
 	/***
 	 * Default Weapon默认武器
 	 */
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="BlasterPlayer|默认武器")
 	TSubclassOf<AWeapon> DefaultWeaponClass;
 
 	//void DropOrDestroyWeapon(AWeapon* Weapon);教程中有，我的案例中未将其实现
@@ -461,6 +461,6 @@ private:
 	 * 帧存储的一些操作
 	 */
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category="BlasterPlayer|功能组件")
 	ULagCompensationComponent* LagCompensation;
 };

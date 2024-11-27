@@ -23,25 +23,25 @@ protected:
 	void WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit);
 	
 	//命中部位的粒子特效
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "武器属性|特效")
 	UParticleSystem* ImpactParticles;
 
 	//命中的音效
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "武器属性|特效")
 	USoundCue* HitSound;
 	
 private:
 	
 	//命中轨迹特效
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "武器属性|特效")
 	UParticleSystem* BeamParticles;
 
 	//枪口闪光特效
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "武器属性|特效")
 	UParticleSystem* MuzzleFlash;
 
 	//开火的音效
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "武器属性|特效")
 	USoundCue* FireSound;
 	
 };

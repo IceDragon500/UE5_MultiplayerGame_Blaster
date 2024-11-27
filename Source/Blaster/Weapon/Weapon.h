@@ -97,12 +97,12 @@ public:
 	bool bDestroyWeapon = false;
 
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "武器属性|Weapon")
 	EFireType FireType = EFireType::EFT_HitScan;
 	
 	
 	//启用或者禁用散射
-	UPROPERTY(EditAnywhere, Category= "Weapon Scatter")
+	UPROPERTY(EditAnywhere, Category= "武器属性|Weapon Scatter")
 	bool bUseScatter = false;
 
 	
@@ -125,22 +125,22 @@ protected:
  * 以散点图结尾点击并应用
  */
 	//从枪口到球体的距离
-	UPROPERTY(EditAnywhere, Category= "Weapon Scatter")
+	UPROPERTY(EditAnywhere, Category= "武器属性|Weapon Scatter")
 	float DistanceToSphere = 800.f;
 
 	//球体的半径
-	UPROPERTY(EditAnywhere, Category= "Weapon Scatter")
+	UPROPERTY(EditAnywhere, Category= "武器属性|Weapon Scatter")
 	float SphereRadius = 75.f;
 
 	//射线武器的伤害值
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "武器属性|Weapon")
 	float Damage = 20.f;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category= "武器属性|Weapon")
 	float HeadShotDamage = 40.f;
 
 	//作为一个开关，用来选择是否使用服务器倒带的计算方式来计算伤害
-	UPROPERTY(Replicated, EditAnywhere)
+	UPROPERTY(Replicated, EditAnywhere, Category= "武器属性|Server Side Rewind")
 	bool bUseServerSideRewind = false;
 
 	UPROPERTY()
@@ -210,10 +210,10 @@ private:
 	void SpendRound();
 	
 	//最大子弹数量(弹夹容量)
-	UPROPERTY(EditAnywhere, Category= "武器属性")
+	UPROPERTY(EditAnywhere, Category= "武器属性|Weapon")
 	int32 MagCapacity;
 
-	UPROPERTY(EditAnywhere, Category= "武器属性")
+	UPROPERTY(EditAnywhere, Category= "武器属性|Weapon")
 	EWeaponType WeaponType;
 	
 };
