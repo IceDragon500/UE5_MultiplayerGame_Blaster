@@ -125,11 +125,11 @@ protected:
  * 以散点图结尾点击并应用
  */
 	//从枪口到球体的距离
-	UPROPERTY(EditAnywhere, Category= "武器属性|Weapon Scatter")
+	UPROPERTY(EditAnywhere, Category= "武器属性|Weapon Scatter", meta = (EditCondition = "bUseScatter"))
 	float DistanceToSphere = 800.f;
 
 	//球体的半径
-	UPROPERTY(EditAnywhere, Category= "武器属性|Weapon Scatter")
+	UPROPERTY(EditAnywhere, Category= "武器属性|Weapon Scatter", meta = (EditCondition = "bUseScatter"))
 	float SphereRadius = 75.f;
 
 	//射线武器的伤害值

@@ -28,7 +28,7 @@ private:
 	TSubclassOf<AProjectile> ProjectileClass;
 
 	//使用具有服务器倒带技术的子弹
-	UPROPERTY(EditAnywhere, Category= "武器属性|子弹")
+	UPROPERTY(EditAnywhere, Category= "武器属性|子弹", meta =(EditCondition = "bUseServerSideRewind"))
 	TSubclassOf<AProjectile> ServerSideRewindProjectileClass;
 	
 };

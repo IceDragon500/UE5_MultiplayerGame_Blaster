@@ -7,7 +7,7 @@
 #include "ProjectileGrenade.generated.h"
 
 /**
- * 
+ * 继承自子弹类的手榴弹
  */
 UCLASS()
 class BLASTER_API AProjectileGrenade : public AProjectile
