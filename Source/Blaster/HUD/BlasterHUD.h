@@ -69,7 +69,7 @@ private:
 	UPROPERTY()
 	class APlayerController* OwningPlayer;
 
-	void DrawCrosshair(UTexture2D* Texture, FVector2d ViewportSize, FVector2d Spread, FLinearColor CrosshairColor);
+	void DrawCrosshair(UTexture2D* Texture, FVector2D ViewportSize, FVector2D Spread, FLinearColor CrosshairColor);
 	FHUDPackage HUDPackage;
 
 	//准星扩散的最大值

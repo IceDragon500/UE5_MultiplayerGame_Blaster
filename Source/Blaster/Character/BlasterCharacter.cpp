@@ -707,7 +707,7 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 void ABlasterCharacter::Move(const FInputActionValue& Value)
 {
 	if(bDisableGameplay) return;
-	const FVector2d MovementVector = Value.Get<FVector2d>();
+	const FVector2D MovementVector = Value.Get<FVector2D>();
 
 	/*使用前后左右来移动角色
 	const FVector Forward = GetActorForwardVector();
@@ -731,7 +731,7 @@ void ABlasterCharacter::Move(const FInputActionValue& Value)
 
 void ABlasterCharacter::Look(const FInputActionValue& Value)
 {
-	const FVector2d LookAxisVector = Value.Get<FVector2d>();
+	const FVector2D LookAxisVector = Value.Get<FVector2D>();
 
 	AddControllerPitchInput(LookAxisVector.Y);//以x轴，向上下转动
 	AddControllerYawInput(LookAxisVector.X);//以z轴，向左右转动

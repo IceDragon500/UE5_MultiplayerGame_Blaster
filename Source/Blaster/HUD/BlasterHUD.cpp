@@ -101,11 +101,11 @@ void ABlasterHUD::DrawHUD()
 {
 	Super::DrawHUD();
 
-	FVector2d ViewportSize;
+	FVector2D ViewportSize;
 	if(GEngine)
 	{
 		GEngine->GameViewport->GetViewportSize(ViewportSize);
-		const FVector2d ViewportCenter(ViewportSize.X / 2.f , ViewportSize.Y/2.f);
+		const FVector2D ViewportCenter(ViewportSize.X / 2.f , ViewportSize.Y/2.f);
 
 		//控制准星变化的量
 		//乘以的值，就是变量，是0~1之间的一个值
@@ -113,32 +113,32 @@ void ABlasterHUD::DrawHUD()
 		
 		if(HUDPackage.CrosshairCenter)
 		{
-			DrawCrosshair(HUDPackage.CrosshairCenter , ViewportCenter, FVector2d(0.f, 0.f), HUDPackage.CrosshairColor);
+			DrawCrosshair(HUDPackage.CrosshairCenter , ViewportCenter, FVector2D(0.f, 0.f), HUDPackage.CrosshairColor);
 		}
 		if(HUDPackage.CrosshairLeft)
 		{
-			DrawCrosshair(HUDPackage.CrosshairLeft , ViewportCenter,FVector2d(-SpreadScaled, 0.f), HUDPackage.CrosshairColor);
+			DrawCrosshair(HUDPackage.CrosshairLeft , ViewportCenter,FVector2D(-SpreadScaled, 0.f), HUDPackage.CrosshairColor);
 		}
 		if(HUDPackage.CrosshairRight)
 		{
-			DrawCrosshair(HUDPackage.CrosshairRight , ViewportCenter, FVector2d(SpreadScaled, 0.f), HUDPackage.CrosshairColor);
+			DrawCrosshair(HUDPackage.CrosshairRight , ViewportCenter, FVector2D(SpreadScaled, 0.f), HUDPackage.CrosshairColor);
 		}
 		if(HUDPackage.CrosshairTop)
 		{
-			DrawCrosshair(HUDPackage.CrosshairTop , ViewportCenter, FVector2d(0.f, -SpreadScaled), HUDPackage.CrosshairColor);
+			DrawCrosshair(HUDPackage.CrosshairTop , ViewportCenter, FVector2D(0.f, -SpreadScaled), HUDPackage.CrosshairColor);
 		}
 		if(HUDPackage.CrosshairDown)
 		{
-			DrawCrosshair(HUDPackage.CrosshairDown , ViewportCenter, FVector2d(0.f, SpreadScaled), HUDPackage.CrosshairColor);
+			DrawCrosshair(HUDPackage.CrosshairDown , ViewportCenter, FVector2D(0.f, SpreadScaled), HUDPackage.CrosshairColor);
 		}
 	}
 }
 
-void ABlasterHUD::DrawCrosshair(UTexture2D* Texture, FVector2d ViewportSize, FVector2d Spread, FLinearColor CrosshairColor)
+void ABlasterHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportSize, FVector2D Spread, FLinearColor CrosshairColor)
 {
 	const float TextureWidth = Texture->GetSizeX();
 	const float TextureHeight = Texture->GetSizeY();
-	const FVector2d TextureDrawPoint(
+	const FVector2D TextureDrawPoint(
 		ViewportSize.X - TextureWidth / 2.f + Spread.X,
 		ViewportSize.Y - TextureHeight / 2.f + Spread.Y
 		);

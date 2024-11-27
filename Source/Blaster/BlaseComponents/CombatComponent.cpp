@@ -777,11 +777,11 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		End,
 		ECollisionChannel::ECC_Visibility
 		);
-		/*
+		
 		if(!TraceHitResult.bBlockingHit)//如果射线检测没有碰撞到任何东西
 		{
 			TraceHitResult.ImpactPoint = End;//那我们就设置碰撞到的那个点为射线的终点
-		}*/
+		}
 
 		//实现当检测目标是角色时，改变准星的颜色
 		//判断角色， 并且判断获取到的角色是否有对应的接口
