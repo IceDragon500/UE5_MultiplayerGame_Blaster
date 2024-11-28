@@ -58,6 +58,8 @@ public:
 	//冷却时长
 	UPROPERTY(EditAnywhere)
 	float CooldownTime = 30.f;
+
+	bool bTeamsMatch = false;
 	
 protected:
 	

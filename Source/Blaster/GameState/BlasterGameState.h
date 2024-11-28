@@ -26,8 +26,11 @@ public:
 	/**
 	 * Teams队伍
 	 */
+	void RedTeamScores();
+	void BlueTeamScores();
+	//用来保存红队角色的BlasterPlayerState
 	TArray<ABlasterPlayerState*> RedTeam;
-
+	//用来保存蓝队角色的BlasterPlayerState
 	TArray<ABlasterPlayerState*> BlueTeam;
 
 	UPROPERTY(ReplicatedUsing = OnRep_RedTeamScore)

@@ -35,6 +35,10 @@ public:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	void HideTeamScores();
+	void InitTeamScores();
+	void SetHUDRedTeamScore(int32 RedScore);
+	void SetHUDBlueTeamScore(int32 BlueScore);
 	
 	//Synced with server world clock
 	//与服务器世界时钟同步
@@ -45,10 +49,10 @@ public:
 	virtual void ReceivedPlayer() override;
 	
 	//从GameMode设置MatchState
-	void OnMatchStateSet(FName State);
+	void OnMatchStateSet(FName State, bool bTeamsMatch = false);
 	
 	////进入游戏开始阶段后，把角色主界面添加到屏幕，然后将等待界面设置为隐藏
-	void HandleMatchHasStarted();
+	void HandleMatchHasStarted(bool bTeamsMatch = false);
 	
 	//游戏结束后进入冷却阶段，这个时候移除界面内容  然后把等待界面显示出来
 	void HandleCooldown();
@@ -124,7 +128,12 @@ protected:
 	UFUNCTION(Client, Reliable)
 	void ClientElimAnnouncement(APlayerState* Attacker, APlayerState* Victim);
 	
-
+	UPROPERTY(ReplicatedUsing=OnRep_ShowTeamScores)
+	bool bShowTeamScores = false;
+	
+	UFUNCTION()
+	void OnRep_ShowTeamScores();
+	
 private:
 	UPROPERTY()
 	ABlasterHUD* BlasterHUD;
