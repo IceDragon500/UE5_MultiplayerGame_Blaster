@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "GameFramework/PlayerState.h"
+#include "Blaster/BlasterTypes/Team.h"
 #include "BlasterPlayerState.generated.h"
 
 /**
@@ -26,6 +27,8 @@ public:
 	
 	void AddToScore(float ScoreAmount);
 	void AddToDefeats(int32 DefeatsAmount);
+
+	
 	
 protected:
 
@@ -37,4 +40,12 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_Defeats)
 	int32 Defeats;
+
+	//队伍设置
+	UPROPERTY(Replicated)
+	ETeam Team = ETeam::ET_NoTeam;
+
+public:
+	FORCEINLINE ETeam GetTeam() const { return Team; }
+	FORCEINLINE void SetTeam(ETeam TeamToSet) { Team = TeamToSet; }
 };
