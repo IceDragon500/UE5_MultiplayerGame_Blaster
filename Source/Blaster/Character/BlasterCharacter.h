@@ -11,6 +11,7 @@
 #include "Blaster/Interface/InteractWithCrosshairsInterface.h"
 //#include "Blaster/PlayerState/BlasterPlayerState.h"
 #include "Blaster/BlaseComponents/LagCompensationComponent.h"
+#include "Blaster/BlasterTypes/Team.h"
 #include "Components/TimelineComponent.h"
 #include "BlasterCharacter.generated.h"
 
@@ -138,6 +139,8 @@ public:
 	//广播 失去第一名名次
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastLostTheLead();
+
+	void SetTeamColor(ETeam Team);
 	
 	
 protected:
@@ -414,12 +417,32 @@ private:
 	UPROPERTY(VisibleAnywhere, Category="BlasterPlayer|角色淘汰")
 	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance;
 	//蓝图上设置的材料实例，与动态材料一起使用material instance set on the Blueprint, used with the dynamic material
-	UPROPERTY(EditAnywhere, Category="BlasterPlayer|角色淘汰")
+	UPROPERTY(VisibleAnywhere, Category="BlasterPlayer|角色淘汰")
 	UMaterialInstance* DissolveMaterialInstance;
 
 	UFUNCTION()
 	void UpdateDissolveMaterial(float DissolveValue);
 	void StartDissolve();
+
+	/**
+	 * Team Colors
+	 */
+	//红队的溶解材质实例
+	UPROPERTY(EditAnywhere, Category="BlasterPlayer|角色队伍")
+	UMaterialInstance* RedDissolveMatInst;
+	//红队的材质
+	UPROPERTY(EditAnywhere, Category="BlasterPlayer|角色队伍")
+	UMaterialInstance* RedMaterial;
+	//蓝队溶解的材质实例
+	UPROPERTY(EditAnywhere, Category="BlasterPlayer|角色队伍")
+	UMaterialInstance* BlueDissolveMatInst;
+	//蓝队的材质
+	UPROPERTY(EditAnywhere, Category="BlasterPlayer|角色队伍")
+	UMaterialInstance* BlueMaterial;
+
+	//初始角色身上的材质
+	UPROPERTY(EditAnywhere, Category="BlasterPlayer|角色队伍")
+	UMaterialInstance* OriginalMaterial;
 	
 	/*
 	 *Elim Bot

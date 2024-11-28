@@ -27,7 +27,8 @@ public:
 	
 	void AddToScore(float ScoreAmount);
 	void AddToDefeats(int32 DefeatsAmount);
-
+	
+	void SetTeam(ETeam TeamToSet);
 	
 	
 protected:
@@ -42,10 +43,12 @@ private:
 	int32 Defeats;
 
 	//队伍设置
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_Team)
 	ETeam Team = ETeam::ET_NoTeam;
+
+	UFUNCTION()
+	void OnRep_Team();
 
 public:
 	FORCEINLINE ETeam GetTeam() const { return Team; }
-	FORCEINLINE void SetTeam(ETeam TeamToSet) { Team = TeamToSet; }
 };
