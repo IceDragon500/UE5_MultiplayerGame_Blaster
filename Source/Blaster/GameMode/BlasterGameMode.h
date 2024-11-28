@@ -42,7 +42,7 @@ public:
 	//玩家离开游戏
 	void PlayerLeftGame(ABlasterPlayerState* PlayerLeaving);
 
-	FORCEINLINE float GetCountdownTime() const { return CountdownTime; }
+	virtual float CalculateDamage(AController* Attacker, AController* Victim, float BaseDamage);
 	
 	//定义一个游戏进行的最大时间限制
 	UPROPERTY(EditAnywhere)
@@ -68,5 +68,8 @@ protected:
 private:
 	//倒计时时间
 	float CountdownTime = 0.f;
+
+public:
+	FORCEINLINE float GetCountdownTime() const { return CountdownTime; }
 	
 };

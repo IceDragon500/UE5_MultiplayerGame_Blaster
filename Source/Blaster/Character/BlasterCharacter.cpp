@@ -685,10 +685,11 @@ void ABlasterCharacter::ThrowGrenadePressed(const FInputActionValue& Value)
 	}
 }
 
-void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
-	AController* InstigatroController, AActor* DamageCasuer)
+void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatroController, AActor* DamageCasuer)
 {
-	if(bElimmed) return; //防止在被击杀之后，播放死亡特效时被反复击杀
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
+	if(bElimmed || BlasterGameMode == nullptr) return; //防止在被击杀之后，播放死亡特效时被反复击杀
+	Damage = BlasterGameMode->CalculateDamage(InstigatroController, Controller, Damage);
 
 	float DamageToHealth = Damage;//扣除血量的值
 	if(Shield > 0.f)
@@ -715,7 +716,6 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	//获得游戏模式，然后执行游戏模式中的淘汰相关的逻辑
 	if (Health == 0.f)
 	{
-		BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 		if(BlasterGameMode)
 		{
 			//获得受害者的控制器，就是当前这个类
