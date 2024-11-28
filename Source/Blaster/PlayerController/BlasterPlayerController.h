@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-//#include "Blaster/GameMode/BlasterGameMode.h"
 #include "GameFramework/PlayerController.h"
 #include "Blaster/HUD/BlasterHUD.h"
 #include "Blaster/HUD/ReturnToMainMenu.h"
@@ -133,6 +132,9 @@ protected:
 	
 	UFUNCTION()
 	void OnRep_ShowTeamScores();
+
+	FString GetInfoText(const TArray<class ABlasterPlayerState*>& PlayerStates);
+	FString GetTeamsInfoText(class ABlasterGameState* BlasterGameState);
 	
 private:
 	UPROPERTY()

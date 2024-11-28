@@ -32,15 +32,9 @@ public:
 	TArray<ABlasterPlayerState*> RedTeam;
 	//用来保存蓝队角色的BlasterPlayerState
 	TArray<ABlasterPlayerState*> BlueTeam;
-
-	UPROPERTY(ReplicatedUsing = OnRep_RedTeamScore)
-	float RedTeamScore = 0.f;
 	
 	UFUNCTION()
 	void OnRep_RedTeamScore();
-
-	UPROPERTY(ReplicatedUsing = OnRep_BlueTeamScore)
-	float BlueTeamScore = 0.f;
 	
 	UFUNCTION()
 	void OnRep_BlueTeamScore();
@@ -49,5 +43,15 @@ public:
 protected:
 private:
 	float TopScore = 0.f;
+
+	UPROPERTY(ReplicatedUsing = OnRep_RedTeamScore)
+	float RedTeamScore = 0.f;
+
+	UPROPERTY(ReplicatedUsing = OnRep_BlueTeamScore)
+	float BlueTeamScore = 0.f;
+
+public:
+	FORCEINLINE float GetRedTeamScore() const { return RedTeamScore; }
+	FORCEINLINE float GetBlueTeamScore() const { return BlueTeamScore; }
 	
 };
