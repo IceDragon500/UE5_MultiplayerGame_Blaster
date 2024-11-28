@@ -254,6 +254,7 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 	//关闭碰撞
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	//Spawn elim bot
 	//生成被淘汰时的机器人特效和音效
@@ -969,18 +970,24 @@ void ABlasterCharacter::HideCameraIfCharacterClose()
 		GetMesh()->SetVisibility(false);//隐藏角色的模型
 		if(Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())//隐藏武器的模型
 		{
-			//Combat->EquippedWeapon->GetWeaponMesh()->SetVisibility(false);
 			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;//只对拥有者不可见
+		}
+		if(Combat && Combat->SecondaryWeapon && Combat->SecondaryWeapon->GetWeaponMesh())//隐藏武器的模型
+		{
+			Combat->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = true;//只对拥有者不可见
 		}
 	}
 	else
 	{
 		GetMesh()->SetVisibility(true);//隐藏角色的模型
 		if(Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())//隐藏武器的模型
-			{
-			//Combat->EquippedWeapon->GetWeaponMesh()->SetVisibility(false);
+		{
 			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;//只对拥有者不可见
-			}
+		}
+		if(Combat && Combat->SecondaryWeapon && Combat->SecondaryWeapon->GetWeaponMesh())//隐藏武器的模型
+		{
+			Combat->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = false;//只对拥有者不可见
+		}
 	}
 }
 
