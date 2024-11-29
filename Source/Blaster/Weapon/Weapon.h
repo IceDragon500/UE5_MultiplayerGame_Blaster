@@ -51,16 +51,6 @@ public:
 	void SetWeaponState(EWeaponState State);//设置武器在各种情况下的状态参数
 	void AddAmmo(int32 AmmoToAdd);//给武器添加子弹的方法
 	FVector TraceEndWithScatter(const FVector& HitTarget);
-	
-	FORCEINLINE USphereComponent* GetAreaSphere() const { return  AreaSphere; }
-	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
-	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
-	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
-	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
-	FORCEINLINE int32 GetAmmo() const { return Ammo; } //获取当前子弹数量(斜杠前面的数值)
-	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; } //获取最大子弹数量(弹夹容量 斜杠前面的数值)
-	FORCEINLINE float GetDamage() const { return Damage; } //获取当前武器的伤害值
-	FORCEINLINE float GetHeadShotDamage() const { return HeadShotDamage; }
 
 	//开火相关的逻辑
 	virtual void Fire(const FVector& HitTarget);
@@ -215,5 +205,18 @@ private:
 
 	UPROPERTY(EditAnywhere, Category= "武器属性|Weapon")
 	EWeaponType WeaponType;
+
+public:
+		
+	FORCEINLINE USphereComponent* GetAreaSphere() const { return  AreaSphere; }
+	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
+	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
+	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
+	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+	FORCEINLINE int32 GetAmmo() const { return Ammo; } //获取当前子弹数量(斜杠前面的数值)
+	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; } //获取最大子弹数量(弹夹容量 斜杠前面的数值)
+	FORCEINLINE float GetDamage() const { return Damage; } //获取当前武器的伤害值
+	FORCEINLINE float GetHeadShotDamage() const { return HeadShotDamage; }
 	
 };

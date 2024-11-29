@@ -24,6 +24,7 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 //------初始化角色实例-----------------------------------------------------
 
 	BlasterCharacter = BlasterCharacter == nullptr ? Cast<ABlasterCharacter>(TryGetPawnOwner()) : BlasterCharacter;
+	if(BlasterCharacter == nullptr) return;//这里需要检查一下是否赋值成功了
 	
 //------获得旋转初始值-----------------------------------------------------
 	//获得上一帧模型的旋转
@@ -37,35 +38,21 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	PlayerRotation = BlasterCharacter->GetActorRotation();
 
 //------赋值基础属性-----------------------------------------------------
-	FVector Velocity = CharacterMovement->Velocity;
+
+	FVector Velocity = BlasterCharacter->GetCharacterMovement()->Velocity;
 	Velocity.Z = 0.f;
-	//移动速度
-	Speed = Velocity.Size();
-
-	//是否在空中
-	bIsInAir = BlasterCharacter->GetCharacterMovement()->IsFalling();
-
-	//是否加速
-	bIsAccelerating = BlasterCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.f ? true : false;
-
-	//是否装备了武器
-	bWeaponEquipped = BlasterCharacter->IsWeaponEquipped();
-	EquippedWeapon = BlasterCharacter->GetEquippedWeapon();
-
-	//是否蹲下
-	bIsCrouched = BlasterCharacter->bIsCrouched;
-
-	//是否瞄准
-	bAiming = BlasterCharacter->IsAiming();
-
-	//是否原地转身
-	TurningInPlace = BlasterCharacter->GetTurningInPlace();
+	Speed = Velocity.Size();//移动速度
 	
+	bIsInAir = BlasterCharacter->GetCharacterMovement()->IsFalling();//是否在空中
+	bIsAccelerating = BlasterCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.f ? true : false;//是否加速
+	bWeaponEquipped = BlasterCharacter->IsWeaponEquipped();//是否装备了武器
+	EquippedWeapon = BlasterCharacter->GetEquippedWeapon();
+	bIsCrouched = BlasterCharacter->bIsCrouched;//是否蹲下
+	bAiming = BlasterCharacter->IsAiming();//是否瞄准
+	TurningInPlace = BlasterCharacter->GetTurningInPlace();//是否原地转身
 	bRotateRootBone = BlasterCharacter->ShouldRotateRootBone();
-
 	bElimmed = BlasterCharacter->IsElimmed();
-
-
+	bHoldingTheFlag = BlasterCharacter->IsHoldingTheFlag();
 	
 //------计算当前运动方向（相对于控制器）Direction-----------------------------------------------------
 	FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(BlasterCharacter->GetVelocity());
@@ -77,10 +64,6 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	FRotator DeltaRot = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, PlayerControlRotation);
 	DeltaRotation = FMath::RInterpTo(DeltaRotation, DeltaRot, DeltaSeconds, 6.f);
 	Direction = DeltaRotation.Yaw;
-
-
-	
-	
 	
 	//设置最后停下的方向StopDirection
 	if (bIsAccelerating == true)
@@ -101,8 +84,7 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	//Pitch = RotatorDeltar.Pitch;
 	Roll = RotatorDeltar.Roll;
 	//Yaw = RotatorDeltar.Yaw;
-
-
+	
 	Yaw = BlasterCharacter->GetAO_Yaw();
 	Pitch = BlasterCharacter->GetAO_Pitch();
 
