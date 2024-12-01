@@ -49,6 +49,8 @@ protected:
 	void OnRep_EquippedWeapon();
 	UFUNCTION()
 	void OnRep_SecondaryWeapon();
+	UFUNCTION()
+	void OnRep_TheFlag();
 
 	//装备主武器
 	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
@@ -344,6 +346,9 @@ private:
 
 	UPROPERTY(Replicated)
 	bool bHoldingTheFlag = false;
+
+	UPROPERTY(ReplicatedUsing = OnRep_TheFlag)
+	AWeapon* TheFlag;
 
 public:
 	FORCEINLINE int32 GetGrenades() const {return Grenades;}

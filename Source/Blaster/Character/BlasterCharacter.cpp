@@ -199,20 +199,7 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 
 void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 {
-	
-	//DropOrDestroyWeapons(); 我这里没有使用与教程一致的方法 直接将身上所有武器丢在地上
-	if(Combat)
-	{
-		if(Combat->EquippedWeapon)
-		{
-			Combat->EquippedWeapon->Dropped();
-		}
-		if(Combat->SecondaryWeapon)
-		{
-			Combat->SecondaryWeapon->Dropped();
-		}
-	}
-
+	DropOrDestroyWeapons();
 	MulticastElim(bPlayerLeftGame);
 }
 
@@ -350,6 +337,10 @@ void ABlasterCharacter::DropOrDestroyWeapons()
 		if (Combat->SecondaryWeapon)
 		{
 			DropOrDestroyWeapon(Combat->SecondaryWeapon);
+		}
+		if (Combat->TheFlag)
+		{
+			Combat->TheFlag->Dropped();
 		}
 	}
 }

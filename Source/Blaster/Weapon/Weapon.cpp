@@ -235,7 +235,7 @@ void AWeapon::OnEquipped()
 	 *关闭自定义深度设置
 	*/
 	ShowPickupWidget(false);
-	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetAreaSphere()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	/*
 	 *根据我的搜索结果，这个错误通常是由于物体的“启用碰撞”属性设置为“查询”或“无碰撞”，但“模拟物理”被设置为“是”导致的。

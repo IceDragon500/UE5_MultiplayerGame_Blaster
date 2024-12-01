@@ -35,6 +35,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
 	DOREPLIFETIME(UCombatComponent, CombatState);
 	DOREPLIFETIME(UCombatComponent, Grenades);
+	DOREPLIFETIME(UCombatComponent, TheFlag);
 	DOREPLIFETIME(UCombatComponent, bHoldingTheFlag);
 }
 
@@ -256,9 +257,10 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	{
 		Character->Crouch();
 		bHoldingTheFlag = true;
-		AttackFlagToLeftHand(WeaponToEquip);
 		WeaponToEquip->SetWeaponState(EWeaponState::EWS_Equipped);
+		AttackFlagToLeftHand(WeaponToEquip);
 		WeaponToEquip->SetOwner(Character);
+		TheFlag = WeaponToEquip;
 	}
 	else
 	{
@@ -751,6 +753,15 @@ void UCombatComponent::OnRep_SecondaryWeapon()
 		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 		AttachActorToBackpack(SecondaryWeapon);
 		PlayEquipWeaponSound(EquippedWeapon);//播放装备武器的声音
+	}
+}
+
+void UCombatComponent::OnRep_TheFlag()
+{
+	if(TheFlag && Character)
+	{
+		TheFlag->SetWeaponState(EWeaponState::EWS_Equipped);
+		AttackFlagToLeftHand(TheFlag);
 	}
 }
 

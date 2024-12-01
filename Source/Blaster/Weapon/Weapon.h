@@ -44,8 +44,12 @@ public:
 	AWeapon();
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	void ShowPickupWidget(bool bShowWidget);//显示拾取界面
-	void Dropped();//扔出武器
+	
+	//显示拾取界面
+	void ShowPickupWidget(bool bShowWidget);
+	//扔出武器
+	virtual void Dropped();
+	
 	virtual void OnRep_Owner() override;
 	void SetHUDAmmo();	
 	void SetWeaponState(EWeaponState State);//设置武器在各种情况下的状态参数
