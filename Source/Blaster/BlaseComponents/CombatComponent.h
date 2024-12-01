@@ -42,27 +42,38 @@ protected:
 /*
 * 装备武器相关的逻辑
 */
-	
-	void EquipWeapon(AWeapon* WeaponToEquip);//装备武器的完整逻辑
+	//装备武器的完整逻辑
+	//WeaponToEquip正在被装备的武器对象
+	void EquipWeapon(AWeapon* WeaponToEquip);
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
 	UFUNCTION()
 	void OnRep_SecondaryWeapon();
 
-	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);//装备主武器
-	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);//装备副武器
+	//装备主武器
+	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
+	//装备副武器
+	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
 	
-	
-	void DropEquippedWeapon();//扔出武器
-	void AttachActorToRightHand(AActor* ActorToAttach);//将武器附加在右手上
-	void AttachActorToLeftHand(AActor* ActorToAttach);//将武器附加在左手上
+	//扔出手上的武器
+	void DropEquippedWeapon();
+	//将武器附加在右手上
+	void AttachActorToRightHand(AActor* ActorToAttach);
+	//将武器附加在左手上
+	void AttachActorToLeftHand(AActor* ActorToAttach);
+	//添加旗帜到左手
+	void AttackFlagToLeftHand(AWeapon* Flag);
 	void AttachActorToBackpack(AActor* ActorToAttach);
-	void UpdateCarriedAmmo();//更新子弹的HUD和角色身上携带的子弹数量
-	void PlayEquipWeaponSound(AWeapon* WeaponToEquip);//播放装备武器时的音效
-	void ReloadEmptyWeapon();//如果使其的武器为空子弹，尝试换弹
+	//更新子弹的HUD和角色身上携带的子弹数量
+	void UpdateCarriedAmmo();
+	//播放装备武器时的音效
+	void PlayEquipWeaponSound(AWeapon* WeaponToEquip);
+	//如果使其的武器为空子弹，尝试换弹
+	void ReloadEmptyWeapon();
 /*
 * 交换武器的逻辑
 */
+	//交换右手和背上的武器（主副武器）
 	void SwapWeapons();
 
 	
@@ -331,6 +342,7 @@ private:
 	UFUNCTION()
 	void OnRep_CombatState();
 
+	UPROPERTY(Replicated)
 	bool bHoldingTheFlag = false;
 
 public:

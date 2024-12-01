@@ -486,6 +486,16 @@ void ABlasterCharacter::RotateInPlace(float DeltaTime)
 		return;
 	}
 	*/
+
+	if(Combat && Combat->bHoldingTheFlag)
+	{
+		bUseControllerRotationYaw = true;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
+
+	
 	if (Combat && Combat->EquippedWeapon) GetCharacterMovement()->bOrientRotationToMovement = false;
 	if (Combat && Combat->EquippedWeapon) bUseControllerRotationYaw = true;
 
