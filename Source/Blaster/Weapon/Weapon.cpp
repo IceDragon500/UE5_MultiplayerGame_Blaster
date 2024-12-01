@@ -97,6 +97,8 @@ void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
 	if(BlasterCharacter)
 	{
+		if(WeaponType == EWeaponType::EWT_Flag && BlasterCharacter->GetTeam() != Team) return; //自己拾取自己队伍的旗帜
+		if(BlasterCharacter->IsHoldingTheFlag()) return; //如果当前角色正在持有旗帜，是拾取不了武器的
 		BlasterCharacter->SetOverlappingWeapon(this);
 	}
 }
@@ -106,6 +108,8 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
 	if(BlasterCharacter)
 	{
+		if(WeaponType == EWeaponType::EWT_Flag && BlasterCharacter->GetTeam() != Team) return; //自己拾取自己队伍的旗帜
+		if(BlasterCharacter->IsHoldingTheFlag()) return; //如果当前角色正在持有旗帜，是拾取不了武器的
 		BlasterCharacter->SetOverlappingWeapon(nullptr);
 	}
 }

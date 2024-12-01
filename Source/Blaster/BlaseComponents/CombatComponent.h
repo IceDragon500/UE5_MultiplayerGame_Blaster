@@ -6,6 +6,7 @@
 #include "Blaster/BlasterTypes/CombatState.h"
 #include "Blaster/HUD/BlasterHUD.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
+#include "Blaster/Weapon/Flag.h"
 #include "Blaster/Weapon/Projectile.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Blaster/Weapon/WeaponTypes.h"
@@ -348,7 +349,7 @@ private:
 	bool bHoldingTheFlag = false;
 
 	UPROPERTY(ReplicatedUsing = OnRep_TheFlag)
-	AWeapon* TheFlag;
+	AFlag* TheFlag;
 
 public:
 	FORCEINLINE int32 GetGrenades() const {return Grenades;}

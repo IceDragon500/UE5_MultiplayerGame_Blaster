@@ -7,6 +7,7 @@
 #include "CoreMinimal.h"
 #include "Casing.h"
 #include "WeaponTypes.h"
+#include "Blaster/BlasterTypes/Team.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
@@ -209,6 +210,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category= "武器属性|Weapon")
 	EWeaponType WeaponType;
+
+	UPROPERTY(EditAnywhere, Category= "武器属性|旗帜")
+	ETeam Team = ETeam::ET_NoTeam;
 
 public:
 		

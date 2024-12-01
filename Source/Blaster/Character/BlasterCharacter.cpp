@@ -8,6 +8,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Blaster/Blaster.h"
+#include "Blaster/BlasterTypes/Announcement.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
 #include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
@@ -1191,4 +1192,11 @@ bool ABlasterCharacter::IsHoldingTheFlag() const
 {
 	if(Combat == nullptr) return false;
 	return Combat->bHoldingTheFlag;
+}
+
+ETeam ABlasterCharacter::GetTeam()
+{
+	BlasterPlayerState = BlasterPlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
+	if(BlasterPlayerState == nullptr) return ETeam::ET_NoTeam;
+	return BlasterPlayerState->GetTeam();
 }

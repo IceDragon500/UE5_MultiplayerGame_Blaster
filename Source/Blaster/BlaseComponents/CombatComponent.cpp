@@ -260,7 +260,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		WeaponToEquip->SetWeaponState(EWeaponState::EWS_Equipped);
 		AttackFlagToLeftHand(WeaponToEquip);
 		WeaponToEquip->SetOwner(Character);
-		TheFlag = WeaponToEquip;
+		TheFlag = Cast<AFlag>(WeaponToEquip);
 	}
 	else
 	{

@@ -118,7 +118,7 @@ public:
 
 	void SetTeamColor(ETeam Team);
 	
-	
+	ETeam GetTeam();
 protected:
 	virtual void BeginPlay() override;
 
@@ -486,4 +486,5 @@ public:
 	FORCEINLINE UBuffComponent* GetBuff() const { return BuffComponent; }
 	FORCEINLINE ULagCompensationComponent* GetLagCompensation() const { return LagCompensation; }
 	FORCEINLINE bool IsHoldingTheFlag() const;
+	
 };
