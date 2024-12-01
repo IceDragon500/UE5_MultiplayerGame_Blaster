@@ -532,26 +532,21 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	//使用CastChecked<>转换时，如果转换失败，则会抛出一个异常，Cast<>则会返回空指针
 	if(UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ThisClass::Jump);
 		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
 		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Completed, this, &ThisClass::Move);
 		
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Completed, this, &ThisClass::Look);
 		
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ThisClass::Jump);
-		
-		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ThisClass::FireButtonPressed);
-		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &ThisClass::FireButtonReleased);
 		
 		EnhancedInputComponent->BindAction(PickupKeyAction, ETriggerEvent::Triggered, this, &ThisClass::EquipButtonPressed);
-
-		EnhancedInputComponent->BindAction(ReloadKeyAction, ETriggerEvent::Triggered, this, &ThisClass::ReloadButtonPressed);
-		
 		EnhancedInputComponent->BindAction(Crouching, ETriggerEvent::Started, this, &ThisClass::CrouchKeyPressed);//注意这里是ETriggerEvent::Started
-		
 		EnhancedInputComponent->BindAction(Aiming,ETriggerEvent::Started, this, &ThisClass::AimButtonPressed);
 		EnhancedInputComponent->BindAction(Aiming,ETriggerEvent::Completed, this, &ThisClass::AimButtonReleased);
-
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ThisClass::FireButtonPressed);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &ThisClass::FireButtonReleased);
+		EnhancedInputComponent->BindAction(ReloadKeyAction, ETriggerEvent::Triggered, this, &ThisClass::ReloadButtonPressed);
 		EnhancedInputComponent->BindAction(ThrowGrenadeKeyAction, ETriggerEvent::Triggered, this, &ThisClass::ThrowGrenadePressed);
 		
 	}
@@ -689,6 +684,7 @@ void ABlasterCharacter::PlayHitReactMontage()
 void ABlasterCharacter::ThrowGrenadePressed(const FInputActionValue& Value)
 {
 	if(bDisableGameplay) return;
+	if(Combat && Combat->bHoldingTheFlag) return;
 	if(Combat)
 	{
 		Combat->ThrowGrenade();
@@ -775,6 +771,7 @@ void ABlasterCharacter::EquipButtonPressed(const FInputActionValue& Value)
 	if(bDisableGameplay) return;
 	if(Combat)
 	{
+		if(Combat->bHoldingTheFlag) return;
 		if(Combat->CombatState == ECombatState::ECS_Unoccupied) ServerEquipButtonPressed();
 		bool bSwap =Combat->ShouldSwapWeapons() &&
 			!HasAuthority() &&
@@ -806,6 +803,7 @@ void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 
 void ABlasterCharacter::CrouchKeyPressed(const FInputActionValue& Value)
 {
+	if(Combat && Combat->bHoldingTheFlag) return;
 	if(bDisableGameplay) return;
 	//在Character类中，UE实现了 Crouch的网络复制的申明，我们可以直接重写下面的方法
 	//virtual void OnRep_IsCrouched();
@@ -824,6 +822,7 @@ void ABlasterCharacter::CrouchKeyPressed(const FInputActionValue& Value)
 void ABlasterCharacter::ReloadButtonPressed(const FInputActionValue& Value)
 {
 	if(bDisableGameplay) return;
+	if(Combat && Combat->bHoldingTheFlag) return;
 	if(Combat)
 	{
 		Combat->Reload();
@@ -835,6 +834,7 @@ void ABlasterCharacter::ReloadButtonPressed(const FInputActionValue& Value)
 void ABlasterCharacter::AimButtonPressed(const FInputActionValue& Value)
 {
 	if(bDisableGameplay) return;
+	if(Combat && Combat->bHoldingTheFlag) return;
 	if(Combat)
 	{
 		Combat->SetAiming(true);
@@ -844,6 +844,7 @@ void ABlasterCharacter::AimButtonPressed(const FInputActionValue& Value)
 void ABlasterCharacter::AimButtonReleased(const FInputActionValue& Value)
 {
 	if(bDisableGameplay) return;
+	if(Combat && Combat->bHoldingTheFlag) return;
 	if(Combat)
 	{
 		Combat->SetAiming(false);
@@ -943,6 +944,7 @@ void ABlasterCharacter::SimProxiesTurn()
 
 void ABlasterCharacter::Jump()
 {
+	if(Combat && Combat->bHoldingTheFlag) return;
 	if(bIsCrouched)
 	{
 		UnCrouch();
@@ -956,6 +958,7 @@ void ABlasterCharacter::Jump()
 void ABlasterCharacter::FireButtonPressed(const FInputActionValue& Value)
 {
 	if(bDisableGameplay) return;
+	if(Combat && Combat->bHoldingTheFlag) return;
 	if(Combat)
 	{
 		Combat->FireButtonPressed(true);
@@ -965,6 +968,7 @@ void ABlasterCharacter::FireButtonPressed(const FInputActionValue& Value)
 void ABlasterCharacter::FireButtonReleased(const FInputActionValue& Value)
 {
 	if(bDisableGameplay) return;
+	if(Combat && Combat->bHoldingTheFlag) return;
 	if(Combat)
 	{
 		Combat->FireButtonPressed(false);
