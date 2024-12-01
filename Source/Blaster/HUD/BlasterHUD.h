@@ -80,12 +80,14 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UElimAnnouncement> ElimAnnouncementClass;
 
+	//击杀公告显示的时间
 	UPROPERTY(EditAnywhere)
-	float ElimAnnouncementTime = 5.5f;
+	float ElimAnnouncementTime = 2.f;
 
 	UFUNCTION()
 	void ElimAnnouncementTimerFinished(UElimAnnouncement* MsgToRemove);
 
+	//用来保存击杀公告的数组
 	TArray<UElimAnnouncement*> ElimMessages;
 	
 };

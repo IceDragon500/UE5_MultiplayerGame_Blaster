@@ -149,6 +149,8 @@ void ABlasterGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController*
 	}
 	if(ElimmedController)
 	{
+		RestartPlayer(ElimmedController);
+		/*
 		//在ABlasterGameMode::RequestRespawn函数中
 		//使用TArray<AActor*> PlayerStarts的目的是为了存储游戏中所有可用的玩家重生点（Player Start）对象
 		//这个数组用于确保当玩家被淘汰后需要重新加入游戏时，系统能够随机或者根据某种逻辑从这些预设的重生点中选择一个来放置玩家。
@@ -157,6 +159,7 @@ void ABlasterGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController*
 		int32 Selection = FMath::RandRange(0, PlayerStarts.Num() - 1);
 		//将玩家复活至起始点
 		RestartPlayerAtPlayerStart(ElimmedController, PlayerStarts[Selection]);
+		*/
 	}
 }
 

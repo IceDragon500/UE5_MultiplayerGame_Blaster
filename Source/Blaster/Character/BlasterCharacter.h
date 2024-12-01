@@ -125,6 +125,8 @@ protected:
 	void RotateInPlace(float DeltaTime);
 	void DropOrDestroyWeapon(AWeapon* Weapon);
 	void DropOrDestroyWeapons();
+	void SetSpawnPoint();
+	void OnPlayerStateInitialized();
 /*
  * 增强输入
  */

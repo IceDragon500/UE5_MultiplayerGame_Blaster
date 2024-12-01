@@ -48,9 +48,6 @@ void ABlasterHUD::AddElimAnnouncement(FString Attacker, FString Victim)
 					}
 				}
 			}
-
-			
-
 			
 			ElimMessages.Add(ElimAnnouncementWidget);
 
