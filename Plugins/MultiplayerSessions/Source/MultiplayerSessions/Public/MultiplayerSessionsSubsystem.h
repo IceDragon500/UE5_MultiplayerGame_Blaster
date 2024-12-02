@@ -116,4 +116,12 @@ private:
 	int32 LastNumPublicConnections;
 	FString LastMatchType;
 
+	int32 DesiredNumPublicConnections{};
+	FString DesiredMatchType{};
+
+public:
+	FORCEINLINE int32 GetNumPublicConnections() const { return LastNumPublicConnections; }
+	FORCEINLINE FString GetMatchType() const { return LastMatchType; }
+	
+
 };
