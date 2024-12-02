@@ -74,7 +74,10 @@ private:
 	//处理所有在线会话功能的子系统
 	UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
 
+	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess=true))
 	int32 NumPublicConnections = 4;
+	
+	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess=true))
 	FString MatchType = TEXT("FreeForAll");
 	
 	FString PathToLobby = TEXT("");
