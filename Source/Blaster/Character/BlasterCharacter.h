@@ -488,5 +488,6 @@ public:
 	FORCEINLINE UBuffComponent* GetBuff() const { return BuffComponent; }
 	FORCEINLINE ULagCompensationComponent* GetLagCompensation() const { return LagCompensation; }
 	FORCEINLINE bool IsHoldingTheFlag() const;
+	void SetHoldingTheFlag(bool bHolding);
 	
 };

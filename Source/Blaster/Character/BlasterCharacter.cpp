@@ -471,33 +471,26 @@ void ABlasterCharacter::Tick(float DeltaTime)
 
 void ABlasterCharacter::RotateInPlace(float DeltaTime)
 {
-	/*这里在教程131课，我不想调整这个
-	if(bDisableGameplay)
-	{
-		bUseControllerRotationYaw = false;
-		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
-		return;
-	}
-	*/
-
 	if(Combat && Combat->bHoldingTheFlag)
 	{
-		bUseControllerRotationYaw = true;
+		bUseControllerRotationYaw = false;
 		GetCharacterMovement()->bOrientRotationToMovement = true;
 		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 		return;
 	}
-
 	
 	if (Combat && Combat->EquippedWeapon) GetCharacterMovement()->bOrientRotationToMovement = false;
 	if (Combat && Combat->EquippedWeapon) bUseControllerRotationYaw = true;
-
-	if (bDisableGameplay)
-	{
-		bUseControllerRotationYaw = false;
-		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
-		return;
-	}
+	
+	/*这里在教程131课，我不想调整这个
+ *这里主要是在结束游戏后，关闭玩家的旋转
+if(bDisableGameplay)
+{
+	bUseControllerRotationYaw = false;
+	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+	return;
+}
+*/	
 
 	//这里判断是否旋转根骨骼
 	//角色在本地/远程网络上下文中的网络角色
@@ -1230,4 +1223,10 @@ ETeam ABlasterCharacter::GetTeam()
 	BlasterPlayerState = BlasterPlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
 	if(BlasterPlayerState == nullptr) return ETeam::ET_NoTeam;
 	return BlasterPlayerState->GetTeam();
+}
+
+void ABlasterCharacter::SetHoldingTheFlag(bool bHolding)
+{
+	if(Combat == nullptr) return;
+	Combat->bHoldingTheFlag = bHolding;
 }

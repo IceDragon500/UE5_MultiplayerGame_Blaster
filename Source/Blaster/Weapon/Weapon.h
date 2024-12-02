@@ -226,5 +226,6 @@ public:
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; } //获取最大子弹数量(弹夹容量 斜杠前面的数值)
 	FORCEINLINE float GetDamage() const { return Damage; } //获取当前武器的伤害值
 	FORCEINLINE float GetHeadShotDamage() const { return HeadShotDamage; }
+	FORCEINLINE ETeam GetTeam() const { return Team; }
 	
 };
