@@ -45,7 +45,7 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 		DestroySession();
 	}
 
-	SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
+	CreateSessionCompleteDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
 
 	LastSessionSettings = MakeShareable(new FOnlineSessionSettings());
 	LastSessionSettings->bIsLANMatch = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL" ? true : false;
@@ -65,7 +65,7 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 	if (!SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *LastSessionSettings))
 	{
 		//如果创建会话失败，我们就删除会话
-		SessionInterface->ClearOnCancelFindSessionsCompleteDelegate_Handle(StartSessionCompleteDelegateHandle);
+		SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
 
 		//
 		//Broadcast our own custom delegate
@@ -82,14 +82,15 @@ void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
 		return;
 	}
 
-	FindSessionCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
+	FindSessionsCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
 
 
 	LastSessionSearch = MakeShareable(new FOnlineSessionSearch());
 
 	LastSessionSearch->MaxSearchResults = MaxSearchResults;//搜索结果等于传入的最大结果MaxSearchResults
-	LastSessionSearch->bIsLanQuery = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL" ? true : false;;//如果获得的名称为空，则Lan搜索为true，否则为false，表示从steam上获得了会话名称
-	LastSessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+	LastSessionSearch->bIsLanQuery = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL" ? true : false;//如果获得的名称为空，则Lan搜索为true，否则为false，表示从steam上获得了会话名称
+	//LastSessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals); UE5.6无法使用
+	LastSessionSearch->QuerySettings.Set(TEXT("PRESENCE"), true, EOnlineComparisonOp::Equals);
 
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
 
@@ -97,7 +98,7 @@ void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
 	{
 		//当我们在上面判断失败的时候
 		//需要清除会话
-		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionCompleteDelegateHandle);
+		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
 		//并且广播一个空数组，并且返回为false
 		MultiplayerOnFindSessionsComplete.Broadcast(TArray<FOnlineSessionSearchResult>(), false);
 	}
@@ -151,8 +152,6 @@ void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, b
 	if (SessionInterface)
 	{
 		SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
-
-
 	}
 
 	MultiplayerOnCreateSessionComplete.Broadcast(bWasSuccessful);
@@ -163,7 +162,7 @@ void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 	if (SessionInterface)//如果我们在Subsystem里面回调成功
 	{
 		//则清除这里的委托
-		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionCompleteDelegateHandle);
+		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
 	}
 
 	if (LastSessionSearch->SearchResults.Num() <= 0)//做一个额外的检查：如果找到的结果等于0

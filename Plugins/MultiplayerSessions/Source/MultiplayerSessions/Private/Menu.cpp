@@ -33,6 +33,7 @@ void UMenu::MenuSetup(int32 NumOfPublicConnections, FString TypeOfMatch, FString
 			InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);//设置鼠标锁定模式，设置为不锁定
 
 			PlayerController->SetInputMode(InputModeData);
+			PlayerController->SetShowMouseCursor(true);
 		}
 	}
 
@@ -65,9 +66,9 @@ bool UMenu::Initialize()
 		HostButton->OnClicked.AddDynamic(this, &ThisClass::HostButtonClicked);
 	}
 
-	if (JoinButtom)
+	if (JoinButton)
 	{
-		JoinButtom->OnClicked.AddDynamic(this, &ThisClass::JoinButtonClicked);
+		JoinButton->OnClicked.AddDynamic(this, &ThisClass::JoinButtonClicked);
 	}
 
 
@@ -76,9 +77,8 @@ bool UMenu::Initialize()
 
 void UMenu::NativeDestruct()
 {
-	Super::NativeDestruct();
-
 	MenuTearDown();
+	Super::NativeDestruct();
 }
 
 void UMenu::OnCreateSession(bool bWasSuccessful)
@@ -86,12 +86,8 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 	if (bWasSuccessful)//如果创建成功了
 	{
 		//打印成功的消息提示
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString(TEXT("Session created successfully!!!")));
-		}
 
-		//进入指定的关卡
+		//这里是从主菜单关卡 进入 Lobby等待关卡
 		UWorld* World = GetWorld();
 		if (World)
 		{
@@ -138,7 +134,7 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 	//如果搜索失败，或者 找到的结果等于0，则我们需要将加入按钮重置为有效
 	if (!bWasSuccessful || SessionResult.Num() == 0)
 	{
-		JoinButtom->SetIsEnabled(true);
+		JoinButton->SetIsEnabled(true);
 	}
 }
 
@@ -168,7 +164,7 @@ void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 	//则我们需要将加入按钮重置为有效
 	if (Result != EOnJoinSessionCompleteResult::Success)
 	{
-		JoinButtom->SetIsEnabled(true);
+		JoinButton->SetIsEnabled(true);
 	}
 
 
@@ -196,7 +192,7 @@ void UMenu::HostButtonClicked()
 void UMenu::JoinButtonClicked()
 {
 	//按下之后先将按钮禁用，避免多次加入
-	JoinButtom->SetIsEnabled(false);
+	JoinButton->SetIsEnabled(false);
 
 	if (MultiplayerSessionsSubsystem)
 	{

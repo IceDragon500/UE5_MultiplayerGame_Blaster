@@ -2,7 +2,7 @@
 
 
 #include "ProjectileRocket.h"
-
+#include "NiagaraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -89,7 +89,10 @@ void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 	if(TrailSystemComponent && TrailSystemComponent->GetSystemInstanceController())
 	{
 		//设置拖尾的特效发生器停止
-		TrailSystemComponent->GetSystemInstanceController()->Deactivate();//GetSystemInstance()不可用
+		//TrailSystemComponent->GetSystemInstanceController()->Deactivate();//GetSystemInstance()不可用
+
+		//UE5.6更新
+		TrailSystemComponent->Deactivate();
 	}
 	if(ProjectileLoopComponent && ProjectileLoopComponent->IsPlaying())
 	{

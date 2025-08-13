@@ -101,7 +101,7 @@ private:
 	FDelegateHandle CreateSessionCompleteDelegateHandle;
 
 	FOnFindSessionsCompleteDelegate FindSessionsCompleteDelegate;
-	FDelegateHandle FindSessionCompleteDelegateHandle;
+	FDelegateHandle FindSessionsCompleteDelegateHandle;
 
 	FOnJoinSessionCompleteDelegate JoinSessionCompleteDelegate;
 	FDelegateHandle JoinSessionCompleteDelegateHandle;
@@ -120,8 +120,8 @@ private:
 	FString DesiredMatchType{};
 
 public:
-	FORCEINLINE int32 GetNumPublicConnections() const { return LastNumPublicConnections; }
-	FORCEINLINE FString GetMatchType() const { return LastMatchType; }
+	FORCEINLINE int32 GetNumPublicConnections() const { return DesiredNumPublicConnections; }
+	FORCEINLINE FString GetMatchType() const { return DesiredMatchType; }
 	
 
 };

@@ -60,7 +60,7 @@ public:
 
 	FHighPingDelegate HighPingDelegate;
 
-	void BroadcastElie(APlayerState* Attacker, APlayerState* Victim);
+	void BroadcastElim(APlayerState* Attacker, APlayerState* Victim);
 	
 protected:
 

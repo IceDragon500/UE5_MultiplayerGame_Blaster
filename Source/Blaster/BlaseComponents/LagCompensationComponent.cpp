@@ -40,6 +40,12 @@ FFramePackage ULagCompensationComponent::InterpBetweenFrames(const FFramePackage
 		InterpBoxInfo.Rotation = FMath::RInterpTo(OlderBox.Rotation, YoungerBox.Rotation, 1.f, InterpFraction);
 		InterpBoxInfo.BoxExtent = YoungerBox.BoxExtent;
 
+		// 添加日志记录
+		UE_LOG(LogTemp, Log, TEXT("BoxInfoName: %s"), *BoxInfoName.ToString());
+		UE_LOG(LogTemp, Log, TEXT("OlderBox BoxExtent: %s"), *OlderBox.BoxExtent.ToString());
+		UE_LOG(LogTemp, Log, TEXT("YoungerBox BoxExtent: %s"), *YoungerBox.BoxExtent.ToString());
+		UE_LOG(LogTemp, Log, TEXT("InterpBoxInfo BoxExtent: %s"), *InterpBoxInfo.BoxExtent.ToString());
+
 		InterpFramePackage.HitBoxInfo.Add(BoxInfoName, InterpBoxInfo);
 	}
 	

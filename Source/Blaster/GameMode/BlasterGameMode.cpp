@@ -19,6 +19,12 @@ ABlasterGameMode::ABlasterGameMode()
 	bDelayedStart = true;
 }
 
+void ABlasterGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+	LevelStartingTime = GetWorld()->GetTimeSeconds();
+}
+
 void ABlasterGameMode::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -50,12 +56,6 @@ void ABlasterGameMode::Tick(float DeltaSeconds)
 			RestartGame();
 		}
 	}
-}
-
-void ABlasterGameMode::BeginPlay()
-{
-	Super::BeginPlay();
-	LevelStartingTime = GetWorld()->GetTimeSeconds();
 }
 
 void ABlasterGameMode::OnMatchStateSet()
@@ -135,7 +135,7 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* ElimmedCharacter, ABl
 		ABlasterPlayerController* BlasterPlayer = Cast<ABlasterPlayerController>(*It);
 		if(BlasterPlayer && AttackerPlayerState && VictimPlayerState)
 		{
-			BlasterPlayer->BroadcastElie(AttackerPlayerState, VictimPlayerState);
+			BlasterPlayer->BroadcastElim(AttackerPlayerState, VictimPlayerState);
 		}
 	}
 }
@@ -175,6 +175,7 @@ void ABlasterGameMode::PlayerLeftGame(ABlasterPlayerState* PlayerLeaving)
 		BlasterGameState->TopScoringPlayers.Remove(PlayerLeaving);
 	}
 	ABlasterCharacter* CharacterLeaving = Cast<ABlasterCharacter>(PlayerLeaving->GetPawn());
+	if(CharacterLeaving)
 	{
 		CharacterLeaving->Elim(true);
 	}

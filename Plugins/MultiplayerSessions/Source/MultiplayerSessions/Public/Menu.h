@@ -68,7 +68,7 @@ private:
 
 	//声明button变量，对应UMG中的两个按钮，名称需要一致
 	UPROPERTY(meta = (BinWidget))
-	UButton* JoinButtom;
+	UButton* JoinButton;
 
 	//The subsystem designed to handle all online session functionality
 	//处理所有在线会话功能的子系统
