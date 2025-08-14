@@ -8,6 +8,7 @@ Content/__ExternalActors__
 Content/__ExternalObjects__
 Content/Collections
 Content/Developers
+DerivedDataCache/*
 Intermediate/*
 Platforms/*
 Plugins/MultiplayerSessions/Binaries/*
